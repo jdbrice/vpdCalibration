@@ -1,0 +1,25 @@
+<config>
+
+	<jobType>calibrate</jobType>
+
+	<rootOutput>test/test.root</rootOutput>
+	
+	<variableBinning>1</variableBinning>
+
+	<dataDir>/star/institutions/rice/jdb/run14AuAu15TofCalibration/TofCalibration/geomAlign/t14Data0/output/</dataDir>
+	
+	<maxFiles>200</maxFiles>
+
+	<numIterations>1</numIterations>
+
+	<paramsOutput>test/NULL.dat</paramsOutput>
+
+	<removeOffset>1</removeOffset>
+
+	<outlierRejection>1</outlierRejection>
+
+	<numTOTBins>25</numTOTBins>
+
+	<reportOutput>test/qa.pdf</reportOutput>
+
+</config>
