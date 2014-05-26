@@ -62,6 +62,18 @@ bool xmlConfig::getAsBool( char* nName ) {
 
 
 	string str = getAsString( nName );
+
+	// first check for string literal "true" or "false"
+	// first push to lower case
+	transform(str.begin(), str.end(), str.begin(), ::tolower);
+	if ( str == (string)"false" )
+		return false;
+	if ( str == (string)"true" )
+		return true;
+
+	// if not look for an integer
+	// 0 or negative = false
+	// any positive = true
 	if ( str.length() >= 1 ){
 		return ( atoi( str.c_str() ) >= 1 );
 	}

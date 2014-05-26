@@ -2,7 +2,7 @@
 #include <fstream>
 using namespace std;
 
-void plotCorrections( TString ifn = "cor.dat", int t = 0) {
+void plotCorrections( TString ifn = "cor.dat", int t = 0, double off = 0) {
 
 	TString out = ifn + ".root";
 	TFile * f = new TFile( out, "RECREATE" );
@@ -43,7 +43,7 @@ void plotCorrections( TString ifn = "cor.dat", int t = 0) {
 			cout << "VALS" << endl;
 			for ( int i=0; i < tBins; i++ ){
 				infile >> tmp;
-				vals[ channel ][ i ] = tmp;
+				vals[ channel ][ i ] = tmp + off;
 				cout << " " << tmp;
 			}
 			cout << endl << endl;
@@ -66,6 +66,7 @@ void plotCorrections( TString ifn = "cor.dat", int t = 0) {
 		hcor[j] = new TH1D( sstr.str().c_str(), sstr.str().c_str(), nBins[ j ] - 1, bins[ j ] );
 		for ( int i = 0; i < nBins[ j ]; i++ ){
 
+			hcor[ j ]->GetYaxis()->SetRangeUser(-20, 20);
 			hcor[ j ]->SetBinContent( i + 1, vals[ j ][ i ] );
 
 		}

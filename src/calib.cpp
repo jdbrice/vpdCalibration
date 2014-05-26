@@ -25,6 +25,16 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	for ( int j = 0; j < constants::nChannels; j++){
 		correction[ j ] 	= new double[ numTOTBins + 1 ];
 		totBins[ j ] 		= new double[ numTOTBins + 1 ];
+
+		deadDetector[ j ]	= false;
+	}
+
+	// zero the corrections & offsets
+	for ( int j = 0; j < constants::nChannels; j++){
+		for (int k = 0; k < numTOTBins + 1; k++){
+			correction[ j ] [ k ] = 0;
+		}
+		initialOffsets[ j ] = 0;
 	}
 	
 
@@ -32,7 +42,7 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	book = new histoBook( config.getAsString( "rootOutput" ) );
 	_chain = chain;
 	pico = new TOFrPicoDst( _chain );
-	gStyle->SetOptStat( 0 );
+	gStyle->SetOptStat( 111 );
 
 	currentIteration = 0;
 }
@@ -45,10 +55,10 @@ calib::~calib() {
 	cout << "[calib.~calib] " << endl;
 	
 	delete book;
-
+	
 	for ( int j = 0; j < constants::nChannels; j++){
-		delete[] correction[ j ];
-		delete[] totBins[ j ];
+		delete [] correction[j];
+		delete [] totBins[j];
 	}
 
 }
@@ -85,7 +95,10 @@ void calib::offsets() {
 		}
 		// progress indicator
 
-		
+		// channel 0 on the west side is the reference channel
+    	double reference = pico->vpdLeWest[0];
+    	
+    	
 		for( int j = constants::startWest; j < constants::endEast; j++) {
 
 			
@@ -105,9 +118,7 @@ void calib::offsets() {
 	    	book->fill( "tdcRaw", j, tdc );
 
 	    	if(tot <= constants::minTOT || tot >= constants::maxTOT) continue;
-	    		
-	    	// channel 0 on the west side is the reference channel
-	    	double reference = pico->vpdLeWest[0];
+	    
 
 	    	book->fill( "tdc", j, tdc - reference );
 
@@ -125,6 +136,14 @@ void calib::offsets() {
 		cout << "Channel [ " << i << " ] Offset = " << tdcMean->GetBinContent( i  ) << endl;
 		this->initialOffsets[ i ] = tdcMean->GetBinContent( i  );
 	}
+
+	// get the east / west offset
+	TH1D* west = tdc->ProjectionY( "westOffset", 2, 19 );
+	TH1D* east = tdc->ProjectionY( "eastOffset", 20, 38 );
+
+	westMinusEast = ( west->GetMean() - east->GetMean() );
+	
+	cout << "West - East offset: " << westMinusEast << endl; 
 
 	cout << "[calib." << __FUNCTION__ << "] completed in " << elapsed() << " seconds " << endl;
 }
@@ -156,6 +175,8 @@ void calib::binTOT( bool variableBinning ) {
 
 		Int_t nevents = (int)_chain->GetEntries();
 		vector<double> tots[ constants::nChannels];
+
+		cout << "[calib." << __FUNCTION__ << "] Processing " <<  nevents << " events" << endl;
 
 		for(Int_t i=0; i<nevents; i++) {
 	    	_chain->GetEntry(i);
@@ -207,7 +228,7 @@ void calib::binTOT( bool variableBinning ) {
 	        	
 	        	Double_t step = ( constants::maxTOT - constants::minTOT ) / numTOTBins;
 
-	        	for(Int_t j=0; j <= numTOTBins * 5; j++) {
+	        	for(Int_t j=0; j <= numTOTBins; j++) {
 
 	                totBins[ i ][ j ] = ( step * j ) + constants::minTOT; 
 	        	}
@@ -225,13 +246,13 @@ void calib::binTOT( bool variableBinning ) {
 	        	std::sort( tots[i].begin(), tots[i].end());
 	        	
 	        	totBins[ i ][0] = tots[ i ].at(0);
-	        	totBins[ i ][ numTOTBins  ] = constants::maxTOT;
+	        	totBins[ i ][ numTOTBins ] = constants::maxTOT;
 	        	
-	        	for( Int_t j = 1; j< numTOTBins ; j++) {
+	        	for( Int_t j = 1; j < numTOTBins ; j++) {
 
 	        		double d1 = tots[i].at( step * j );
 	        		double d2 = tots[ i ].at( step * (j - 1) );
-
+	        	
 	        		totBins[ i ][ j ] = ( d1 + d2 ) / 2.0;
 	            	
 	        	}	// loop over tot bins
@@ -239,7 +260,7 @@ void calib::binTOT( bool variableBinning ) {
 	      } // end channle not dead
 
 	  	} // end loop channles
-
+	  	
 		for(Int_t i = 0; i< constants::nChannels; i++) {
 			tots[i].clear();
 		}	
@@ -250,8 +271,8 @@ void calib::binTOT( bool variableBinning ) {
 
 double calib::getCorrection( int vpdChannel, double tot ){
 	
-	if ( currentIteration <= 0 )
-		return 0;
+	//if ( currentIteration <= 0 )
+	//	return 0;
 
 	/*if ( spline[ vpdChannel ] ){
 		return spline[ vpdChannel ]->V( tot );
@@ -419,12 +440,14 @@ void calib::outlierRejection( bool reject ) {
 	double vzCut = 40;
 	if ( currentIteration == 0 )
 		vzCut = 40;
-	else if ( currentIteration < 2 )
+	else if ( currentIteration == 1 )
 		vzCut = 20;
-	else if ( currentIteration < 4 )
+	else if ( currentIteration == 2 )
 		vzCut = 15;
-	else
+	else if ( currentIteration == 3 )
 		vzCut = 8;
+	else if ( currentIteration >= 4 )
+		vzCut = 5;
 
 	
 
@@ -525,8 +548,8 @@ void calib::prepareStepHistograms() {
 		sstr.str("");  	sstr << "it" << currentIteration <<  "tdctot";
     	sstr2 << "Channel " << ch << ";tot; tdc"; 
 		TH2D* tmp = new TH2D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-								numTOTBins - 1, totBins[ ch ], 
-								400, -20, 20 
+								numTOTBins , totBins[ ch ], 
+								1000, -20, 20 
 							);
 		book->add( (char*)sstr.str().c_str(), tmp );
 
@@ -535,8 +558,8 @@ void calib::prepareStepHistograms() {
     	sstr << "it" << currentIteration <<  "tdccor";
     	sstr2 << "Channel " << ch << ";tot; tdc"; 
 		tmp = new TH2D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							numTOTBins - 1, totBins[ ch ], 
-							400, -20, 20 
+							numTOTBins , totBins[ ch ], 
+							1000, -20, 20 
 						);
 		book->add( (char*)sstr.str().c_str(), tmp );
 
@@ -545,7 +568,7 @@ void calib::prepareStepHistograms() {
     	sstr.str(""); 		sstr << "it" << currentIteration <<  "tdc";
     	sstr2.str(""); 		sstr2 << "Channel " << ch << "; tdc"; 
 		TH1D* tmp2 = new TH1D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-								400, -10, 10 
+								500, -10, 10 
 							);
 		book->add( (char*)sstr.str().c_str(), tmp2 );
 
@@ -555,7 +578,7 @@ void calib::prepareStepHistograms() {
 		sstr2.str("");		sstr2 << "Channel " << ch << " : 1 - <N>;N; tdc";
 		tmp = new TH2D( 	sstr.str().c_str(), sstr2.str().c_str(), 
 							constants::nChannels-1, 1, constants::nChannels, 
-							200, -20, 20 
+							1000, -20, 20 
 						);
 		book->add( (char*)sstr.str().c_str(), tmp );
 		
@@ -575,7 +598,7 @@ void calib::step( ) {
 	startTimer();
 
 	bool outliers =  config.getAsBool( "outlierRejection" );
-
+	bool removeOffset = config.getAsBool( "removeOffset" );
 	
 	// the data we will use over and over 
 	double tot[ constants::nChannels ];		// tot value
@@ -583,7 +606,6 @@ void calib::step( ) {
 	// correction based on channel and tot value
 	double corr[ constants::nChannels ];	
 	double reference;
-
 
 	// make sure the histograms are ready
 	prepareStepHistograms();
@@ -606,8 +628,14 @@ void calib::step( ) {
     	// perform outlier rejection for this event
     	outlierRejection( outliers );
 
-    	for( int j = constants::startWest; j < constants::endEast; j++) {
+    	float vx = pico->vertexX;
+    	float vy = pico->vertexY;
+    	float vxy = TMath::Sqrt( vx*vx + vy*vy );
+    	if ( vxy > 1 ) continue;
+ 		   	
 
+    	for( int j = constants::startWest; j < constants::endEast; j++) {
+    		
     		if ( deadDetector[ j ] ) continue;
 			if ( !useDetector[ j ] ) continue;
 
@@ -619,6 +647,7 @@ void calib::step( ) {
   			corr[ j ] = getCorrection( j, tot[ j ] );
     	}
     	reference = pico->vpdLeWest[0];
+
     	
 		double tdcSumWest;
 		double tdcSumEast;
@@ -646,7 +675,9 @@ void calib::step( ) {
 				if ( deadDetector[ k ] ) continue;
 				if ( !useDetector[ k ] ) continue;
 
-	    		double offset = this->initialOffsets[ k ];
+				double offset = 0;
+				if ( removeOffset )
+	    			offset = this->initialOffsets[ k ];
 	    		
 
 	    		if(tot[ k ] <= constants::minTOT || tot[ k ] > constants::maxTOT) continue;
@@ -662,8 +693,11 @@ void calib::step( ) {
 
 			}	// loop on vpdChannel k
 			
-			double offset = this->initialOffsets[ j ];
-			
+			double offset = 0;
+			if ( removeOffset )
+	    		offset = this->initialOffsets[ j ];
+	    		
+
 			// require the tot is within range
 	    	if(tot[ j ] <= constants::minTOT || tot[ j ] > constants::maxTOT) continue;
 
@@ -675,7 +709,6 @@ void calib::step( ) {
 	 			string old = book->cd( "initialOffset" );
 		    	book->fill( "correctedOffsets", j, tdc[ j ] - reference - offset );
 		    	book->cd( old );
-
 		    }
 
 	    	double avg = (tdcSumWest / countWest );
@@ -736,6 +769,12 @@ void calib::makeCorrections(){
 
 	stringstream sstr;
 
+	bool differential = config.getAsBool( "differential" );
+	string hName = "tdctot";
+
+	if ( differential )
+		hName = "tdccor";
+
 	// get the corrections for the next iteration 
 	for( int k = constants::startWest; k < constants::endEast; k++) {
 
@@ -746,7 +785,8 @@ void calib::makeCorrections(){
 		sstr.str("");		sstr << "channel" << k;
 		book->cd( sstr.str() );
 
-		sstr.str("");   	sstr << "it" << currentIteration <<  "tdctot";
+
+		sstr.str("");   	sstr << "it" << currentIteration <<  hName;
 	    TH2D* tmp = (TH2D*) book->get( sstr.str() );
 
 	    sstr.str("");		sstr << "channel" << k << "/fit";
@@ -755,7 +795,7 @@ void calib::makeCorrections(){
 		// do the fit
 	    tmp->FitSlicesY();
 
-	    sstr.str("");    	sstr << "it" << currentIteration <<  "tdctot" << "_1";
+	    sstr.str("");    	sstr << "it" << currentIteration <<  hName << "_1";
 	    TH1D* tmp2 = (TH1D*) gDirectory->FindObject( sstr.str().c_str() );
 
 	    sstr.str("");	sstr << "channel" << k;
@@ -768,7 +808,10 @@ void calib::makeCorrections(){
 
 	    // histogram bin 0 is underflow, index 1 is the first real bin
 	    for ( int ib = 1; ib <= numTOTBins ; ib ++ ){
-	    	correction[ k ][ ib  ] = cor->GetBinContent( ib );
+	    	if ( currentIteration == 0 || !differential )
+	    		correction[ k ][ ib  ] = cor->GetBinContent( ib );
+	    	else if ( differential && currentIteration >= 1 )
+	    		correction[ k ][ ib  ] += cor->GetBinContent( ib );
 	    }
 
 
@@ -783,6 +826,8 @@ void calib::writeParameters( string outName ){
 	ofstream f;
 	f.open( outName.c_str() );
 
+	bool removeOffset = config.getAsBool( "removeOffset" );
+
 	for ( int j = constants::startWest; j < constants::endEast; j++ ){
 
 		f << (j + 1) << endl;
@@ -793,7 +838,14 @@ void calib::writeParameters( string outName ){
 		}
 		f << endl;
 		for ( int i = 0; i <= numTOTBins; i++ ){
-			f << (correction[ j ][ i + 1 ] +  initialOffsets[ j ] ) << " ";
+			double off = 0;
+			if ( removeOffset ){
+				off = initialOffsets[ j ];
+				if ( j >= constants::startEast && j < constants::endEast )
+					off += westMinusEast;
+			}
+
+			f << (correction[ j ][ i + 1 ] + off ) << " ";
 		}
 		f << endl;
 	} 
@@ -853,15 +905,17 @@ void calib::readParameters( string inName ){
 
 	infile.close();
 
-	if ( good )
+	if ( good ){
 		cout << "[calib." << __FUNCTION__ <<  "] " << " Read parameters for all channels " << endl;
+		currentIteration = 5;
+	}
 
 	cout << "[calib." << __FUNCTION__ <<  "] " << " completed in " << elapsed() << " seconds " << endl;
 }
 
 void calib::stepReport() {
 
-	if ( config.getAsString( "reportOutput" ).length() < 5 ){
+	/*if ( config.getAsString( "reportOutput" ).length() < 5 ){
 		return;
 	}
 
@@ -872,6 +926,6 @@ void calib::stepReport() {
 	book->cd( "initialOffsets" );
 	TH2D* hInitial = (TH2D*) book->get( "tdc" )->Clone( "initialOffset" );
 	hInitial->Draw("colz");
-	
+	*/
 
 }
