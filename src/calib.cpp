@@ -9,12 +9,20 @@
 
 /*
 *	Constructor
+*
+* 	Parameters:
+*	chain:	The chain object containing all data compatible with the TOFrPicoDST format
+*	nIterations:	Max number of iterations to run
+*	xmlConfig:		The xml configuration defining key aspects of the calibration
+*					such as number of tot bins to use, data location etc. See repo Readme
+*					for a sample configuration.		
 */
 calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	cout << "[calib.calib] " << endl;
 	
 	config = con;
 
+	// default number of tot bins is defined in constants in case non is given in config file
 	numTOTBins = constants::numTOTBins;
 	
 	// set the number of tot bins from the config if given
@@ -37,11 +45,14 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 		initialOffsets[ j ] = 0;
 	}
 	
-
+	// set the maximum number of iterations
 	maxIterations = nIterations;
-	book = new histoBook( config.getAsString( "rootOutput" ) );
+	// create the histogram book
+	book = new histoBook( ( config.getAsString( "baseName" ) + config.getAsString( "rootOutput" ) ) );
+
 	_chain = chain;
 	pico = new TOFrPicoDst( _chain );
+
 	gStyle->SetOptStat( 111 );
 
 	currentIteration = 0;
@@ -110,11 +121,14 @@ void calib::offsets() {
 			if ( nHits < constants::minHits ) 
 				continue;
 
+			double tpcZ = pico->vertexZ;
+    		if ( pico->nTofHits <= 1 ) continue;
+    		if ( TMath::Abs( tpcZ ) > 100 ) continue;
+
 			double tdc = pico->channelTDC( j );
 	    	double tot = pico->channelTOT( j );
 
-	    	
-
+	    
 	    	book->fill( "tdcRaw", j, tdc );
 
 	    	if(tot <= constants::minTOT || tot >= constants::maxTOT) continue;
@@ -133,8 +147,12 @@ void calib::offsets() {
   	book->add( "tdcMean", tdcMean );
 	
 	for ( int i = constants::startWest; i < constants::endEast; i++ ){
-		cout << "Channel [ " << i << " ] Offset = " << tdcMean->GetBinContent( i  ) << endl;
-		this->initialOffsets[ i ] = tdcMean->GetBinContent( i  );
+		TH1D* tmp = tdc->ProjectionY( "tmp", i, i );
+		cout << "Channel [ " << i << " ] Offset = " << tmp->GetMean() << endl;
+
+		this->initialOffsets[ i ] = tmp->GetMean();
+
+		delete tmp;
 	}
 
 	// get the east / west offset
@@ -313,19 +331,19 @@ void calib::zVtxPairs(){
 	stringstream sstr;
 	book->cd( "vtxPairs");
 
-	sstr.str("");	sstr << currentIteration << "TPCvsVPD";
+	sstr.str("");	sstr << "it" << currentIteration << "TPCvsVPD";
 	book->make2D( sstr.str(), "TPC vs VPD zVertex", 200, -200, 200, 200, -200, 200 );
 
-	sstr.str(""); 	sstr << currentIteration << "sumTPCvsVPD";
+	sstr.str(""); 	sstr << "it" << currentIteration << "sumTPCvsVPD";
 	book->make2D( sstr.str(), 	"TPC vs VPD zVertex", 	200, -200, 200, 200, -200, 200 );
 
-	sstr.str(""); 	sstr << currentIteration << "sumTPCminusVPD";
+	sstr.str(""); 	sstr << "it" << currentIteration << "sumTPCminusVPD";
 	book->make1D( sstr.str(), "TPC - VPD zVertex", 	600, -200, 200 );
 	
-	sstr.str(""); 	sstr << currentIteration << "TPCminusVPD";
+	sstr.str(""); 	sstr << "it" << currentIteration << "TPCminusVPD";
 	book->make1D( sstr.str(), 	"TPC - VPD zVertex", 	600, -200, 200 );
 
-	sstr.str(""); 	sstr << currentIteration << "offset";
+	sstr.str(""); 	sstr << "it" << currentIteration << "offset";
 	book->make2D( sstr.str(), 	"offset", constants::nChannels-1, 1, constants::nChannels, 200, -100, 100 );
 
 
@@ -368,6 +386,7 @@ void calib::zVtxPairs(){
 		    double corWest = getCorrection( j, totWest );
 		    tdcWest -= corWest;
 
+
 		    sumWest += tdcWest;
 		    countWest++;
 
@@ -379,6 +398,7 @@ void calib::zVtxPairs(){
 
 		    	tdcEast -= this->initialOffsets[ k ];
 
+
 		    	if( totEast <= constants::minTOT || totEast > constants::maxTOT) continue;
 
 		    	double corEast = getCorrection( k, totEast );
@@ -386,19 +406,19 @@ void calib::zVtxPairs(){
 
 		    	if ( j == constants::startWest ){
 
-		    		sstr.str(""); sstr << currentIteration << "offset";
+		    		sstr.str(""); sstr << "it" << currentIteration << "offset";
 		    		book->fill( sstr.str(), k, tdcEast - reference );
 
 		    		sumEast += tdcEast;
 		    		countEast++;
 		    	}
 
-		    	double vpdZ = constants::c * ( tdcEast - tdcWest) / 2.0;
+		    	double vpdZ = (constants::c * ( tdcEast - tdcWest)) / 2.0;
 
-		    	sstr.str("");	sstr << currentIteration << "TPCvsVPD";
+		    	sstr.str("");	sstr << "it" << currentIteration << "TPCvsVPD";
 		    	book->fill( sstr.str(), tpcZ, vpdZ );
 		    	
-		    	sstr.str("");	sstr << currentIteration << "TPCminusVPD";
+		    	sstr.str("");	sstr << "it" << currentIteration << "TPCminusVPD";
 		    	book->fill( sstr.str(), (tpcZ - vpdZ ) );   		
 
     		}
@@ -411,10 +431,10 @@ void calib::zVtxPairs(){
     	if ( countEast >= 1 && countWest >= 1 ){
     		double vpdZ = constants::c * ( (sumEast / countEast) - (sumWest / countWest) ) / 2.0;
 
-    		sstr.str("");	sstr << currentIteration << "sumTPCvsVPD";
+    		sstr.str("");	sstr << "it" << currentIteration << "sumTPCvsVPD";
     		book->fill( sstr.str(), tpcZ, (vpdZ ) ); 
 
-    		sstr.str("");	sstr << currentIteration << "sumTPCminusVPD";
+    		sstr.str("");	sstr << "it" << currentIteration << "sumTPCminusVPD";
     		book->fill( sstr.str(), (tpcZ - vpdZ) );
     	}
 
@@ -821,7 +841,12 @@ void calib::makeCorrections(){
 
 }
 
-void calib::writeParameters( string outName ){
+void calib::writeParameters(  ){
+
+	string outName = config.getAsString( "baseName" ) + config.getAsString( "paramsOutput" );
+
+	if ( outName.length() <= 4 )
+		return;
 
 	ofstream f;
 	f.open( outName.c_str() );
@@ -854,8 +879,9 @@ void calib::writeParameters( string outName ){
 
 }
 
-void calib::readParameters( string inName ){
+void calib::readParameters(  ){
 
+	string inName = config.getAsString( "baseName" ) + config.getAsString( "paramsInput" );
 
 	cout << "[calib." << __FUNCTION__ << "] " << " Start " << endl;
 	
@@ -915,17 +941,6 @@ void calib::readParameters( string inName ){
 
 void calib::stepReport() {
 
-	/*if ( config.getAsString( "reportOutput" ).length() < 5 ){
-		return;
-	}
-
-	string fn = config.getAsString( "reportOutput" );
-
-	TCanvas can( "can", "can", 600, 800 );
-
-	book->cd( "initialOffsets" );
-	TH2D* hInitial = (TH2D*) book->get( "tdc" )->Clone( "initialOffset" );
-	hInitial->Draw("colz");
-	*/
 
 }
+

@@ -32,6 +32,8 @@ private:
 
 	// the initial offsets for each channel relative to the 1st channel on the west side
 	double initialOffsets[ constants::nChannels ];
+	// the west - east offset
+	double westMinusEast;
 
 	// number of tot bins to use
 	// defaults to constants::numTOTBins if not set in config
@@ -99,8 +101,8 @@ public:
 	// get the bin for a given tot value ona given channel
 	int binForTOT( int vpdChannel, double tot );
 
-	void writeParameters( string outName = "VPD.dat" );
-	void readParameters( string inName = "VPD.dat");
+	void writeParameters(  );
+	void readParameters( );
 	
 	// reports
 	void stepReport();

@@ -26,6 +26,7 @@ int main( int argc, char* argv[] ) {
     xmlConfig config( argv[ 1 ] );
     cout << "[CONFIG] File: " << argv[ 1 ] << endl;
     cout << "[CONFIG]" << setw(20) << left << " jobType is "        << config.getAsString( "jobType" ) << endl;
+    cout << "[CONFIG]" << setw(20) << " baseName "        << config.getAsString( "baseName" ) << endl;
     cout << "[CONFIG]" << setw(20) << " rootOutput "      << config.getAsString( "rootOutput" ) << endl;
     cout << "[CONFIG]" << setw(20) << " dataDir "         << config.getAsString( "dataDir" ) << endl;
     cout << "[CONFIG]" << setw(20) << " variableBinning " << config.getAsString( "variableBinning" ) << endl;
@@ -58,7 +59,7 @@ int main( int argc, char* argv[] ) {
 
     if ( jobType == (string)"genReport" ){
 
-        vpdCalib.readParameters( config.getAsString( "paramsInput" ) );
+        vpdCalib.readParameters(  );
     
         vpdCalib.zVtxPairs();
 
@@ -68,7 +69,6 @@ int main( int argc, char* argv[] ) {
         // determine the variable binning in tot space
         vpdCalib.binTOT( config.getAsBool( "variableBinning")  );     
         
-
         // get the inital offsets
         vpdCalib.offsets();
 
@@ -84,7 +84,7 @@ int main( int argc, char* argv[] ) {
             vpdCalib.zVtxPairs();
         
         // write out the parameters file
-        vpdCalib.writeParameters( config.getAsString( "paramsOutput" ) );
+        vpdCalib.writeParameters(  );
         
     }
 

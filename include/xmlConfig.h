@@ -8,6 +8,8 @@
 #include <string>
 #include <cerrno>
 #include <sstream>
+#include <algorithm>
+
 
 using namespace std;
 using namespace rapidxml;
