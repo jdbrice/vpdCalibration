@@ -40,6 +40,7 @@ int main( int argc, char* argv[] ) {
     cout << "[CONFIG]" << setw(20) << " differential "    << config.getAsString( "differential" ) << endl;
     cout << "[CONFIG]" << setw(20) << " compareVpdTPC "   << config.getAsString( "compareVpdTPC" ) << endl;
 
+
     string jobType = config.getAsString( "jobType" );
 
     /*   Load the files into the chain */
@@ -84,7 +85,7 @@ int main( int argc, char* argv[] ) {
             vpdCalib.zVtxPairs();
         
         // write out the parameters file
-        vpdCalib.writeParameters(  );
+        //vpdCalib.writeParameters(  );
         
     }
 

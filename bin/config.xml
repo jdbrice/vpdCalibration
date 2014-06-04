@@ -2,24 +2,27 @@
 
 	<jobType>calibrate</jobType>
 
-	<rootOutput>test/test.root</rootOutput>
+	<rootOutput>qa.root</rootOutput>
 	
-	<variableBinning>1</variableBinning>
+	<variableBinning>true</variableBinning>
 
-	<dataDir>/star/institutions/rice/jdb/run14AuAu15TofCalibration/TofCalibration/geomAlign/t14Data0/output/</dataDir>
+	<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>
 	
-	<maxFiles>200</maxFiles>
+	<maxFiles>25</maxFiles>
 
 	<numIterations>1</numIterations>
 
-	<paramsOutput>test/NULL.dat</paramsOutput>
+	<paramsOutput>params.dat</paramsOutput>
 
-	<removeOffset>1</removeOffset>
+	<removeOffset>true</removeOffset>
 
-	<outlierRejection>1</outlierRejection>
+	<outlierRejection>false</outlierRejection>
 
-	<numTOTBins>25</numTOTBins>
+	<numTOTBins>10</numTOTBins>
 
-	<reportOutput>test/qa.pdf</reportOutput>
+	<reportOutput>qa.pdf</reportOutput>
+
+	<compareVpdTPC>false</compareVpdTPC>
+
 
 </config>

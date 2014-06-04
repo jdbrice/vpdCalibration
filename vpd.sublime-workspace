@@ -4,6 +4,90 @@
 		"selected_items":
 		[
 			[
+				"Set",
+				"SetOptStat"
+			],
+			[
+				"use",
+				"useDetector"
+			],
+			[
+				"star",
+				"startWest"
+			],
+			[
+				"cutCou",
+				"cutCountEast"
+			],
+			[
+				"cutC",
+				"cutCount"
+			],
+			[
+				"cut",
+				"cutCountWest"
+			],
+			[
+				"cutSu",
+				"cutSumWest"
+			],
+			[
+				"cutCount",
+				"cutCountWest"
+			],
+			[
+				"out",
+				"outlierCut"
+			],
+			[
+				"ou",
+				"outlierCut"
+			],
+			[
+				"east",
+				"eastIsGood"
+			],
+			[
+				"west",
+				"westIsGood"
+			],
+			[
+				"tdcSum",
+				"tdcSumWest"
+			],
+			[
+				"initi",
+				"initialOffsets"
+			],
+			[
+				"sta",
+				"startEast"
+			],
+			[
+				"start",
+				"startEast"
+			],
+			[
+				"West",
+				"westMinusEast"
+			],
+			[
+				"end",
+				"endEast"
+			],
+			[
+				"st",
+				"startWest"
+			],
+			[
+				"td",
+				"tdctot"
+			],
+			[
+				"getA",
+				"getAsBool"
+			],
+			[
 				"corr",
 				"correction"
 			],
@@ -52,14 +136,6 @@
 				"outliers"
 			],
 			[
-				"out",
-				"outlierRejection"
-			],
-			[
-				"ou",
-				"outlierRejection"
-			],
-			[
 				"re",
 				"removeOffset"
 			],
@@ -78,14 +154,6 @@
 			[
 				"in",
 				"inline-block"
-			],
-			[
-				"star",
-				"startEast"
-			],
-			[
-				"start",
-				"startWest"
 			],
 			[
 				"arg",
@@ -152,10 +220,6 @@
 				"nevents"
 			],
 			[
-				"sta",
-				"startTimer"
-			],
-			[
 				"startT",
 				"startTimer"
 			],
@@ -174,10 +238,6 @@
 			[
 				"numTOTBins",
 				"numTOTBins"
-			],
-			[
-				"end",
-				"endEast"
 			],
 			[
 				"tof",
@@ -243,19 +303,11 @@
 	},
 	"buffers":
 	[
-		{
-			"file": "bin/run13/wOffset/config.xml",
-			"settings":
-			{
-				"buffer_size": 529,
-				"line_ending": "Unix"
-			}
-		}
 	],
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 54.0,
+		"height": 392.0,
 		"selected_items":
 		[
 			[
@@ -267,7 +319,7 @@
 				"Package Control: Remove Package"
 			]
 		],
-		"width": 449.0
+		"width": 404.0
 	},
 	"console":
 	{
@@ -284,12 +336,33 @@
 	},
 	"file_history":
 	[
+		"/home/daniel/bnl/tmp/detRes.C",
+		"/home/daniel/bnl/tmp/testInterpolation.cxx",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/auau15.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/vpd.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/allroot.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/Makefile",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/refresh.sh",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/detRes.C",
+		"/home/daniel/bnl/root/config.log",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/wo/config.xml",
+		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_class.h",
+		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_utils.cxx",
+		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_loop.cxx",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/w/config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/plotCorrections.C",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/compare.C",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/wo/config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/w/config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/wOffset/betaConfig.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/xmlConfig.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/xmlConfig.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/wOffset/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/woOffset/config.xml",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/vpd.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14auau15_wOffset/config.xml",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/config.xml",
 		"/home/daniel/Dropbox/WORK/vpd/billsMethod/cal_class.h",
 		"/home/daniel/Dropbox/WORK/vpd/billsMethod/cal_setup.cxx",
 		"/home/daniel/Dropbox/WORK/vpd/billsMethod/cal_loop.cxx",
@@ -373,12 +446,9 @@
 		"/tmp/fz3temp-1/schedule_nTupleDay75And80.xml",
 		"/home/daniel/.ssh/config",
 		"/home/daniel/star/work/vpd/script/offsets.C",
-		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_class.h",
-		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_utils.cxx",
 		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_setup.cxx",
 		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_main.cxx",
 		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_loop_ORIG.cxx",
-		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_loop.cxx",
 		"/home/daniel/STAR/WORK/vpd/src/vpd",
 		"/home/daniel/STAR/WORK/vpd/include/calib.h",
 		"/home/daniel/STAR/WORK/vpd/include/allroot.h",
@@ -393,25 +463,7 @@
 		"/home/daniel/STAR/WORK/FromBill/vpdPlots/demo/channelPlots.C",
 		"/home/daniel/STAR/WORK/vpd/include/histoBook.h",
 		"/home/daniel/STAR/WORK/vpd/doCalib.cpp",
-		"/home/daniel/STAR/WORK/vpd/src/Makefile",
-		"/home/daniel/STAR/WORK/vpd/src/k",
-		"/home/daniel/STAR/WORK/FromBill/vpdPlots/demo/channelPlots",
-		"/tmp/rsub-NiSEPf/nTuple.C",
-		"/home/daniel/STAR/WORK/particleId/src/file.list",
-		"/home/daniel/STAR/WORK/particleId/src/checknew.cpp",
-		"/home/daniel/STAR/WORK/particleId/src/small.list",
-		"/home/daniel/STAR/WORK/particleId/src/test.list",
-		"/home/daniel/STAR/WORK/particleId/StBTofNtupleMaker/StBTofCellData.h",
-		"/home/daniel/STAR/WORK/particleId/StBTofNtupleMaker/StBTofNtupleMaker.h",
-		"/tmp/rsub-z9Yd_q/nTuple.C",
-		"/tmp/rsub-zaowV5/nTuple.C",
-		"/home/daniel/STAR/WORK/particleId/StBTofNtupleMaker/StBTofNtupleMaker.cxx",
-		"/tmp/rsub-DEdtZx/schedule.xml",
-		"/tmp/rsub-3xAEa7/schedule.xml",
-		"/tmp/rsub-ErzLEz/schedule.xml",
-		"/home/daniel/.bash_profile",
-		"/tmp/rsub-kVuCZY/sublime",
-		"/home/daniel/STAR/WORK/particleId/src/Makefile"
+		"/home/daniel/STAR/WORK/vpd/src/Makefile"
 	],
 	"find":
 	{
@@ -429,6 +481,21 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"hdt_end_n",
+			"gsl",
+			"GSL",
+			"hdt_A",
+			"cons",
+			"hdt_end_n",
+			"h1mn_n",
+			"DTOUTLIERCUTlower",
+			"DTOUTLIERCUTlower0",
+			"iAlgo",
+			"DTOUTLIERCUTupper",
+			"DTOUTLIERCUTlower",
+			"Get(",
+			"dir",
+			"gDir",
 			"NREQUIRE",
 			"DTOUTLIERCUTlower",
 			"ff",
@@ -542,42 +609,14 @@
 		"reverse": false,
 		"show_context": true,
 		"use_buffer2": true,
-		"whole_word": true,
+		"whole_word": false,
 		"wrap": true
 	},
 	"groups":
 	[
 		{
-			"selected": 0,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "bin/run13/wOffset/config.xml",
-					"settings":
-					{
-						"buffer_size": 529,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								519,
-								519
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/XML/XML.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 575.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				}
 			]
 		}
 	],
@@ -612,6 +651,10 @@
 		]
 	},
 	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 148.0
+	},
 	"replace":
 	{
 		"height": 70.0

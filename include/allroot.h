@@ -27,7 +27,9 @@
 #include "TGraphErrors.h"
 #include "TPostScript.h"
 #include "TString.h"
- #include "TLeaf.h"
+#include "TLeaf.h"
+#include "TLegend.h"
+#include "Math/Interpolator.h"
 
 using namespace std; 
 

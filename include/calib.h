@@ -20,6 +20,9 @@ class calib{
 
 private:
 
+	// the canvas used to draw report hidtos
+	TCanvas* can;
+
 	// the total number of iterations to try
 	uint maxIterations;
 
@@ -55,6 +58,9 @@ private:
 	// calculated in binTOT
 	Double_t * totBins[ constants::nChannels ];
 
+	// Interpolation based corrections
+	ROOT::Math::Interpolator* spline[ constants::nChannels ];
+
 
 	// outlier rejection
 	// for each event we will want 
@@ -63,6 +69,9 @@ private:
 	// list of detectors with prompt hits for this event and usable in calibration
 	// calculated for each event in outlierRejection()
 	bool useDetector[ constants::nChannels ];
+
+	bool westIsGood;
+	bool eastIsGood;
 
 
 	// use for timing
@@ -79,6 +88,10 @@ public:
 
 	// destructor
 	~calib();
+
+	// finish the calibration by conducting fits etc.
+
+	void finish();
 
 	// calculates the inital offsets of each channel
 	void offsets( );
@@ -106,6 +119,7 @@ public:
 	
 	// reports
 	void stepReport();
+	void savePage();
 
 protected:
 
@@ -114,6 +128,10 @@ protected:
 	// performs outlier rejection by selecting detectors on the east and west only when they produce
 	// a z vertex that is consistent with a prompt particle ( ie consistent with TPC vertex ).
 	void outlierRejection( bool reject = true );
+
+	void averageN();
+
+	Double_t detectorResolution(Double_t *x, Double_t *par);
 
 	/*
 	*	Utility functions that should be moved soon

@@ -133,10 +133,7 @@ void TOFrPicoDst::Init(TTree *tree)
    fChain->SetBranchAddress("nSigP", nSigP, &b_nSigP);
    fChain->SetBranchAddress("tofCorr", tofCorr, &b_tofCorr);
    fChain->SetBranchAddress("beta", beta, &b_beta);
-   //fChain->SetBranchAddress("T0", &T0, &b_T0);
-   //fChain->SetBranchAddress("vzVpd", &vzVpd, &b_vzVpd);
-   //fChain->SetBranchAddress("Iwest", &Iwest, &b_Iwest);
-   //fChain->SetBranchAddress("Ieast", &Ieast, &b_Ieast);
+
 
    Notify();
 }

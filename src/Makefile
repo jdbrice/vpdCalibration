@@ -13,7 +13,7 @@ ROOTGLIBS     	= $(shell root-config --glibs)
 
 # Custom Project includes and libs
 includes		= -I../include -I. -I$(ROOTSYS)/include -I$(ROOTDEV)/include 
-libraries 			= 	$(ROOTLIBS) -lGui -lHtml -lGuiHtml $(CERNLIBS) $(SYSLIBS) \
+libraries 			= 	$(ROOTLIBS) -lGui -lHtml -lGuiHtml -lMathCore -lMathMore $(CERNLIBS) $(SYSLIBS) \
 #					$(ROOTDEV)/lib/libSplineFit.so \
 #					$(ROOTDEV)/lib/libTwoPad.so
 
