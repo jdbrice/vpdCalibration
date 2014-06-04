@@ -15,6 +15,7 @@ histoBook::histoBook( string name ){
 	file = new TFile( filename.c_str(), "recreate" );
 	file->cd();
 
+	globalStyle();
 
 }
 // destructor
@@ -118,3 +119,76 @@ void histoBook::fill( string name, double bin, double weight ){
 
 
 
+
+
+void histoBook::globalStyle(){
+
+	gStyle->SetCanvasColor(kWhite);     // background is no longer mouse-dropping white
+  	gStyle->SetPalette(1,0);            // blue to red false color palette. Use 9 for b/w
+  	gStyle->SetCanvasBorderMode(0);     // turn off canvas borders
+  	gStyle->SetPadBorderMode(0);
+  	gStyle->SetPaintTextFormat("5.2f");  // What precision to put numbers if plotted with "TEXT"
+
+  	// For publishing:
+  	gStyle->SetLineWidth(2.);
+  	//gStyle->SetTextSize(1.1);
+  	gStyle->SetLabelSize(0.06,"xy");
+  	gStyle->SetTitleSize(0.06,"xy");
+  	gStyle->SetTitleOffset(1.2,"x");
+  	gStyle->SetTitleOffset(1.0,"y");
+  	gStyle->SetPadTopMargin(0.1);
+  	gStyle->SetPadRightMargin(0.1);
+  	gStyle->SetPadBottomMargin(0.16);
+  	gStyle->SetPadLeftMargin(0.12);
+
+}
+
+
+histoBook* histoBook::style( string histName ){
+	styling = histName;
+	return this;
+}
+histoBook* histoBook::set( string param, ...  ){
+
+	transform(param.begin(), param.end(), param.begin(), ::tolower);
+	int n = 0;
+	
+	va_list ap;
+    
+    TH1* h = get( styling );
+    if ( h ){
+
+	    if ( "title" == param ){
+	    	va_start(ap, 1);
+	    	char* t = va_arg(ap, char*);
+	    	h->SetTitle( t );
+	    } else if ( "linecolor" == param ){
+	    	va_start(ap, 1);
+	    	h->SetLineColor( va_arg(ap, int) );
+	    } else if ( "domain" == param ){
+	    	va_start(ap, 2);
+	    	double min = va_arg(ap, double);
+	    	double max = va_arg(ap, double);
+	    	h->GetXaxis()->SetRangeUser( min, max );
+	    } else if ( "range" == param ){
+	    	va_start(ap, 2);
+	    	double min = va_arg(ap, double);
+	    	double max = va_arg(ap, double);
+	    	h->GetYaxis()->SetRangeUser( min, max );
+	    } else if ( "markercolor" == param ) {
+	    	va_start(ap, 1);
+	    	h->SetMarkerColor( va_arg(ap, int) );
+	    } else if ( "markerstyle" == param ) {
+	    	va_start(ap, 1);
+	    	h->SetMarkerStyle( va_arg(ap, int) );
+	    }
+
+    	va_end(ap);
+    }
+    
+    
+    
+
+
+	return this;
+}

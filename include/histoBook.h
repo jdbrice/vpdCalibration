@@ -6,8 +6,10 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <stdarg.h>
 
 using namespace std;
+
 
 class histoBook {
 
@@ -20,6 +22,8 @@ private:
 	string filename;
 	
 	TFile *file;
+
+	string styling;
 
 
 public:
@@ -42,6 +46,13 @@ public:
 	TDirectory* getDirectory( ) { return gDirectory; }
 
 	void save();
+
+	histoBook* style( string hName );
+	histoBook* set( string param, ... );
+	//vector<string> 
+
+private:
+	void globalStyle();
 
 };
 

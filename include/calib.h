@@ -6,6 +6,7 @@
 #include "histoBook.h"
 #include "constants.h"
 #include "TOFrPicoDst.h"
+#include "splineMaker.h"
 #include <vector>
 
 // clock_t, clock, CLOCKS_PER_SEC 
@@ -14,6 +15,7 @@
 // for testing if stdout is interactive or pipe / file
 #include "unistd.h"
 #include "xmlConfig.h"
+#include "utils.h"
 
 
 class calib{
@@ -59,7 +61,7 @@ private:
 	Double_t * totBins[ constants::nChannels ];
 
 	// Interpolation based corrections
-	ROOT::Math::Interpolator* spline[ constants::nChannels ];
+	splineMaker * spline[ constants::nChannels ];
 
 
 	// outlier rejection

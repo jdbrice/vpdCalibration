@@ -4,7 +4,7 @@ project = vpd
 # source suffix
 source = .cpp 
 # object files to make
-objects = vpd.o histoBook.o calib.o chainLoader.o TOFrPicoDst.o xmlConfig.o
+objects = vpd.o histoBook.o calib.o chainLoader.o TOFrPicoDst.o xmlConfig.o splineMaker.o utils.o
 
 # ROOT libs and includes
 ROOTCFLAGS    	= $(shell root-config --cflags)
@@ -17,7 +17,7 @@ libraries 			= 	$(ROOTLIBS) -lGui -lHtml -lGuiHtml -lMathCore -lMathMore $(CERNL
 #					$(ROOTDEV)/lib/libSplineFit.so \
 #					$(ROOTDEV)/lib/libTwoPad.so
 
-cxx 		= g++
+cxx 		= g++ -std=c++0x
 flags 		= -Wall -g $(ROOTCFLAGS) $(includes) -Wno-write-strings -m32 -fno-inline
 compile 	= $(cxx) $(flags) -c 
 ldFlags  	= -m32 -g

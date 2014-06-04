@@ -5,6 +5,7 @@
 #include "histoBook.h"
 #include "chainLoader.h"
 #include "calib.h"
+#include "utils.h"
 
 
 
@@ -21,6 +22,7 @@ int main( int argc, char* argv[] ) {
        	return 0;
 
     } 
+
 
     /* Give a summary of config file */
     xmlConfig config( argv[ 1 ] );
@@ -39,6 +41,7 @@ int main( int argc, char* argv[] ) {
     cout << "[CONFIG]" << setw(20) << " numTOTBins "      << config.getAsString( "numTOTBins" ) << endl;
     cout << "[CONFIG]" << setw(20) << " differential "    << config.getAsString( "differential" ) << endl;
     cout << "[CONFIG]" << setw(20) << " compareVpdTPC "   << config.getAsString( "compareVpdTPC" ) << endl;
+    cout << "[CONFIG]" << setw(20) << " splineType "   << config.getAsString( "splineType" ) << endl;
 
 
     string jobType = config.getAsString( "jobType" );

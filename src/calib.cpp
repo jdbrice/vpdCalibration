@@ -57,7 +57,7 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 
 	currentIteration = 0;
 
-	gErrorIgnoreLevel=kError;
+	//gErrorIgnoreLevel=kError;
 	// create a canvas for report building 
 	can = new TCanvas( "c", "canvas", 0, 0, 800, 1024);
 	can->Print( ( config.getAsString( "baseName" ) + config.getAsString( "reportOutput" ) + "[" ).c_str() );
@@ -82,8 +82,9 @@ calib::~calib() {
 	for ( int j = 0; j < constants::nChannels; j++){
 		delete [] correction[j];
 		delete [] totBins[j];
-		if ( spline[ j ] )
+		if ( spline [ j ] )
 			delete spline[ j ];
+	
 	}
 
 
@@ -110,7 +111,7 @@ void calib::offsets() {
 	cout << "[calib." << __FUNCTION__ << "] Loaded: " << nevents << " events " << endl;
 
 	book->cd( "initialOffset" );
-	book->make2D( "tdc", "tdc relative to channel 0", constants::nChannels-1, 0.5, constants::nChannels + 0.5, 400, -100, 100 );
+	book->make2D( "tdc", "tdc relative to channel 0", constants::nChannels-1, 0, constants::nChannels, 400, -100, 100 );
 	book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels-1, 1, constants::nChannels, 1000, 0, 51200 );
 
 	cout << "[calib." << __FUNCTION__ << "] Made Histograms " << endl;
@@ -191,10 +192,10 @@ void calib::offsets() {
 	
 	can->Divide(1, 2);
 	can->cd(1);
+
+	book->style( "tdc" )->set( "title", "Channel TDC wrt West Channel 1")->set( "range", -15.0, 15.0 );
+	book->style( "tdcMean" )->set( "title", "Channel TDC wrt West Channel 1")->set( "range", -15.0, 15.0 );
 	
-	tdcMean->SetLineColor( 2 );
-	tdcMean->SetMarkerStyle( 10 );
-	tdcMean->SetMarkerColor( 2 );
 	tdc->Draw(  );	
 	tdcMean->Draw("same");	
 
@@ -347,9 +348,9 @@ double calib::getCorrection( int vpdChannel, double tot ){
 	//if ( currentIteration <= 0 )
 	//	return 0;
 
-	/*if ( spline[ vpdChannel ] ){
-		return spline[ vpdChannel ]->V( tot );
-	}*/
+	if ( spline[ vpdChannel ] && spline[ vpdChannel ]->getSpline() ){
+		return spline[ vpdChannel ]->getSpline()->Eval( tot );
+	}
 	
 	int totBin = binForTOT( vpdChannel, tot ); 
 	
@@ -433,7 +434,7 @@ void calib::zVtxPairs(){
     	double countWest = 0;
 
     	double corWest;
-    	for ( uint j = constants::startWest; j < constants::endWest; j++ ){
+    	for ( int j = constants::startWest; j < constants::endWest; j++ ){
     		if ( deadDetector[ j ] ) continue;
     		if ( pico->numHits( j ) < constants::minHits ) continue;
     		double tdcWest = pico->channelTDC( j );
@@ -450,7 +451,7 @@ void calib::zVtxPairs(){
 		    sumWest += tdcWest;
 		    countWest++;
 
-    		for ( uint k = constants::startEast; k < constants::endEast; k++ ){
+    		for ( int k = constants::startEast; k < constants::endEast; k++ ){
     			if ( deadDetector[ k ] ) continue;
     			if ( pico->numHits( k ) < constants::minHits ) continue;
 				double tdcEast = pico->channelTDC( k );
@@ -509,7 +510,7 @@ void calib::outlierRejection( bool reject ) {
 
 	if ( reject == false ){
 		// reset the state
-		for ( uint j = constants::startWest; j < constants::endEast; j++ ){
+		for ( int j = constants::startWest; j < constants::endEast; j++ ){
 			useDetector[ j ] = true;
 		}
 		westIsGood = true;
@@ -534,10 +535,10 @@ void calib::outlierRejection( bool reject ) {
 
 	
 
-	uint numValidPairs = 0;
+	int numValidPairs = 0;
 
 	// reset the state
-	for ( uint j = constants::startWest; j < constants::endWest; j++ ){
+	for ( int j = constants::startWest; j < constants::endWest; j++ ){
 		useDetector[ j ] = false;
 	}
 
@@ -550,7 +551,7 @@ void calib::outlierRejection( bool reject ) {
 	double countWest = 0;
 	stringstream sstr;
 
-	for ( uint j = constants::startWest; j < constants::endWest; j++ ){
+	for ( int j = constants::startWest; j < constants::endWest; j++ ){
 
 		if ( deadDetector[ j ] ) continue;
 
@@ -568,7 +569,7 @@ void calib::outlierRejection( bool reject ) {
 	    sumWest += tdcWest;
 	    countWest++;
 
-		for ( uint k = constants::startEast; k < constants::endEast; k++ ){
+		for ( int k = constants::startEast; k < constants::endEast; k++ ){
 			
 			if ( deadDetector[ k ] ) continue;
 
@@ -610,8 +611,8 @@ void calib::outlierRejection( bool reject ) {
 	sstr.str(""); 		sstr << "it" << currentIteration <<  "nValidPairs";
 	book->get( sstr.str(), "OutlierRejection" )->Fill( numValidPairs );
 
-	uint nAccepted = 0;
-	for ( uint j = constants::startWest; j < constants::endWest; j++ ){
+	int nAccepted = 0;
+	for ( int j = constants::startWest; j < constants::endWest; j++ ){
 		if( useDetector[ j ] )
 			nAccepted ++;
 	}
@@ -620,7 +621,7 @@ void calib::outlierRejection( bool reject ) {
 	book->get( sstr.str(), "OutlierRejection" )->Fill( nAccepted );
 
 	nAccepted = 0;
-	for ( uint j = constants::startEast; j < constants::endEast; j++ ){
+	for ( int j = constants::startEast; j < constants::endEast; j++ ){
 		if( useDetector[ j ] )
 			nAccepted ++;
 	}
@@ -827,10 +828,11 @@ void calib::step( ) {
     		tot[ j ] = pico->channelTOT( j );
     		tdc[ j ] = pico->channelTDC( j );
     		off[ j ] = this->initialOffsets[ j ];
+    		
     		if ( removeOffset )
     			tAll[ j ] = tdc[ j ] - off[ j ];
     		
-    		if(tot[ j ] <= constants::minTOT || tot[ j ] > constants::maxTOT) continue;
+    		if(tot[ j ] <= constants::minTOT || tot[ j ] >= constants::maxTOT) continue;
   			
   			corr[ j ] = getCorrection( j, tot[ j ] );
   			tAll[ j ] -= corr[ j ];
@@ -858,7 +860,7 @@ void calib::step( ) {
 				if ( deadDetector[ k ] ) continue;
 				if ( !useDetector[ k ] ) continue;
 	    		
-	    		//if(tot[ k ] <= constants::minTOT || tot[ k ] > constants::maxTOT) continue;
+	    		if(tot[ k ] <= constants::minTOT || tot[ k ] > constants::maxTOT) continue;
 	    		if ( j == k ) continue;
 	    		
 	    		if ( k >= constants::startWest && k < constants::endWest ){
@@ -886,15 +888,18 @@ void calib::step( ) {
 				if ( deadDetector[ k ] ) continue;
 				if ( !useDetector[ k ] ) continue;
 	    		if ( j == k ) continue;
-	    		
+	    		if(tot[ k ] <= constants::minTOT || tot[ k ] > constants::maxTOT) continue;
+
 	    		if ( k >= constants::startWest && k < constants::endWest ){
 	    			double tAvg = tdcSumWest / countWest;
+
 	    			if ( tAll[ k ] - tAvg < outlierCut && tAll[ k ] - tAvg > -outlierCut ){
 	    				cutSumWest += tAll[ k ];
 	    				cutCountWest ++;
 	    			}
 	    		} else if ( k >= constants::startEast && k < constants::endEast ){
 	    			double tAvg = tdcSumEast / countEast;
+
 	    			if ( tAll[ k ] - tAvg < outlierCut && tAll[ k ] - tAvg > -outlierCut ){
 	    				cutSumEast += tAll[ k ];
 	    				cutCountEast ++;
@@ -905,7 +910,7 @@ void calib::step( ) {
 
 
 	 		if ( currentIteration == 0 ){
-
+	 			
 	 			/*
 	 			*	Plot the offsets after correction just to be sure it all works
 	 			*/
@@ -957,8 +962,10 @@ void calib::step( ) {
 				}	// loop on vpdChannel k
 			}
 
-			sstr.str("");	sstr << "it" << currentIteration <<  "cutAvgN";
-		    book->fill( sstr.str(), count, tAll[ j ] - cutAvg );
+			if ( count >= 1){
+				sstr.str("");	sstr << "it" << currentIteration <<  "cutAvgN";
+		    	book->fill( sstr.str(), count, tAll[ j ] - cutAvg );
+			}
 
 	    	if ( count <= constants::minHits ) continue;
 
@@ -1022,6 +1029,10 @@ void calib::makeCorrections(){
 	if ( differential )
 		hName = "tdccor";
 
+	can->Clear();
+	can->Divide(3, 3);
+	can->cd(1);
+	int pad = 1;
 	// get the corrections for the next iteration 
 	for( int k = constants::startWest; k < constants::endEast; k++) {
 
@@ -1052,40 +1063,44 @@ void calib::makeCorrections(){
 	    TH1D* cor = (TH1D*) tmp2->Clone( sstr.str().c_str() );
 	    book->add( sstr.str(), cor  );
 
-	    vector<double> x( numTOTBins ); 
-   		vector<double> y( numTOTBins ); 
-	    // histogram bin 0 is underflow, index 1 is the first real bin
-	    for ( int ib = 1; ib <= numTOTBins ; ib ++ ){
-	    	if ( currentIteration == 0 || !differential )
-	    		correction[ k ][ ib  ] = cor->GetBinContent( ib );
-	    	else if ( differential && currentIteration >= 1 )
-	    		correction[ k ][ ib  ] += cor->GetBinContent( ib );
-	    	y[ ib-1 ] = correction[ k ][ ib ];
-	    	x[ ib-1 ] = totBins[ k ][ ib - 1 ];
+	    if ( spline[ k ])
+	    	delete spline[ k ];
+
+	    cor->GetYaxis()->SetRangeUser( -5, 5);
+	   
+	   	// set the spline type
+	   	// default to none
+	   	if ( "akima" == config.getAsString( "splineType" ) )
+	    	spline[ k ] = new splineMaker( cor, splineAlignment::center, ROOT::Math::Interpolation::kAKIMA );
+	    else if ( "linear" == config.getAsString( "splineType" ) )
+	    	spline[ k ] = new splineMaker( cor, splineAlignment::center, ROOT::Math::Interpolation::kLINEAR );
+	    else if ( "cspline" == config.getAsString( "splineType" ) )
+	    	spline[ k ] = new splineMaker( cor, splineAlignment::center, ROOT::Math::Interpolation::kCSPLINE );
+	    
+	    
+	    can->cd(pad);
+	    
+	    sstr.str("");   	sstr << "it" << currentIteration <<  hName;
+	    book->style( ("it"+utils::toString(currentIteration)+hName) )
+	    	->set( "range", -5.0, 5.0)
+	    	->set( "title", ("TDC vs TOT: Channel" + utils::toString( k+1 )).c_str() );
+	    tmp->Draw( "colz" );
+	    
+	    if ( spline[ k ] ){
+	    	TGraph* g = spline[ k ]->graph( constants::minTOT, constants::maxTOT, 0.2);
+	    	g->GetYaxis()->SetRangeUser( -5, 5);
+	    	g->SetMarkerStyle(7);
+	    	g->SetMarkerColor( kRed );
+	    	g->Draw( "same cp" );
+		}
+		tmp->GetYaxis()->SetRangeUser( -5, 5);
+
+
+	    pad++;
+	    if ( pad > 9){
+	    	pad = 1;
+	    	savePage();
 	    }
-
-	    // now make splines
-	    spline[ k ] = new ROOT::Math::Interpolator( x, y, ROOT::Math::Interpolation::kAKIMA);
-	    can->Divide(1, 1);
-	    can->cd(0);
-
-	    sstr.str("");		sstr << "Channel " << k ;
-	    cor->SetTitle( sstr.str().c_str() );
-	    cor->Draw("");
-	    double step = 0.2;
-	   	const Int_t n = ( (constants::maxTOT -  constants::minTOT - 5) / step)  + 1;
-	   	Int_t i = 0;
-	   	Float_t xcoord[n], ycoord[n];
-	   	for ( double xi = constants::minTOT+2.5; xi < constants::maxTOT-2.5; xi += step) { 
-	      	xcoord[i] = xi;
-	      	ycoord[i] = spline[ k ]->Eval(xi);
-	      	i++; 
-	   	}
-	   	TGraph *gr = new TGraph(n,xcoord,ycoord);
-   		gr->SetMarkerColor(kRed);
-   		gr->SetMarkerStyle(7);
-   		gr->Draw("same CP");
-	    savePage();
 
 	}
 
