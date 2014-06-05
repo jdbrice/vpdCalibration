@@ -25,6 +25,8 @@ private:
 
 	string styling;
 
+	TLegend * legend;
+
 
 public:
 
@@ -42,6 +44,11 @@ public:
 					uint nBinsX, double lowX, double hiX, uint nBinsY, double lowY, double hiY );
 	void make2D( 	string name, string title, 
 					uint nBinsX, const Double_t* xBins, uint nBinsY, double lowY, double hiY );
+
+	histoBook* draw(string name, Option_t* opt= "", bool leg = false );
+	histoBook* draw( Option_t* opt= "", bool leg = false );
+	histoBook* clearLegend() { legend->Clear(); return this; };
+	
 
 	TDirectory* getDirectory( ) { return gDirectory; }
 

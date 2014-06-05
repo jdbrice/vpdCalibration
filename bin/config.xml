@@ -1,14 +1,20 @@
 <config>
 
+	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
+	<baseName></baseName>
+
+	<!-- 	calibrate - for producing a new calibration 
+			genReport - for reading in a calibration and producing qa -->
 	<jobType>calibrate</jobType>
 
-	<rootOutput>qa.root</rootOutput>
+	<!--	root filename appended to baseName -->
+	<rootOutput>ppqa.root</rootOutput>
 	
 	<variableBinning>true</variableBinning>
 
 	<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>
 	
-	<maxFiles>25</maxFiles>
+	<maxFiles>20</maxFiles>
 
 	<numIterations>1</numIterations>
 
@@ -16,13 +22,18 @@
 
 	<removeOffset>true</removeOffset>
 
-	<outlierRejection>false</outlierRejection>
+	<outlierRejection>true</outlierRejection>
 
-	<numTOTBins>10</numTOTBins>
+	<numTOTBins>15</numTOTBins>
 
-	<reportOutput>qa.pdf</reportOutput>
+	<reportOutput>ppqa.pdf</reportOutput>
 
 	<compareVpdTPC>false</compareVpdTPC>
 
+	<!-- 	none: for bin based corrections
+			linear: for linear interpolation
+			cpline: for cubic spline interpolation
+			akima:	for akima spline interpolation -->
+	<splineType>akima</splineType>
 
 </config>

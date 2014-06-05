@@ -1,4 +1,6 @@
 
+
+
 Double_t detectorResolution(Double_t *x, Double_t *par){
 	Double_t resval = 0.0;
 	if (x[0]>0){
@@ -14,19 +16,32 @@ void detRes(){
 
 	TFile * f = new TFile( "qa.root" );
 
-	f->cd( "channel0" );
+	TH1D* sigma = new TH1D( "sigma", "sigma 0", 38, 0.5, 39.5 );
 
-	TF1 * g = new TF1( "g", "gaus", -1.0, 1.0 );
+	for ( int i = 0; i < 38; i++){
 
-	it1cutAvgNB->FitSlicesY(g, 0, -1, 10);
+		stringstream sstr;
+		sstr << "channel" << i;
+		f->cd( sstr.str().c_str() );
 
-	TH1D* sig = (TH1D*)it1cutAvgNB_2->Clone("sigma");
-	
-	TF1 * fr = new TF1( "fr", detectorResolution, 0, 19, 1);
+		TF1 * g = new TF1( "g", "gaus", -1.0, 1.0 );
 
-	sig->Fit( "fr", "NQR" );
+		it5cutAvgN->FitSlicesY(g, 0, -1, 10);
 
-	sig->Draw("P");
+
+		TH1D* sig = (TH1D*)it5cutAvgN_2->Clone("sigma");
+		
+		TF1 * fr = new TF1( "fr", detectorResolution, 0, 19, 1);
+
+		sig->Fit( "fr", "QR" );
+
+		sig->Draw("P");
+
+		cout << "res: " << fr->GetParameter( 0 ) << endl;
+		sigma->SetBinContent( i+1, fr->GetParameter( 0 ) );
+	}
+
+	sigma ->Draw("HP");
 
 
 

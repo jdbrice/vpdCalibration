@@ -19,4 +19,15 @@ public:
 	/* data */
 };
 
+
+namespace jdbUtils{
+
+	std::string ts( int );
+	std::string ts( double );
+	std::string ts( uint );
+}
+
+
+
+
 #endif

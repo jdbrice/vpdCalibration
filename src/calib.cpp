@@ -6,6 +6,9 @@
 #include <sstream>
 
 
+// provides my own string shortcuts etc.
+using namespace jdbUtils;
+
 /*
 *	Constructor
 *
@@ -57,7 +60,7 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 
 	currentIteration = 0;
 
-	//gErrorIgnoreLevel=kError;
+	gErrorIgnoreLevel=kError;
 	// create a canvas for report building 
 	can = new TCanvas( "c", "canvas", 0, 0, 800, 1024);
 	can->Print( ( config.getAsString( "baseName" ) + config.getAsString( "reportOutput" ) + "[" ).c_str() );
@@ -182,7 +185,9 @@ void calib::offsets() {
 
 	// get the east / west offset
 	TH1D* west = tdc->ProjectionY( "westOffset", 2, 19 );
+	book->add( "westOffset", west );
 	TH1D* east = tdc->ProjectionY( "eastOffset", 20, 38 );
+	book->add( "eastOffset", east );
 
 	westMinusEast = ( west->GetMean() - east->GetMean() );
 	
@@ -193,23 +198,22 @@ void calib::offsets() {
 	can->Divide(1, 2);
 	can->cd(1);
 
-	book->style( "tdc" )->set( "title", "Channel TDC wrt West Channel 1")->set( "range", -15.0, 15.0 );
-	book->style( "tdcMean" )->set( "title", "Channel TDC wrt West Channel 1")->set( "range", -15.0, 15.0 );
-	
-	tdc->Draw(  );	
-	tdcMean->Draw("same");	
+	book->clearLegend();
+	book->style( "tdc" )
+		->set( "title", "Channel TDC wrt West Channel 1")
+		->set( "range", -35.0, 35.0 )->draw();
+	book->style( "tdcMean" )
+		->set( "title", "Channel TDC wrt West Channel 1")
+		->set( "markerStyle", 17)
+		->set( "markerColor", 2 )->draw("same");
 
 	can->cd(2);
-	TLegend *leg = new TLegend( 0.2, 0.8, .35, .95);
-	leg->AddEntry( east, "East", "l");
-	leg->AddEntry( west, "West", "l");
-	east->SetLineColor( 2 );
 
-	west->Draw();
-	east->Draw( "same" );
-	leg->Draw();
+	book->style( "westOffset" )->set( "lineColor", kRed)->set( "title", "East vs. West Offset" )->draw( "", true);
+	book->style( "eastOffset" )->set( "lineColor", kBlue)->set( "title", "East vs. West Offset" )->draw( "same", true);
 	
 	savePage();
+	book->clearLegend();
 
 	cout << "[calib." << __FUNCTION__ << "] completed in " << elapsed() << " seconds " << endl;
 }
@@ -506,7 +510,9 @@ void calib::zVtxPairs(){
 }
 
 void calib::outlierRejection( bool reject ) {
+
 	// must be called from inside event loop in the calib step
+	string iStr = "it"+ts(currentIteration);
 
 	if ( reject == false ){
 		// reset the state
@@ -538,7 +544,7 @@ void calib::outlierRejection( bool reject ) {
 	int numValidPairs = 0;
 
 	// reset the state
-	for ( int j = constants::startWest; j < constants::endWest; j++ ){
+	for ( int j = constants::startWest; j < constants::endEast; j++ ){
 		useDetector[ j ] = false;
 	}
 
@@ -591,8 +597,7 @@ void calib::outlierRejection( bool reject ) {
 	    	// calculate the VPD z Vertex
 	    	double vpdZ = constants::c * ( tdcEast - tdcWest) / 2.0;
 
-	    	sstr.str(""); 		sstr << "it" << currentIteration <<  "All";
-	    	book->get( sstr.str(), "OutlierRejection" )->Fill( tpcZ - vpdZ );
+	    	book->get( iStr+"All", "OutlierRejection" )->Fill( tpcZ - vpdZ );
 
 	    	if ( TMath::Abs( tpcZ - vpdZ ) < vzCut  ){
 
@@ -608,8 +613,7 @@ void calib::outlierRejection( bool reject ) {
 		}
 	}
 
-	sstr.str(""); 		sstr << "it" << currentIteration <<  "nValidPairs";
-	book->get( sstr.str(), "OutlierRejection" )->Fill( numValidPairs );
+	book->get( iStr+"nValidPairs", "OutlierRejection" )->Fill( numValidPairs );
 
 	int nAccepted = 0;
 	for ( int j = constants::startWest; j < constants::endWest; j++ ){
@@ -617,8 +621,7 @@ void calib::outlierRejection( bool reject ) {
 			nAccepted ++;
 	}
 
-	sstr.str(""); 		sstr << "it" << currentIteration <<  "nAcceptedWest";
-	book->get( sstr.str(), "OutlierRejection" )->Fill( nAccepted );
+	book->get( iStr+"nAcceptedWest", "OutlierRejection" )->Fill( nAccepted );
 
 	nAccepted = 0;
 	for ( int j = constants::startEast; j < constants::endEast; j++ ){
@@ -626,15 +629,15 @@ void calib::outlierRejection( bool reject ) {
 			nAccepted ++;
 	}
 
-	sstr.str(""); 		sstr << "it" << currentIteration <<  "nAcceptedEast";
-	book->get( sstr.str(), "OutlierRejection" )->Fill( nAccepted );
-
+	book->get( iStr+"nAcceptedEast", "OutlierRejection" )->Fill( nAccepted );
 
 	//cout << "[calib." << __FUNCTION__ << "] Num Accepted detectors: " << nAccepted << endl;
 
 }
 
 void calib::prepareStepHistograms() {
+	
+	string iStr = "it"+ts(currentIteration);
 	/*
 	* check that our histos are made for this iteration
 	*/
@@ -642,116 +645,41 @@ void calib::prepareStepHistograms() {
 		book->cd( "initialOffset" );
 		book->make2D( "correctedOffsets", "corrected Initial Offsets", constants::nChannels-1, 1, constants::nChannels, 200, -100, 100 );
 	}
-	stringstream sstr;
-	stringstream sstr2;
 	
 	for ( int ch = constants::startWest; ch < constants::endEast; ch++ ){
+				
+		book->cd( "channel" + ts(ch) );
+
+		book->make2D( 	iStr + "tdctot", "Channel" + ts(ch) + ";tot [ns];tdc [ns]", 
+								numTOTBins , totBins[ ch ], 1000, -20, 20 );
+
+		book->make2D( 	iStr + "tdccor", "Channel" + ts(ch) + ";tot [ns];tdc [ns]", 
+							numTOTBins , totBins[ ch ], 1000, -20, 20 );
 		
-		/*
-		* cd into the directory for this channel
-		*/
-		
-		sstr.str("");
-
-		sstr << "channel" << ch;
-		book->cd( sstr.str() );
-
-		sstr.str("");  	sstr << "it" << currentIteration <<  "tdctot";
-    	sstr2 << "Channel " << ch << ";tot; tdc"; 
-		TH2D* tmp = new TH2D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-								numTOTBins , totBins[ ch ], 
-								1000, -20, 20 
-							);
-		book->add( (char*)sstr.str().c_str(), tmp );
-
-		sstr.str("");
-		sstr2.str("");
-    	sstr << "it" << currentIteration <<  "tdccor";
-    	sstr2 << "Channel " << ch << ";tot; tdc"; 
-		tmp = new TH2D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							numTOTBins , totBins[ ch ], 
-							1000, -20, 20 
-						);
-		book->add( (char*)sstr.str().c_str(), tmp );
-
+		book->make1D( 	iStr + "tdc", "Channel" + ts(ch) + ";tdc [ns]; [# events]",	500, -10, 10 );
 		
 		
-    	sstr.str(""); 		sstr << "it" << currentIteration <<  "tdc";
-    	sstr2.str(""); 		sstr2 << "Channel " << ch << "; tdc"; 
-		TH1D* tmp2 = new TH1D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-								500, -10, 10 
-							);
-		book->add( (char*)sstr.str().c_str(), tmp2 );
+		book->make2D( 	iStr + "avgN", "Channel" + ts(ch) + " : 1 - <N>;N;tdc [ns]", 
+						constants::nChannels-1, 1, constants::nChannels, 1000, -20, 20 );
 		
-		
-		sstr.str("");		sstr << "it" << currentIteration <<  "avgN";
-		sstr2.str("");		sstr2 << "Channel " << ch << " : 1 - <N>;N; tdc";
-		tmp = new TH2D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							constants::nChannels-1, 1, constants::nChannels, 
-							1000, -20, 20 
-						);
-		book->add( (char*)sstr.str().c_str(), tmp );
 
-		sstr.str("");		sstr << "it" << currentIteration <<  "cutAvgN";
-		sstr2.str("");		sstr2 << "Cut Channel " << ch << " : 1 - <N>;N; tdc";
-		tmp = new TH2D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							constants::nChannels-1, 1, constants::nChannels, 
-							1000, -20, 20 
-						);
-		book->add( (char*)sstr.str().c_str(), tmp );
-
-		sstr.str("");		sstr << "it" << currentIteration <<  "avgNB";
-		sstr2.str("");		sstr2 << "Channel " << ch << " : 1 - <N>;N; tdc";
-		tmp = new TH2D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							constants::nChannels-1, 1, constants::nChannels, 
-							1000, -20, 20 
-						);
-		book->add( (char*)sstr.str().c_str(), tmp );
-
-		sstr.str("");		sstr << "it" << currentIteration <<  "cutAvgNB";
-		sstr2.str("");		sstr2 << "Cut Channel " << ch << " : 1 - <N>;N; tdc";
-		tmp = new TH2D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							constants::nChannels-1, 1, constants::nChannels, 
-							1000, -20, 20 
-						);
-		book->add( (char*)sstr.str().c_str(), tmp );
-		
+		book->make2D( 	iStr + "cutAvgN", "Channel" + ts(ch) + " : 1 - <N>;N;tdc [ns]", 
+							constants::nChannels-1, 1, constants::nChannels, 1000, -20, 20 );
 	}
 
 	/*
 	* outlier rejection histos
 	*/
 	book->cd( "OutlierRejection" );
-	sstr.str(""); 		sstr << "it" << currentIteration <<  "All";
-	sstr2.str(""); 		sstr2 << "Outlier Rejection: iteration " << currentIteration; 
-	TH1D* tmp2 = new TH1D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							600, -200, 200 );
-	book->add( sstr.str(), tmp2 );
 
-	sstr.str(""); 		sstr << "it" << currentIteration <<  "nValidPairs";
-	sstr2.str(""); 		sstr2 << "Number Of Valid Pairs: iteration " << currentIteration; 
-	tmp2 = new TH1D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							49, 0, 50 );
-	book->add( sstr.str(), tmp2 );
-
-	sstr.str(""); 		sstr << "it" << currentIteration <<  "nAcceptedWest";
-	sstr2.str(""); 		sstr2 << "Number Of Accepted Detectors: iteration " << currentIteration; 
-	tmp2 = new TH1D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							39, 0, 40 );
-	book->add( sstr.str(), tmp2 );
-
-	sstr.str(""); 		sstr << "it" << currentIteration <<  "nAcceptedEast";
-	sstr2.str(""); 		sstr2 << "Number Of Accepted Detectors: iteration " << currentIteration; 
-	tmp2 = new TH1D( 	sstr.str().c_str(), sstr2.str().c_str(), 
-							39, 0, 40 );
-	book->add( sstr.str(), tmp2 );
+	book->make1D( 	iStr + "All", "Outlier Rejection : step " + ts( currentIteration ), 600, -200, 200 );
+	book->make1D( 	iStr + "nValidPairs", "# of Valid Pairs: step " + ts(currentIteration), 49, 0, 50 );
+	book->make1D( 	iStr + "nAcceptedWest", "# of Accepted Detectors : step " + ts(currentIteration),
+							19, -0.5, 18.5 );
+	book->make1D( 	iStr + "nAcceptedEast", "# of Accepted Detectors : step " + ts(currentIteration),
+							19, -0.5, 18.5 );
 	/*
 	* outlier rejection histos
-	*/
-
-
-	/*
-	* check that our histos are made
 	*/
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Histograms Booked " << endl;
@@ -767,6 +695,7 @@ void calib::step( ) {
 	bool outliers =  config.getAsBool( "outlierRejection" );
 	bool removeOffset = config.getAsBool( "removeOffset" );
 
+	//TODO
 	double outlierCut = 2;
 	if ( currentIteration == 1)
 		outlierCut = 1;
@@ -783,6 +712,8 @@ void calib::step( ) {
 	double corr[ constants::nChannels ];	
 	// reference tdc time => the 1st channel on the west side
 	double reference;
+
+	string iStr = "it"+ts(currentIteration);
 	stringstream sstr;
 
 	// make sure the histograms are ready
@@ -805,7 +736,6 @@ void calib::step( ) {
     	// perform outlier rejection for this event
     	outlierRejection( outliers );
 
-    	
 
     	float vx = pico->vertexX;
     	float vy = pico->vertexY;
@@ -816,7 +746,7 @@ void calib::step( ) {
     	if ( pico->nTofHits <= 1 ) continue;
     	if ( TMath::Abs( tpcZ ) > 100 ) continue;
 
-    	averageN();
+    	//averageN();
  		   	
 
     	// Alias the values for this event for ease
@@ -940,8 +870,7 @@ void calib::step( ) {
 
 
 	    	// change into this channels dir for histogram saving
-			sstr.str("");		sstr << "channel" << j;
-			book->cd( sstr.str() );
+			book->cd( "channel" + ts(j) );
 
 			if ( true == eastIsGood && true == westIsGood) {
 		    	for( int k = start; k < end; k++) {
@@ -952,8 +881,7 @@ void calib::step( ) {
 		    		if ( j == k ) continue;
 		    		if ( avg == 0 ) continue;
 
-		    		sstr.str("");	sstr << "it" << currentIteration <<  "avgN";
-		    		book->fill( sstr.str(), count, tAll[ k ] - avg );
+		    		book->fill( iStr+"avgN", count, tAll[ k ] - avg );
 
 		    		if ( count <= 0 ) continue;
 
@@ -963,29 +891,25 @@ void calib::step( ) {
 			}
 
 			if ( count >= 1){
-				sstr.str("");	sstr << "it" << currentIteration <<  "cutAvgN";
-		    	book->fill( sstr.str(), count, tAll[ j ] - cutAvg );
+		    	book->fill( iStr+"cutAvgN", count, tAll[ j ] - cutAvg );
 			}
 
 	    	if ( count <= constants::minHits ) continue;
 
-	    	sstr.str("");	sstr << "it" << currentIteration <<  "tdctot" ;
-	    	book->fill( sstr.str(), tot[ j ], tdc[ j ] - off[ j ] - cutAvg );
-
-	    	sstr.str("");	sstr << "it" << currentIteration <<  "tdccor";
-	    	book->fill( sstr.str(), tot[ j ], tAll[ j ] - cutAvg );
-
-	    	sstr.str("");	sstr << "it" << currentIteration <<  "tdc";
-	    	book->fill( sstr.str(), tAll[ j ]  - cutAvg );
 	    	
+	    	book->fill( iStr+"tdctot", tot[ j ], tdc[ j ] - off[ j ] - cutAvg );
+	    	book->fill( iStr+"tdccor", tot[ j ], tAll[ j ] - cutAvg );
+	    	book->fill( iStr+"tdc" , tAll[ j ]  - cutAvg );
+	
 		}	
 	}
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " completed in " << elapsed() << " seconds " << endl;
 	
 
-	makeCorrections();
+	//makeCorrections();
 	
+	stepReport();
 
 	currentIteration++;
 
@@ -1024,82 +948,127 @@ void calib::makeCorrections(){
 	stringstream sstr;
 
 	bool differential = config.getAsBool( "differential" );
-	string hName = "tdctot";
-
-	if ( differential )
-		hName = "tdccor";
 
 	can->Clear();
-	can->Divide(3, 3);
+	can->Divide(3, 2);
 	can->cd(1);
 	int pad = 1;
+
 	// get the corrections for the next iteration 
 	for( int k = constants::startWest; k < constants::endEast; k++) {
 
-		// skip dead detectors
-		if ( deadDetector[ k ] ) continue;
-
 		// switch into channel dir
-		sstr.str("");		sstr << "channel" << k;
-		book->cd( sstr.str() );
+		book->cd( "channel" + ts( k ) );
 
+		// slewing curve without correction applied to channel k
+	    TH2D* pre = (TH2D*) book->get( "it" + ts( currentIteration) + "tdctot" );
 
-		sstr.str("");   	sstr << "it" << currentIteration <<  hName;
-	    TH2D* tmp = (TH2D*) book->get( sstr.str() );
+	    // slewing curve with correction applied to channel k
+	    TH2D* post = (TH2D*) book->get( "it" + ts( currentIteration) + "tdccor" );
 
-	    sstr.str("");		sstr << "channel" << k << "/fit";
-		book->cd( sstr.str() );
+		book->cd( "channel" + ts( k ) + "/fit" );
 
 		// do the fit
-	    tmp->FitSlicesY();
+	    pre->FitSlicesY();
 
-	    sstr.str("");    	sstr << "it" << currentIteration <<  hName << "_1";
-	    TH1D* tmp2 = (TH1D*) gDirectory->FindObject( sstr.str().c_str() );
+	    TH1D* preMean = (TH1D*) gDirectory->FindObject( 
+	    					("it" + ts( currentIteration ) + "tdctot_1").c_str() );
 
-	    sstr.str("");	sstr << "channel" << k;
-		book->cd( sstr.str() );
+	    // do the fit
+	    TF1* g = new TF1( "g", "gaus", -1, 1 );
+	    post->FitSlicesY( g );
+	    delete g;
 
-	    sstr.str("");    	sstr << "it" << currentIteration <<  "totcor";
-	    TH1D* cor = (TH1D*) tmp2->Clone( sstr.str().c_str() );
-	    book->add( sstr.str(), cor  );
+	    TH1D* postMean = (TH1D*) gDirectory->FindObject( 
+	    					("it" + ts( currentIteration ) + "tdccor_1").c_str() );
+
+	    book->cd( "channel" + ts( k ) );
+
+	    TH1D* cor = (TH1D*) preMean->Clone( ("it" + ts( currentIteration ) + "totcor").c_str() );
+	    book->add( ("it" + ts( currentIteration ) + "totcor").c_str(), cor  );
+
+	    TH1D* dif = (TH1D*) postMean->Clone( ("it" + ts( currentIteration ) + "difcor").c_str() );
+	    book->add( ("it" + ts( currentIteration ) + "difcor").c_str(), dif  );
+
+	    for ( int ib = 1; ib <= numTOTBins ; ib ++ ){
+
+	    	// reject outlier bins
+	    	if ( ib >= 2 && ib <= numTOTBins - 1){
+
+	    		double s1 = cor->GetBinContent( ib - 1 );
+	    		double s2 = cor->GetBinContent( ib + 1 );
+	    		double avgSides = (s1 + s2 ) / 2.0;
+	    		double val = cor->GetBinContent( ib );
+
+	    		if ( 	TMath::Abs( val - avgSides ) >= 1 && TMath::Abs( val - s1 ) >= .75 && TMath::Abs( val - s2 ) >= .75 ) /////// TODO
+	    			cor->SetBinContent( ib, avgSides );
+
+	    	} else if ( ib == 1 ){	// first bin
+	    		double val = cor->GetBinContent( ib );
+	    		double s2 = cor->GetBinContent( ib + 1 );
+	    		if ( TMath::Abs( val - s2 ) >= 1 )
+	    			cor->SetBinContent( ib, s2 );
+	    	} else if ( ib == numTOTBins ){	// last bin
+	    		double val = cor->GetBinContent( ib );
+	    		double s1 = cor->GetBinContent( ib - 1 );
+	    		if ( TMath::Abs( val - s1 ) >= 1 )
+	    			cor->SetBinContent( ib, s1 );
+	    	}
+
+	    	correction[ k ][ ib  ] = cor->GetBinContent( ib );
+	    	
+	    }
 
 	    if ( spline[ k ])
 	    	delete spline[ k ];
-
-	    cor->GetYaxis()->SetRangeUser( -5, 5);
 	   
 	   	// set the spline type
 	   	// default to none
-	   	if ( "akima" == config.getAsString( "splineType" ) )
-	    	spline[ k ] = new splineMaker( cor, splineAlignment::center, ROOT::Math::Interpolation::kAKIMA );
-	    else if ( "linear" == config.getAsString( "splineType" ) )
-	    	spline[ k ] = new splineMaker( cor, splineAlignment::center, ROOT::Math::Interpolation::kLINEAR );
-	    else if ( "cspline" == config.getAsString( "splineType" ) )
-	    	spline[ k ] = new splineMaker( cor, splineAlignment::center, ROOT::Math::Interpolation::kCSPLINE );
+	   	Interpolation::Type type = type = ROOT::Math::Interpolation::kAKIMA;
+	   	bool useSpline = false;
+	   	if ( "akima" == config.getAsString( "splineType" ) ){
+	    	type = ROOT::Math::Interpolation::kAKIMA;	
+	    	useSpline = true; 
+	    } else if ( "linear" == config.getAsString( "splineType" ) ){
+	    	type = ROOT::Math::Interpolation::kLINEAR;	
+	    	useSpline = true;
+	    } else if ( "cspline" == config.getAsString( "splineType" ) ){
+	    	type =  ROOT::Math::Interpolation::kCSPLINE;	
+	    	useSpline = true;
+	    }
 	    
+	    if ( useSpline )
+		    spline[ k ] = new splineMaker( cor, splineAlignment::center, type );
+
+		splineMaker* vSpline;
+		if ( currentIteration == 0 ) 
+			vSpline = spline[ k ];
+		else
+			vSpline = new splineMaker( dif, splineAlignment::center, type );
 	    
 	    can->cd(pad);
 	    
-	    sstr.str("");   	sstr << "it" << currentIteration <<  hName;
-	    book->style( ("it"+utils::toString(currentIteration)+hName) )
+	    book->style( ("it"+ts(currentIteration)+"tdccor") )
 	    	->set( "range", -5.0, 5.0)
-	    	->set( "title", ("TDC vs TOT: Channel" + utils::toString( k+1 )).c_str() );
-	    tmp->Draw( "colz" );
+	    	->set( "title", ( "Step:" +  ts( currentIteration + 1 ) + "TDC vs TOT: Channel" + ts( k+1 )).c_str() );
+
+	    post->Draw( "colz" );
 	    
-	    if ( spline[ k ] ){
-	    	TGraph* g = spline[ k ]->graph( constants::minTOT, constants::maxTOT, 0.2);
+	    if ( useSpline ){
+	    	TGraph* g = vSpline->graph( constants::minTOT, constants::maxTOT, 0.2);
 	    	g->GetYaxis()->SetRangeUser( -5, 5);
 	    	g->SetMarkerStyle(7);
 	    	g->SetMarkerColor( kRed );
 	    	g->Draw( "same cp" );
 		}
-		tmp->GetYaxis()->SetRangeUser( -5, 5);
-
+		post->GetYaxis()->SetRangeUser( -5, 5);
 
 	    pad++;
-	    if ( pad > 9){
+	    if ( pad > 6 || k == constants::endEast - 1){
 	    	pad = 1;
 	    	savePage();
+	    	can->Clear();
+			can->Divide(3, 2);
 	    }
 
 	}
@@ -1207,6 +1176,64 @@ void calib::readParameters(  ){
 }
 
 void calib::stepReport() {
+
+
+	string iStr = "it"+ts(currentIteration);
+
+	// TODO
+	double vzCut = 40;
+	if ( currentIteration == 0 )
+		vzCut = 40;
+	else if ( currentIteration == 1 )
+		vzCut = 20;
+	else if ( currentIteration == 2 )
+		vzCut = 15;
+	else if ( currentIteration == 3 )
+		vzCut = 8;
+	else if ( currentIteration >= 4 )
+		vzCut = 5;
+
+	// build filled area histo
+	book->cd( "OutlierRejection" );
+	TH1D* fill = (TH1D*)book->get( iStr+"All" )->Clone( "fill" );
+	fill->SetFillColor( kGreen );
+	fill->GetXaxis()->SetRangeUser( -vzCut, vzCut );
+
+	// report the outlier rejection
+	can->Clear();
+	can->Divide( 1, 3);
+	can->cd( 1 );
+	can->SetLogy();
+
+	book->clearLegend();
+	book->style( iStr+"All" )	->set( "title", ("Outlier Rejection step: " + ts( currentIteration)).c_str() )
+								->set( "x", "TPC - VPD_{pair} [cm]")
+								->set( "y", "[events]")->draw();
+	fill->Draw("same" );
+
+	can->cd ( 2 );
+	book->clearLegend();
+	can->SetLogy(0);
+	book->style( iStr+"nAcceptedWest" )	
+								->set( "title", ("# Det Accepted step: " + ts( currentIteration)).c_str() )
+								->set( "x", "# of Detectors")
+								->set( "y", "[#]")
+								->draw("", true);
+	
+	book->style( iStr+"nAcceptedEast" )	
+								->set( "lineColor", kRed )
+								->draw("same", true);
+
+	can->cd( 3 );
+
+	book->style( iStr+"nValidPairs" )	
+								->set( "title", ("# Valid Pairs step: " + ts( currentIteration)).c_str() )
+								->set( "x", "[# pairs]")
+								->set( "y", "[#]");
+	book->get( iStr+"nValidPairs" )->Draw(  );
+
+	savePage();
+
 
 
 }

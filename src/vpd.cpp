@@ -24,6 +24,7 @@ int main( int argc, char* argv[] ) {
     } 
 
 
+
     /* Give a summary of config file */
     xmlConfig config( argv[ 1 ] );
     cout << "[CONFIG] File: " << argv[ 1 ] << endl;
@@ -86,7 +87,7 @@ int main( int argc, char* argv[] ) {
         // look at VPD vs TPC vertex after calibration
         if ( config.getAsBool( "compareVpdTPC") )
             vpdCalib.zVtxPairs();
-        
+      
         // write out the parameters file
         //vpdCalib.writeParameters(  );
         

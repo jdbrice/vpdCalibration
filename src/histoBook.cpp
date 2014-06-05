@@ -15,11 +15,15 @@ histoBook::histoBook( string name ){
 	file = new TFile( filename.c_str(), "recreate" );
 	file->cd();
 
+	legend = new TLegend( 0.75, 0.75, 0.9, 0.9);
+
 	globalStyle();
 
 }
 // destructor
 histoBook::~histoBook(){
+
+	delete legend;
 
 	save();
 	file->Close();
@@ -132,9 +136,9 @@ void histoBook::globalStyle(){
   	// For publishing:
   	gStyle->SetLineWidth(2.);
   	//gStyle->SetTextSize(1.1);
-  	gStyle->SetLabelSize(0.06,"xy");
-  	gStyle->SetTitleSize(0.06,"xy");
-  	gStyle->SetTitleOffset(1.2,"x");
+  	//gStyle->SetLabelSize(0.06,"xy");
+  	//gStyle->SetTitleSize(0.06,"xy");
+  	gStyle->SetTitleOffset(1.0,"x");
   	gStyle->SetTitleOffset(1.0,"y");
   	gStyle->SetPadTopMargin(0.1);
   	gStyle->SetPadRightMargin(0.1);
@@ -162,6 +166,14 @@ histoBook* histoBook::set( string param, ...  ){
 	    	va_start(ap, 1);
 	    	char* t = va_arg(ap, char*);
 	    	h->SetTitle( t );
+	    } else if ( "x" == param ){
+	    	va_start(ap, 1);
+	    	char* t = va_arg(ap, char*);
+	    	h->GetXaxis()->SetTitle( t );
+	    } else if ( "y" == param ){
+	    	va_start(ap, 1);
+	    	char* t = va_arg(ap, char*);
+	    	h->GetYaxis()->SetTitle( t );
 	    } else if ( "linecolor" == param ){
 	    	va_start(ap, 1);
 	    	h->SetLineColor( va_arg(ap, int) );
@@ -189,6 +201,42 @@ histoBook* histoBook::set( string param, ...  ){
     
     
 
+
+	return this;
+}
+
+
+histoBook* histoBook::draw(string name, Option_t* opt, bool leg ){
+
+	TH1* h = get( name );
+	if ( h ){
+		h->Draw( opt );
+
+		if ( leg ){
+			legend->AddEntry( h, name.c_str() );
+			legend->Draw();
+		}
+	}
+	
+
+	return this;
+}
+
+histoBook* histoBook::draw( Option_t* opt, bool leg ){
+
+	if ( styling == "" )
+		return this;
+
+	TH1* h = get( styling );
+	if ( h ){
+		h->Draw( opt );
+
+		if ( leg ){
+			legend->AddEntry( h, styling.c_str() );
+			legend->Draw();
+		}
+	}
+	
 
 	return this;
 }
