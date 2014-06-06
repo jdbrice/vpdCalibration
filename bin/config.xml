@@ -1,39 +1,33 @@
 <config>
 
-	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
-	<baseName></baseName>
-
 	<!-- 	calibrate - for producing a new calibration 
 			genReport - for reading in a calibration and producing qa -->
 	<jobType>calibrate</jobType>
 
-	<!--	root filename appended to baseName -->
-	<rootOutput>ppqa.root</rootOutput>
-	
-	<variableBinning>true</variableBinning>
-
-	<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>
-	
-	<maxFiles>20</maxFiles>
-
-	<numIterations>1</numIterations>
-
+	<!-- output files -->
+	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
+	<baseName>a200</baseName>
+	<!--	root, params, report filename appended to baseName -->
+	<rootOutput>qa.root</rootOutput>
 	<paramsOutput>params.dat</paramsOutput>
+	<reportOutput>qa.pdf</reportOutput>
 
+	<!-- Data input -->
+	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>
+	<maxFiles>3</maxFiles>
+
+
+	<!-- Calibration options -->
+	<numIterations>2</numIterations>
+	<variableBinning>false</variableBinning>
 	<removeOffset>true</removeOffset>
-
 	<outlierRejection>true</outlierRejection>
-
-	<numTOTBins>15</numTOTBins>
-
-	<reportOutput>ppqa.pdf</reportOutput>
-
-	<compareVpdTPC>false</compareVpdTPC>
-
-	<!-- 	none: for bin based corrections
-			linear: for linear interpolation
-			cpline: for cubic spline interpolation
-			akima:	for akima spline interpolation -->
+	<compareVpdTPC>true</compareVpdTPC>
+	<!-- 	linear: for linear interpolation
+			cspline: for cubic spline interpolation
+			akima:	for akima spline interpolation 
+			anything else for bin based corrections -->
 	<splineType>akima</splineType>
+	<numTOTBins>40</numTOTBins>
 
 </config>

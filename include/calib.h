@@ -133,39 +133,13 @@ protected:
 
 	void averageN();
 
-	Double_t detectorResolution(Double_t *x, Double_t *par);
+	static Double_t detectorResolution(Double_t *x, Double_t *par);
 
 	/*
 	*	Utility functions that should be moved soon
 	*/ 
 	void startTimer( ) { startTime = clock(); }
 	double elapsed( ) { return ( (clock() - startTime) / (double)CLOCKS_PER_SEC ); }
-	void progressBar( double progress, int max ){
-		
-		// skip for non interactive output
-		if (!isatty(fileno(stdout)) && progress <= 1 )
-			return;
-
-		double per = progress  * 100;
-		per = TMath::Nint( per );
-
-		cout << "[";
-    	for ( int ip = 0; ip < max; ip ++ ){
-    		if ( ip < TMath::Nint( (progress * (double)max) ) )
-    			cout << "=";
-    		else 
-    			cout << " ";
-    	}
-    	if (isatty(fileno(stdout)) ){ 
-	 	   	cout << "]" << per << "%" << "\r";
-			std::cout.flush();
-			if (progress > 1)
-				cout << "[" << endl;
-		} else {
-				cout << "]" << per << "%" << "\n";
-		}
-		
-	}
 };
 
 

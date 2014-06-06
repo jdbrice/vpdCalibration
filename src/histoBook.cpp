@@ -135,9 +135,9 @@ void histoBook::globalStyle(){
 
   	// For publishing:
   	gStyle->SetLineWidth(2.);
-  	//gStyle->SetTextSize(1.1);
-  	//gStyle->SetLabelSize(0.06,"xy");
-  	//gStyle->SetTitleSize(0.06,"xy");
+  	gStyle->SetTextSize(0.6);
+  	gStyle->SetLabelSize(0.05,"xy");
+  	gStyle->SetTitleSize(0.05,"xy");
   	gStyle->SetTitleOffset(1.0,"x");
   	gStyle->SetTitleOffset(1.0,"y");
   	gStyle->SetPadTopMargin(0.1);

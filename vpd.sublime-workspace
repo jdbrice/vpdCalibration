@@ -4,6 +4,46 @@
 		"selected_items":
 		[
 			[
+				"Fin",
+				"FindObject"
+			],
+			[
+				"end",
+				"endEast"
+			],
+			[
+				"progr",
+				"progressBar"
+			],
+			[
+				"sta",
+				"startWest"
+			],
+			[
+				"nAcc",
+				"nAcceptedWest"
+			],
+			[
+				"Re",
+				"Rejection"
+			],
+			[
+				"Outl",
+				"OutlierRejection"
+			],
+			[
+				"cur",
+				"currentIteration"
+			],
+			[
+				"di",
+				"differential"
+			],
+			[
+				"use",
+				"useSpline"
+			],
+			[
 				"his",
 				"histName"
 			],
@@ -46,10 +86,6 @@
 			[
 				"Set",
 				"SetOptStat"
-			],
-			[
-				"use",
-				"useDetector"
 			],
 			[
 				"star",
@@ -100,20 +136,12 @@
 				"initialOffsets"
 			],
 			[
-				"sta",
-				"startEast"
-			],
-			[
 				"start",
 				"startEast"
 			],
 			[
 				"West",
 				"westMinusEast"
-			],
-			[
-				"end",
-				"endEast"
 			],
 			[
 				"st",
@@ -339,7 +367,7 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 392.0,
+		"height": 54.0,
 		"selected_items":
 		[
 			[
@@ -384,17 +412,19 @@
 	},
 	"file_history":
 	[
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/detRes.C",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/histoBook.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/vpd.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/utils.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/utils.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/histoBook.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/splineMaker.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/splineMaker.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/Makefile",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/histoBook.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/histoBook.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/utils.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/utils.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/vpd.cpp",
 		"/home/daniel/bnl/jdb/work/testInterpolation.cxx",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/auau15.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/gslSpline.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/go.sh",
@@ -403,13 +433,11 @@
 		"/home/daniel/bnl/tmp/testInterpolation.cxx",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/allroot.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/refresh.sh",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/script/detRes.C",
 		"/home/daniel/bnl/root/config.log",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/wo/config.xml",
 		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_class.h",
 		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_utils.cxx",
 		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_loop.cxx",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/w/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/plotCorrections.C",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/compare.C",
@@ -529,6 +557,18 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"\"it\" + ts( currentIteration )",
+			"\"it\" + ts( currentIteration)",
+			"progressBar",
+			"progr",
+			"arr",
+			"void",
+			"\"it\"+ts(currentIteration)",
+			"its(",
+			"its",
+			"utils::toString",
+			"hCorrection",
+			"cor",
 			"compareVpdTPC",
 			"str",
 			"uint",
@@ -644,11 +684,7 @@
 			"pvpd cali",
 			"ps",
 			"loop",
-			"t14Data1",
-			"14TestData",
-			"doIdealGeomData",
-			"geometry1Data",
-			"maxiteration"
+			"t14Data1"
 		],
 		"highlight": true,
 		"in_selection": false,
