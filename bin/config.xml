@@ -13,8 +13,11 @@
 	<reportOutput>qa.pdf</reportOutput>
 
 	<!-- Data input -->
-	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>
-	<maxFiles>3</maxFiles>
+	<!--
+	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>-->
+	<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>
+	<!--<dataDir>/star/institutions/rice/jdb/run14/auau15/TofCalibration/geomAlign/t14Data0/output/</dataDir>-->
+	<maxFiles>15</maxFiles>
 
 
 	<!-- Calibration options -->
@@ -22,12 +25,27 @@
 	<variableBinning>false</variableBinning>
 	<removeOffset>true</removeOffset>
 	<outlierRejection>true</outlierRejection>
-	<compareVpdTPC>true</compareVpdTPC>
 	<!-- 	linear: for linear interpolation
 			cspline: for cubic spline interpolation
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
 	<numTOTBins>40</numTOTBins>
+
+
+	<vzOutlierCut>
+		<v>40</v>
+		<v>14</v>
+		<v>8</v>
+		<v>5</v> <!-- las value is for all remaining iterations -->
+	</vzOutlierCut>
+
+	<!-- Background cut applied to the avgN->FitSlicesY() when calculating detector resolution -->
+	<avgNBackgroundCut>10</avgNBackgroundCut>
+	<avgNTimingCut>
+		<v>2</v>
+		<v>1</v>
+		<v>0.6</v>
+	</avgNTimingCut>
 
 </config>

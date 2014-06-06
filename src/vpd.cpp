@@ -27,24 +27,31 @@ int main( int argc, char* argv[] ) {
 
     /* Give a summary of config file */
     xmlConfig config( argv[ 1 ] );
-    cout << "[CONFIG] File: " << argv[ 1 ] << endl;
-    cout << "[CONFIG]" << setw(20) << left << " jobType is "        << config.getAsString( "jobType" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " baseName "        << config.getAsString( "baseName" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " rootOutput "      << config.getAsString( "rootOutput" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " dataDir "         << config.getAsString( "dataDir" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " variableBinning " << config.getAsString( "variableBinning" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " maxFiles "        << config.getAsString( "maxFiles" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " numIterations "   << config.getAsString( "numIterations" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " paramsOutput "    << config.getAsString( "paramsOutput" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " paramsInput "     << config.getAsString( "paramsInput" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " removeOffset "    << config.getAsString( "removeOffset" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " outlierRejection "<< config.getAsString( "outlierRejection" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " numTOTBins "      << config.getAsString( "numTOTBins" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " differential "    << config.getAsString( "differential" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " compareVpdTPC "   << config.getAsString( "compareVpdTPC" ) << endl;
-    cout << "[CONFIG]" << setw(20) << " splineType "   << config.getAsString( "splineType" ) << endl;
 
+    config.display( "jobType" );
+    config.display( "baseName" );
+    config.display( "rootOutput" );
+    config.display( "reportOutput" );
+    config.display( "paramsOutput" );
+    config.display( "paramsInput" );
+    cout << endl;
+    config.display( "dataDir" );
+    config.display( "maxFiles" );
+    cout << endl;
+    config.display( "numIterations" );
+    config.display( "variableBinning" );
+    config.display( "removeOffset" );
+    config.display( "outlierRejection" );
+    config.display( "splineType" );
+    config.display( "numTOTBins" );
+    config.display( "splineType" );
+    cout << endl;
+    config.display( "vzOutlierCut" );    
+    cout << endl;
+    config.display( "avgNBackgroundCut" );
+    config.display( "avgNTimingCut" );
 
+    return 0;
     string jobType = config.getAsString( "jobType" );
 
     /*   Load the files into the chain */
@@ -66,7 +73,7 @@ int main( int argc, char* argv[] ) {
 
         vpdCalib.readParameters(  );
     
-        vpdCalib.zVtxPairs();
+        //vpdCalib.zVtxPairs();
 
     }
     if ( jobType == (string)"calibrate" ){
@@ -78,15 +85,15 @@ int main( int argc, char* argv[] ) {
         vpdCalib.offsets();
 
         // look at the VPD vs TPC vertex pairs before calibration
-        if ( config.getAsBool( "compareVpdTPC") )
-           vpdCalib.zVtxPairs();
+        //if ( config.getAsBool( "compareVpdTPC") )
+        //   vpdCalib.zVtxPairs();
 
         // run the main calibration loop
         vpdCalib.loop();
 
         // look at VPD vs TPC vertex after calibration
-        if ( config.getAsBool( "compareVpdTPC") )
-            vpdCalib.zVtxPairs();
+        //if ( config.getAsBool( "compareVpdTPC") )
+        //    vpdCalib.zVtxPairs();
       
         // write out the parameters file
         //vpdCalib.writeParameters(  );

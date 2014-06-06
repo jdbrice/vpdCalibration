@@ -4,6 +4,82 @@
 		"selected_items":
 		[
 			[
+				"avgN",
+				"avgNBackgroundCut"
+			],
+			[
+				"getAs",
+				"getAsStringVector"
+			],
+			[
+				"out",
+				"outlierRejection"
+			],
+			[
+				"var",
+				"variableBinning"
+			],
+			[
+				"nu",
+				"numIterations"
+			],
+			[
+				"ma",
+				"maxFiles"
+			],
+			[
+				"in",
+				"inc	#include \"…\""
+			],
+			[
+				"push",
+				"push_back"
+			],
+			[
+				"getas",
+				"getAsStringVector"
+			],
+			[
+				"lege",
+				"legendAlignment"
+			],
+			[
+				"Cle",
+				"clearLegend"
+			],
+			[
+				"leg",
+				"legend"
+			],
+			[
+				"str",
+				"string"
+			],
+			[
+				"zT",
+				"zTPCzVPD"
+			],
+			[
+				"zTP",
+				"zTPCzVPDAvg"
+			],
+			[
+				"cou",
+				"countEast"
+			],
+			[
+				"sum",
+				"sumTPCminusVPD"
+			],
+			[
+				"TPC",
+				"TPCvsVPD"
+			],
+			[
+				"cutAvg",
+				"cutAvgN"
+			],
+			[
 				"Fin",
 				"FindObject"
 			],
@@ -112,10 +188,6 @@
 				"cutCountWest"
 			],
 			[
-				"out",
-				"outlierCut"
-			],
-			[
 				"ou",
 				"outlierCut"
 			],
@@ -158,10 +230,6 @@
 			[
 				"corr",
 				"correction"
-			],
-			[
-				"getAs",
-				"getAsString"
 			],
 			[
 				"step",
@@ -208,20 +276,12 @@
 				"removeOffset"
 			],
 			[
-				"var",
-				"variableBinnig"
-			],
-			[
 				"text",
 				"text-decoration"
 			],
 			[
 				"fon",
 				"font-size"
-			],
-			[
-				"in",
-				"inline-block"
 			],
 			[
 				"arg",
@@ -412,20 +472,23 @@
 	},
 	"file_history":
 	[
-		"/home/daniel/bnl/jdb/work/vpdCalibration/script/detRes.C",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/histoBook.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/histoBook.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/vpd.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/histoBook.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/xmlConfig.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/xmlConfig.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/auau15.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/rapidXML.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/detRes.C",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/utils.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/utils.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/histoBook.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/splineMaker.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/splineMaker.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/Makefile",
 		"/home/daniel/bnl/jdb/work/testInterpolation.cxx",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/auau15.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/gslSpline.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/go.sh",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/.gitignore",
@@ -444,8 +507,6 @@
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/wo/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/w/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/wOffset/betaConfig.xml",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/xmlConfig.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/xmlConfig.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/wOffset/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/woOffset/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14auau15_wOffset/config.xml",
@@ -538,8 +599,7 @@
 		"/home/daniel/STAR/WORK/vpd/src/vpd",
 		"/home/daniel/STAR/WORK/vpd/include/calib.h",
 		"/home/daniel/STAR/WORK/vpd/include/allroot.h",
-		"/home/daniel/STAR/WORK/vpd/include/constants.h",
-		"/home/daniel/STAR/WORK/vpd/src/vpd.cpp"
+		"/home/daniel/STAR/WORK/vpd/include/constants.h"
 	],
 	"find":
 	{
@@ -557,6 +617,16 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"hName",
+			"vzOutlierCut",
+			"width",
+			"SetOp",
+			"zTPCzVPD",
+			"constants::endWest",
+			"constants::startWest",
+			"end",
+			"start",
+			"average",
 			"\"it\" + ts( currentIteration )",
 			"\"it\" + ts( currentIteration)",
 			"progressBar",
@@ -674,17 +744,7 @@
 			"tlimit",
 			"hpvpdcorr",
 			"TFile",
-			"hpvpdcorr",
-			"dt",
-			"tot",
-			"pvpdcorr",
-			"tdc",
-			"pvpdcorr",
-			"offset",
-			"pvpd cali",
-			"ps",
-			"loop",
-			"t14Data1"
+			"hpvpdcorr"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -754,6 +814,10 @@
 		"height": 0.0,
 		"selected_items":
 		[
+			[
+				"calib",
+				"src/calib.cpp"
+			],
 			[
 				"v",
 				"src/vpd.cpp"

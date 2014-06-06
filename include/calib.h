@@ -81,6 +81,10 @@ private:
 
 	// config file
 	xmlConfig config;
+
+	vector<double> avgNTimingCut;
+	vector<double> vzOutlierCut;
+	double avgNBackgroundCut;
 	
 
 public:

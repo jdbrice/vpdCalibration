@@ -56,7 +56,7 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	_chain = chain;
 	pico = new TOFrPicoDst( _chain );
 
-	gStyle->SetOptStat( 111 );
+	gStyle->SetOptStat( 0 );
 
 	currentIteration = 0;
 
@@ -65,8 +65,29 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	can = new TCanvas( "c", "canvas", 0, 0, 800, 1024);
 	can->Print( ( config.getAsString( "baseName" ) + config.getAsString( "reportOutput" ) + "[" ).c_str() );
 
-	//savePage();
+
+	std::vector<double> tmp = config.getAsDoubleVector( "vzOutlierCut" );
+	if ( tmp.size() >= 1 && tmp[ 0 ] != config.getAsString( "vzOutlierCut" ) )
+		vzOutlierCut = tmp;
+	else {
+		vzOutlierCut.push_back( 40 );
+		vzOutlierCut.push_back( 20 );
+		vzOutlierCut.push_back( 15 );
+		vzOutlierCut.push_back( 8 );
+		vzOutlierCut.push_back( 5 );
+	}
 	
+	tmp = config.getAsDoubleVector( "avgNTimingCut" );
+	if ( tmp.size() >= 1 && tmp[ 0 ] != config.getAsString( "avgNTimingCut" ) )
+		avgNTimingCut = tmp;
+	else {
+		avgNTimingCut.push_back( 2 );
+		avgNTimingCut.push_back( 1 );
+		avgNTimingCut.push_back( 0.6 );
+	}
+
+	avgNBackgroundCut = config.getAsDouble( "avgNBackgroundCut", 10 );
+	// TODO still apply these things
 
 }
 
@@ -189,11 +210,10 @@ void calib::offsets() {
 	
 	cout << "West - East offset: " << westMinusEast << endl; 
 
-	gStyle->SetOptStat(0);
 	
 	can->Divide(1, 2);
 	can->cd(1);
-	gStyle->SetOptStat( 111 );
+
 	book->clearLegend();
 	book->style( "tdc" )
 		->set( "title", "Channel TDC wrt West Channel 1")
@@ -201,12 +221,20 @@ void calib::offsets() {
 	book->style( "tdcMean" )
 		->set( "title", "Channel TDC wrt West Channel 1")
 		->set( "markerStyle", 17)
-		->set( "markerColor", 2 )->draw("same");
+		->set( "markerColor", 2 )
+		->set( "linecolor", 2)
+		->draw("same");
 
 	can->cd(2);
 
-	book->style( "westOffset" )->set( "lineColor", kRed)->set( "title", "East vs. West Offset" )->draw( "", true);
-	book->style( "eastOffset" )->set( "lineColor", kBlue)->set( "title", "East vs. West Offset" )->draw( "same", true);
+	book->clearLegend();
+	book->placeLegend( legendAlignment::topLeft );
+	book->style( "westOffset" )->set( "lineColor", kRed)
+		->set( "title", "West (Channels 1-19) vs. East (Channels 20-38)" )->draw( "", true);
+
+	book->style( "eastOffset" )->set( "lineColor", kBlue)
+		->set( "title", "West (Channels 1-19) vs. East (Channels 20-38)" )
+		->draw( "same", true);
 	
 	savePage();
 	book->clearLegend();
@@ -477,7 +505,7 @@ void calib::zVtxPairs(){
     	}
 
     }
-    gStyle->SetOptStat( 111 );
+
     // generate some items for the report
     can->Clear();
     can->Divide( 1, 2);
@@ -533,7 +561,7 @@ void calib::outlierRejection( bool reject ) {
 	else if ( currentIteration >= 4 )
 		vzCut = 5;
 
-	
+	book->cd( "OutlierRejection" );
 
 	int numValidPairs = 0;
 
@@ -591,7 +619,9 @@ void calib::outlierRejection( bool reject ) {
 	    	// calculate the VPD z Vertex
 	    	double vpdZ = constants::c * ( tdcEast - tdcWest) / 2.0;
 
-	    	book->get( iStr+"All", "OutlierRejection" )->Fill( tpcZ - vpdZ );
+	    	book->get( iStr+"All" )->Fill( tpcZ - vpdZ );
+	    	book->get( iStr +"zTPCzVPD" )->Fill( tpcZ, vpdZ );
+	    	
 
 	    	if ( TMath::Abs( tpcZ - vpdZ ) < vzCut  ){
 
@@ -604,10 +634,16 @@ void calib::outlierRejection( bool reject ) {
 
 	    	} 
 		    	  			
-		}
+		} // loop channel k
+	} // loop channel j
+
+	if ( countEast >= 1 && countWest >= 1){
+		double vpdZ = constants::c * ( (sumEast/countEast) - (sumWest/countWest)) / 2.0;	
+		book->fill( iStr+"zTPCzVPDAvg", tpcZ, vpdZ );
+		book->fill( iStr+"avg", ( tpcZ-vpdZ ));
 	}
 
-	book->get( iStr+"nValidPairs", "OutlierRejection" )->Fill( numValidPairs );
+	book->fill( iStr+"nValidPairs", numValidPairs );
 
 	int nAccepted = 0;
 	for ( int j = constants::startWest; j < constants::endWest; j++ ){
@@ -616,7 +652,7 @@ void calib::outlierRejection( bool reject ) {
 	}
 
 
-	book->get( iStr+"nAcceptedWest", "OutlierRejection" )->Fill( nAccepted );
+	book->fill( iStr+"nAcceptedWest", nAccepted );
 
 	nAccepted = 0;
 	for ( int j = constants::startEast; j < constants::endEast; j++ ){
@@ -624,15 +660,17 @@ void calib::outlierRejection( bool reject ) {
 			nAccepted ++;
 	}
 
-	book->get( iStr+"nAcceptedEast", "OutlierRejection" )->Fill( nAccepted );
-
-	//cout << "[calib." << __FUNCTION__ << "] Num Accepted detectors: " << nAccepted << endl;
+	book->fill( iStr+"nAcceptedEast", nAccepted );
 
 }
 
 void calib::prepareStepHistograms() {
 	
+	// for names
 	string iStr = "it"+ts(currentIteration);
+	// for titles
+	string step = "Step " + ts( currentIteration+1 ) + " : ";
+
 	/*
 	* check that our histos are made for this iteration
 	*/
@@ -642,17 +680,21 @@ void calib::prepareStepHistograms() {
 	}
 	
 	for ( int ch = constants::startWest; ch < constants::endEast; ch++ ){
-				
+		
 		book->cd( "channel" + ts(ch) );
 
-		book->make2D( 	iStr + "tdctot", "Channel" + ts(ch) + ";tot [ns];tdc [ns]", 
-								numTOTBins , totBins[ ch ], 1000, -20, 20 );
-		book->make2D( 	iStr + "tdccor", "Channel" + ts(ch) + ";tot [ns];tdc [ns]", 
+		// make channel titles start at 1
+		string sCh = "Channel"+ts(ch+1);
+
+		book->make2D( 	iStr + "tdctot", step +sCh+" TDC vs TOT ;tot [ns];tdc [ns]", 
 							numTOTBins , totBins[ ch ], 1000, -20, 20 );
-		book->make1D( 	iStr + "tdc", "Channel" + ts(ch) + ";tdc [ns]; [# events]",	500, -10, 10 );
-		book->make2D( 	iStr + "avgN", "Channel" + ts(ch) + " : 1 - <N>;N;tdc [ns]", 
+		book->make2D( 	iStr + "tdccor", step + "Channel "+sCh+" TDC vs TOT ;tot [ns];tdc [ns]", 
+							numTOTBins , totBins[ ch ], 1000, -20, 20 );
+		book->make1D( 	iStr + "tdc", step + sCh+" TDC;tot [ns];tdc [ns]", 
+							500, -10, 10 );
+		book->make2D( 	iStr + "avgN", step + sCh + " : 1 - <N>;# of Detectors;tdc [ns]", 
 						constants::nChannels/2, 1, constants::nChannels/2, 1000, -20, 20 );
-		book->make2D( 	iStr + "cutAvgN", "Channel" + ts(ch) + " : 1 - <N>;N;tdc [ns]", 
+		book->make2D( 	iStr + "cutAvgN", step + sCh + " : 1 - <N>;# of Detectors;tdc [ns]", 
 							constants::nChannels/2, 1, constants::nChannels/2, 1000, -20, 20 );
 	}
 
@@ -663,15 +705,16 @@ void calib::prepareStepHistograms() {
 
 	int zBins = 600, zRange = 200;
 
-	book->make1D( 	iStr + "All", "Outlier Rejection : step " + ts( currentIteration ), zBins, -zRange, zRange );
-	book->make1D( 	iStr + "avg", "(<East> - <West>) * \\frac{c}{2} : step " + ts( currentIteration ), 	zBins, -zRange, zRange );
-	book->make2D( 	iStr + "zTPCzVPD", "TPC vs. VPD z Vertex : step " + ts( currentIteration ), zBins, -zRange, zRange, zBins, -zRange, zRange );
-	book->make2D( 	iStr + "zTPCzVPDAvg", "TPC vs. VPD z Vertex using <East> & <West> : step " + ts( currentIteration ), zBins, -zRange, zRange, zBins, -zRange, zRange );
+	book->make1D( 	iStr + "All", step + "Outlier Rejection; z_{TPC} - z_{VPD}; [#]", zBins, -zRange, zRange );
+	book->make1D( 	iStr + "avg", step + "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} - z_{VPD} [cm]; [#]", 	zBins, -zRange, zRange );
+	
+	book->make2D( 	iStr + "zTPCzVPD", step + "TPC vs. VPD z Vertex; z_{TPC};z_{VPD}", zBins/2, -zRange/2, zRange/2, zBins/2, -zRange/2, zRange/2 );
+	book->make2D( 	iStr + "zTPCzVPDAvg", step + "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} [cm];z_{VPD} [cm]", zBins/2, -zRange/2, zRange/2, zBins/2, -zRange/2, zRange/2 );
 
-	book->make1D( 	iStr + "nValidPairs", "# of Valid Pairs: step " + ts(currentIteration), 500, 0, 500 );
-	book->make1D( 	iStr + "nAcceptedWest", "# of Accepted Detectors : step " + ts(currentIteration),
+	book->make1D( 	iStr + "nValidPairs", step + "# of Valid Pairs; # of Pairs; [#]", 500, 0, 500 );
+	book->make1D( 	iStr + "nAcceptedWest", step + "# of Accepted Detectors; # of Detectors; [#] ",
 							19, -0.5, 18.5 );
-	book->make1D( 	iStr + "nAcceptedEast", "# of Accepted Detectors : step " + ts(currentIteration),
+	book->make1D( 	iStr + "nAcceptedEast", step + "# of Accepted Detectors; # of Detectors; [#] ",
 							19, -0.5, 18.5 );
 	/*
 	* outlier rejection histos
@@ -791,6 +834,7 @@ void calib::step( ) {
 
 			}	// loop on vpdChannel k
 
+
 			/*
 			*	Now recalculate the average times using the previously calculated average to
 			*	apply a cut on the range of variation
@@ -828,10 +872,7 @@ void calib::step( ) {
 
 
 	 		if ( currentIteration == 0 ){
-	 			
-	 			/*
-	 			*	Plot the offsets after correction just to be sure it all works
-	 			*/
+	 			//Plot the offsets after correction just to be sure it all works
 	 			book->cd( "initialOffset" );
 		    	book->fill( "correctedOffsets", j, tdc[ j ] - reference - off[ j ] );
 		    }
@@ -856,35 +897,10 @@ void calib::step( ) {
 				end 	= constants::endEast;
 	    	}
 
-
-	    	// change into this channels dir for histogram saving
-			book->cd( "channel" + ts(j) );
-			/*
-			if ( true == eastIsGood && true == westIsGood) {
-		    	for( int k = start; k < end; k++) {
-
-		    		// skip dead detectors
-					if ( deadDetector[ k ] ) continue;
-					if ( !useDetector[ k ] ) continue;
-		    		if ( j == k ) continue;
-		    		if ( avg == 0 ) continue;
-
-		    		book->fill( iStr+"avgN", count, tAll[ k ] - avg );
-
-		    		if ( count <= 0 ) continue;
-
-		    		
-
-				}	// loop on vpdChannel k
-			}
-
-			if ( count >= 1){
-		    	book->fill( iStr+"cutAvgN", count, tAll[ j ] - cutAvg );
-			}
-*/
 	    	if ( count <= constants::minHits ) continue;
 
-	    	
+	    	// change into this channels dir for histogram saving
+			book->cd( "channel" + ts(j) );	    	
 	    	book->fill( iStr+"tdctot", tot[ j ], tdc[ j ] - off[ j ] - cutAvg );
 	    	book->fill( iStr+"tdccor", tot[ j ], tAll[ j ] - cutAvg );
 	    	book->fill( iStr+"tdc" , tAll[ j ]  - cutAvg );
@@ -936,12 +952,15 @@ void calib::finish( ){
 		TH2D* tmp = (TH2D*)book->get( iStr + "cutAvgN", iCh );
 		tmp->FitSlicesY( g, 0, -1, 10 ); // TODO 10 = config
 		TH1D* fsySig = (TH1D*)gDirectory->FindObject( (iStr + "cutAvgN" + "_2").c_str() );
+		TH1D* fsyMean = (TH1D*)gDirectory->FindObject( (iStr + "cutAvgN" + "_1").c_str() );
 		
 		
 		book->cd ( "final" );
 
 		TH1D* sigFit = (TH1D*)fsySig->Clone( (iCh + "sigmaFit").c_str() );
 		book->add( iCh + "sigmaFit", sigFit );
+		TH1D* mean = (TH1D*)fsyMean->Clone( (iCh + "sigmaMean").c_str() );
+		book->add( iCh + "sigmaMean", mean );
 
 		TF1 * fr = new TF1( "fr", calib::detectorResolution, 0, 19, 1);
 
@@ -953,8 +972,12 @@ void calib::finish( ){
 
 		book->style( iCh + "sigmaFit" )	->set( "title", ("Detector # " + ts(j) + " Resolution Fit").c_str() )
 										->set( "y", "Time [ns]")
-										->set( "range", 0.05, 0.5 )
+										->set( "markerStyle", 17)
+										->set( "markerColor", 2)
+										->set( "range", -0.2, 0.3 )
 										->draw();
+		book->style( iCh + "sigmaMean" )->set( "markerStyle", kCircle )
+										->draw( "same" );
 
 		pad++;
 	    if ( pad > 6 || j == constants::endEast - 1){
@@ -970,10 +993,12 @@ void calib::finish( ){
 	can->Divide(1);
 
 	book->add( "detSigma", sigmas );
-	book->style( "detSigma" )->draw();
+	book->get( "detSigma" )->Fit( "pol0", "Q" );
+	book->style( "detSigma" )
+		->set( "markerStyle", 17)
+		->set( "markerColor", 2 )
+		->draw();
 	savePage();	
-
-
 }
 
 void calib::loop( ) {
@@ -1008,7 +1033,7 @@ void calib::makeCorrections(){
 
 		if ( deadDetector[ k ] ){
 			pad++;
-			if ( pad > px*py || k == constants::endEast - 1){
+			if ( pad > px*py || k == constants::endEast - 1 || k == constants::endWest - 1){
 		    	pad = 1;
 		    	savePage();
 		    	can->Clear();
@@ -1110,8 +1135,7 @@ void calib::makeCorrections(){
 	    can->cd(pad);
 	    
 	    book->style( ("it"+ts(currentIteration)+"tdccor") )
-	    	->set( "range", -5.0, 5.0)
-	    	->set( "title", ( "Step:" +  ts( currentIteration + 1 ) + "TDC vs TOT: Channel" + ts( k+1 )).c_str() );
+	    	->set( "range", -5.0, 5.0);
 
 	    post->Draw( "colz" );
 	    
@@ -1129,7 +1153,7 @@ void calib::makeCorrections(){
 		
 
 	    pad++;
-	    if ( pad > px*py || k == constants::endEast - 1){
+	    if ( pad > px*py || k == constants::endEast - 1 || k == constants::endWest - 1){
 	    	pad = 1;
 	    	savePage();
 	    	can->Clear();
@@ -1140,7 +1164,6 @@ void calib::makeCorrections(){
 	}
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " completed in " << elapsed() << " seconds " << endl;
-
 }
 
 void calib::writeParameters(  ){
@@ -1243,7 +1266,6 @@ void calib::readParameters(  ){
 
 void calib::stepReport() {
 
-
 	string iStr = "it"+ts(currentIteration);
 
 	// TODO
@@ -1267,47 +1289,43 @@ void calib::stepReport() {
 
 	// report the outlier rejection
 	can->Clear();
-	can->Divide( 1, 3);
+	can->Divide( 2, 2);
 	can->cd( 1 );
 	
 
-	book->clearLegend();
 	gPad->SetLogy(1);
-	book->style( iStr+"All" )	->set( "title", ("Outlier Rejection step: " + ts( currentIteration)).c_str() )
-								->set( "x", "TPC - VPD_{pair} [cm]")
-								->set( "y", "[events]")->draw();
+	book->style( iStr+"All" )->draw();
 	fill->Draw("same" );
 
 	can->cd ( 2 );
+	gPad->SetLogy(1);
+	book->style( iStr+"avg" )->draw();
+
+	can->cd( 3 );
+	book->style( iStr+"zTPCzVPD" )->draw("colz");
+
+	can->cd( 4 );
+	book->style( iStr+"zTPCzVPDAvg" )->draw("colz");
+	savePage();
+
+	
 	book->clearLegend();
+	can->Clear();
+	can->Divide( 1, 2);
+	can->cd( 1 );
+	gPad->SetLogy(1);
+	book->style( iStr+"nAcceptedWest" )->placeLegend( legendAlignment::topCenter )->draw("", true);
 	
-	book->style( iStr+"nAcceptedWest" )	
-								->set( "title", ("# Det Accepted step: " + ts( currentIteration)).c_str() )
-								->set( "x", "# of Detectors")
-								->set( "y", "[#]")
-								->draw("", true);
-	
-	book->style( iStr+"nAcceptedEast" )	
+	book->style( iStr+"nAcceptedEast" )
 								->set( "lineColor", kRed )
 								->draw("same", true);
 
-	can->cd( 3 );
-
-	book->style( iStr+"nValidPairs" )	
-								->set( "title", ("# Valid Pairs step: " + ts( currentIteration)).c_str() )
-								->set( "x", "[# pairs]")
-								->set( "y", "[#]");
-	book->get( iStr+"nValidPairs" )->Draw(  );
-
+	can->cd( 2 );
+	gPad->SetLogy(1);
+	book->style( iStr+"nValidPairs" )->draw();
 
 	savePage();
-
-
-
-
 }
-
-
 
 void calib::averageN() {
 
@@ -1418,7 +1436,6 @@ void calib::averageN() {
 void calib::savePage(){
 	can->Print( ( config.getAsString( "baseName" ) + config.getAsString( "reportOutput" ) ).c_str() );
 }
-
 
 Double_t calib::detectorResolution(Double_t *x, Double_t *par){
 	Double_t resval = 0.0;

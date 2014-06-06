@@ -10,6 +10,16 @@
 
 using namespace std;
 
+class legendAlignment {
+public:
+	static const int topLeft = 1;
+	static const int topRight = 2;
+	static const int topCenter = 3;
+	static const int bottomLeft = 4;
+	static const int bottomRight = 5;
+	static const int bottomCenter = 6;
+
+};
 
 class histoBook {
 
@@ -45,9 +55,12 @@ public:
 	void make2D( 	string name, string title, 
 					uint nBinsX, const Double_t* xBins, uint nBinsY, double lowY, double hiY );
 
+	TLegend* getLegend() { return legend; }
+
 	histoBook* draw(string name, Option_t* opt= "", bool leg = false );
 	histoBook* draw( Option_t* opt= "", bool leg = false );
 	histoBook* clearLegend() { legend->Clear(); return this; };
+	histoBook* placeLegend( int alignment, double width = -1, double height = -1 );
 	
 
 	TDirectory* getDirectory( ) { return gDirectory; }
@@ -56,7 +69,7 @@ public:
 
 	histoBook* style( string hName );
 	histoBook* set( string param, ... );
-	//vector<string> 
+
 
 private:
 	void globalStyle();
