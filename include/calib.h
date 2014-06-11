@@ -105,9 +105,6 @@ public:
 	// determines the binning in tot space for each channel
 	void binTOT( bool variableBinning = true );
 
-	// calculate the zVtx for each pair of east / west times
-	void zVtxPairs();
-
 	// executes the full correction loop
 	void loop();
 

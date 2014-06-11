@@ -30,6 +30,7 @@
 #include "TLeaf.h"
 #include "TLegend.h"
 #include "Math/Interpolator.h"
+#include "TLatex.h"
 
 using namespace std; 
 

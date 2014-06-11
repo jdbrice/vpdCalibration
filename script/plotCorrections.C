@@ -7,7 +7,7 @@ void plotCorrections( TString ifn = "cor.dat", int t = 0, double off = 0) {
 	TString out = ifn + ".root";
 	TFile * f = new TFile( out, "RECREATE" );
 	int channel;
-	double nBins[ 39 ];
+	double 	nBins[ 39 ];
 	double* bins[ 39 ];
 	double* vals[ 39 ];
 
@@ -59,6 +59,7 @@ void plotCorrections( TString ifn = "cor.dat", int t = 0, double off = 0) {
 
 
 	TH1D* hcor[ 39 ];
+	TH1D* hcorno[ 39 ];
 
 	for ( int j = 1; j < 39; j++ ){
 		stringstream sstr;
@@ -70,6 +71,20 @@ void plotCorrections( TString ifn = "cor.dat", int t = 0, double off = 0) {
 			hcor[ j ]->SetBinContent( i + 1, vals[ j ][ i ] );
 
 		}
+
+		double mean = hcor[ j ]->GetBinContent( 1 );//hcor[ j ]->Integral( 1, 10 )/ ( 10 );
+		sstr.str(""); sstr << "corno" << j;
+		hcorno[j] = new TH1D( sstr.str().c_str(), sstr.str().c_str(), nBins[ j ] - 1, bins[ j ] );
+		//cout << "Mean : " << hcor[ j ]->Integral( 1, nBins[ j ] )/ ( nBins[j]) << endl;
+
+		for ( int i = 0; i < nBins[ j ]; i++ ){
+
+			hcorno[ j ]->GetYaxis()->SetRangeUser(-10, 10);
+			hcorno[ j ]->SetBinContent( i + 1, vals[ j ][ i ] - mean );
+
+		}
+
+
 	}
 
 

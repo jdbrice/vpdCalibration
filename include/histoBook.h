@@ -68,7 +68,11 @@ public:
 	void save();
 
 	histoBook* style( string hName );
-	histoBook* set( string param, ... );
+	//histoBook* set( string param, ... );
+	histoBook* set( string param, string val );
+	histoBook* set( string param, double p1, double p2 = -1, double p3 = -1, double p4 = -1 );
+
+
 
 
 private:

@@ -159,50 +159,69 @@ histoBook* histoBook::style( string histName ){
 	styling = histName;
 	return this;
 }
-histoBook* histoBook::set( string param, ...  ){
 
+histoBook* histoBook::set( string param, string value ){
 	transform(param.begin(), param.end(), param.begin(), ::tolower);
 	int n = 0;
-	
-	va_list ap;
-    
+
+
     TH1* h = get( styling );
     if ( h ){
 
 	    if ( "title" == param ){
-	    	va_start(ap, 1);
-	    	char* t = va_arg(ap, char*);
-	    	h->SetTitle( t );
+	    	h->SetTitle( value.c_str() );
 	    } else if ( "x" == param ){
-	    	va_start(ap, 1);
-	    	char* t = va_arg(ap, char*);
-	    	h->GetXaxis()->SetTitle( t );
+	    	h->GetXaxis()->SetTitle( value.c_str() );
 	    } else if ( "y" == param ){
-	    	va_start(ap, 1);
-	    	char* t = va_arg(ap, char*);
-	    	h->GetYaxis()->SetTitle( t );
-	    } else if ( "linecolor" == param ){
-	    	va_start(ap, 1);
-	    	h->SetLineColor( va_arg(ap, int) );
+	    	h->GetYaxis()->SetTitle( value.c_str() );
+	    }
+	}
+
+	return this;
+}
+
+histoBook* histoBook::set( string param, double p1, double p2, double p3, double p4  ){
+
+	transform(param.begin(), param.end(), param.begin(), ::tolower);
+	int n = 0;
+
+
+    TH1* h = get( styling );
+    if ( h ){
+
+	    if ( "linecolor" == param ){
+
+	    	h->SetLineColor( (int) p1 );
 	    } else if ( "domain" == param ){
-	    	va_start(ap, 2);
-	    	double min = va_arg(ap, double);
-	    	double max = va_arg(ap, double);
-	    	h->GetXaxis()->SetRangeUser( min, max );
-	    } else if ( "range" == param ){
-	    	va_start(ap, 2);
-	    	double min = va_arg(ap, double);
-	    	double max = va_arg(ap, double);
+	    	double min = p1;
+	    	double max = p2;
+		    h->GetXaxis()->SetRangeUser( min, max );
+	    } else if ( "dynamicdomain" == param ){
+	    	double thresh = p1;
+	    	int min = (int)p2;
+	    	int max = (int)p3;
+	    	
+	    	if ( thresh >= 0) {
+	    		if ( -1 >= min )
+	    			min = h->FindFirstBinAbove( thresh );
+	    		if ( -1 >= max )
+	    			max = h->FindLastBinAbove( thresh );
+	    		
+	    	}
+	    	
+		    h->GetXaxis()->SetRange( min, max );
+	    }  else if ( "range" == param ){
+
+	    	double min = p1;
+	    	double max = p2;
+	    	
 	    	h->GetYaxis()->SetRangeUser( min, max );
 	    } else if ( "markercolor" == param ) {
-	    	va_start(ap, 1);
-	    	h->SetMarkerColor( va_arg(ap, int) );
+	    	h->SetMarkerColor( (int)p1 );
 	    } else if ( "markerstyle" == param ) {
-	    	va_start(ap, 1);
-	    	h->SetMarkerStyle( va_arg(ap, int) );
+	    	h->SetMarkerStyle( (int)p1 );
 	    }
 
-    	va_end(ap);
     }
     
     

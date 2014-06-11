@@ -4,12 +4,20 @@
 		"selected_items":
 		[
 			[
-				"avgN",
-				"avgNBackgroundCut"
+				"good",
+				"goodCor"
+			],
+			[
+				"goo",
+				"goodCor"
 			],
 			[
 				"getAs",
-				"getAsStringVector"
+				"getAsDouble"
+			],
+			[
+				"avgN",
+				"avgNBackgroundCut"
 			],
 			[
 				"out",
@@ -472,14 +480,23 @@
 	},
 	"file_history":
 	[
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/histoBook.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau200/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/vpd.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau015/config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/compare.C",
+		"/home/daniel/bnl/jdb/work/LearnCalib/TOFCalib/doCalib/fit/getX0.C",
+		"/home/daniel/bnl/jdb/work/LearnCalib/TOFCalib/StRoot/StTofPool/StBTofNtupleMaker/StBTofNtupleMaker.cxx",
+		"/home/daniel/bnl/jdb/work/LearnCalib/TOFCalib/doMuDstEvents.C",
+		"/home/daniel/bnl/jdb/work/LearnCalib/TOFCalib/doCalib/ana/analysis.cxx",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/plotCorrections.C",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/histoBook.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/histoBook.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/xmlConfig.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/xmlConfig.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/auau15.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/rapidXML.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/detRes.C",
@@ -502,8 +519,6 @@
 		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_utils.cxx",
 		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_loop.cxx",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/w/config.xml",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/script/plotCorrections.C",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/script/compare.C",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/wo/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/w/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/wOffset/betaConfig.xml",
@@ -592,14 +607,7 @@
 		"/home/daniel/star/work/vpd/src/histoBook.cpp",
 		"/tmp/fz3temp-1/schedule_nTupleDay75And80.xml",
 		"/home/daniel/.ssh/config",
-		"/home/daniel/star/work/vpd/script/offsets.C",
-		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_setup.cxx",
-		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_main.cxx",
-		"/home/daniel/STAR/WORK/vpd/billsMethod/cal_loop_ORIG.cxx",
-		"/home/daniel/STAR/WORK/vpd/src/vpd",
-		"/home/daniel/STAR/WORK/vpd/include/calib.h",
-		"/home/daniel/STAR/WORK/vpd/include/allroot.h",
-		"/home/daniel/STAR/WORK/vpd/include/constants.h"
+		"/home/daniel/star/work/vpd/script/offsets.C"
 	],
 	"find":
 	{
@@ -617,6 +625,7 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"cor",
 			"hName",
 			"vzOutlierCut",
 			"width",
@@ -743,8 +752,7 @@
 			"TFile",
 			"tlimit",
 			"hpvpdcorr",
-			"TFile",
-			"hpvpdcorr"
+			"TFile"
 		],
 		"highlight": true,
 		"in_selection": false,

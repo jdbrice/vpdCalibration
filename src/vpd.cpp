@@ -23,8 +23,6 @@ int main( int argc, char* argv[] ) {
 
     } 
 
-
-
     /* Give a summary of config file */
     xmlConfig config( argv[ 1 ] );
 
@@ -42,7 +40,6 @@ int main( int argc, char* argv[] ) {
     config.display( "variableBinning" );
     config.display( "removeOffset" );
     config.display( "outlierRejection" );
-    config.display( "splineType" );
     config.display( "numTOTBins" );
     config.display( "splineType" );
     cout << endl;
@@ -50,26 +47,26 @@ int main( int argc, char* argv[] ) {
     cout << endl;
     config.display( "avgNBackgroundCut" );
     config.display( "avgNTimingCut" );
+    /* Give a summary of config file */
 
-    return 0;
-    string jobType = config.getAsString( "jobType" );
+    cout << endl << endl << "Beginning Calibration" << endl << endl;
+
+    string jobType = config.getAsString( "jobType", "calibration" );
 
     /*   Load the files into the chain */
     TChain * chain = new TChain( "tof" );
-    if ( config.getAsInt( "maxFiles" ) ){
-        chainLoader::load( chain, (char*)config.getAsString( "dataDir" ).c_str(), config.getAsInt( "maxFiles" ) );
-    }
+   
+    chainLoader::load( chain, (char*)config.getAsString( "dataDir" ).c_str(), config.getAsInt( "maxFiles", 10000 ) );
+   
     
     // get the num of iterations
-    int numIterations = 5;
-    if ( config.getAsInt( "numIterations" ) >= 1)
-        numIterations = config.getAsInt( "numIterations" );
+    numIterations = config.getAsInt( "numIterations", 5 );
 
     // create a calibration object
     calib vpdCalib( chain, numIterations, config );
  
 
-    if ( jobType == (string)"genReport" ){
+    if ( jobType == (string)"paramReport" ){
 
         vpdCalib.readParameters(  );
     
@@ -84,19 +81,11 @@ int main( int argc, char* argv[] ) {
         // get the inital offsets
         vpdCalib.offsets();
 
-        // look at the VPD vs TPC vertex pairs before calibration
-        //if ( config.getAsBool( "compareVpdTPC") )
-        //   vpdCalib.zVtxPairs();
-
         // run the main calibration loop
         vpdCalib.loop();
-
-        // look at VPD vs TPC vertex after calibration
-        //if ( config.getAsBool( "compareVpdTPC") )
-        //    vpdCalib.zVtxPairs();
       
         // write out the parameters file
-        //vpdCalib.writeParameters(  );
+        vpdCalib.writeParameters(  );
         
     }
 
