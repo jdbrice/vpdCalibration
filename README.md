@@ -6,9 +6,9 @@ VPD Calibration Project
 
 ##Workflow
 
-1. Use the TOF Calibration nTuple Maker to produce nTuples in the TOF Calibration picoDst format. See TOF Calibration nTyple Maker for details.
+1) Use the TOF Calibration nTuple Maker to produce nTuples in the TOF Calibration picoDst format. See TOF Calibration nTyple Maker for details.
 
-2. Checkout this project into a clean working directory and build it:
+2) Checkout this project into a clean working directory and build it:
 ```
 $ cd some-working-directory
 $ git clone <git-url>
@@ -16,7 +16,7 @@ $ cd vpdCalibration/bin
 $ ./buildHere
 ```
 
-3. Run the calibration with a valid configuration file 
+3) Run the calibration with a valid configuration file 
 ```
 $ ./vpd path/to/configuration/file.xml > path/to/log.txt &
 ```
