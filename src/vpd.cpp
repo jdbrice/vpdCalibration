@@ -32,6 +32,7 @@ int main( int argc, char* argv[] ) {
     config.display( "reportOutput" );
     config.display( "paramsOutput" );
     config.display( "paramsInput" );
+    config.display( "paramsLegend" );
     cout << endl;
     config.display( "dataDir" );
     config.display( "maxFiles" );
@@ -41,6 +42,8 @@ int main( int argc, char* argv[] ) {
     config.display( "removeOffset" );
     config.display( "outlierRejection" );
     config.display( "numTOTBins" );
+    config.display( "minTOT" );
+    config.display( "maxTOT" );
     config.display( "splineType" );
     cout << endl;
     config.display( "vzOutlierCut" );    
@@ -53,14 +56,13 @@ int main( int argc, char* argv[] ) {
 
     string jobType = config.getAsString( "jobType", "calibration" );
 
-    /*   Load the files into the chain */
+    // Load the files into the chain 
     TChain * chain = new TChain( "tof" );
    
     chainLoader::load( chain, (char*)config.getAsString( "dataDir" ).c_str(), config.getAsInt( "maxFiles", 10000 ) );
-   
     
     // get the num of iterations
-    numIterations = config.getAsInt( "numIterations", 5 );
+    int numIterations = config.getAsInt( "numIterations", 5 );
 
     // create a calibration object
     calib vpdCalib( chain, numIterations, config );
@@ -69,8 +71,6 @@ int main( int argc, char* argv[] ) {
     if ( jobType == (string)"paramReport" ){
 
         vpdCalib.readParameters(  );
-    
-        //vpdCalib.zVtxPairs();
 
     }
     if ( jobType == (string)"calibrate" ){
@@ -80,10 +80,10 @@ int main( int argc, char* argv[] ) {
         
         // get the inital offsets
         vpdCalib.offsets();
-
+        
         // run the main calibration loop
         vpdCalib.loop();
-      
+
         // write out the parameters file
         vpdCalib.writeParameters(  );
         

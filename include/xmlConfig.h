@@ -36,6 +36,7 @@ public:
 	vector<double> getAsDoubleVector( char* nName );
 
 	bool nodeExists( char* nName );
+	bool isVector( char* nName );
 
 private:
 	string configFile;

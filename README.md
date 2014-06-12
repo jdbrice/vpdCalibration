@@ -118,6 +118,14 @@ Default : ""
 
 ##Sample Configuration
 
+An invalid configuration file will throw the error:
+```
+terminate called after throwing an instance of 'rapidxml::parse_error'
+  what():  unexpected end of data
+Abort
+```
+To fix, you should check for tags that aren't closed or other invalid xml.
+
 ```xml
 <config>
 

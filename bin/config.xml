@@ -6,7 +6,7 @@
 
 	<!-- output files -->
 	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
-	<baseName>a200</baseName>
+	<baseName>a</baseName>
 	<!--	root, params, report filename appended to baseName -->
 	<rootOutput>qa.root</rootOutput>
 	<paramsOutput>params.dat</paramsOutput>
@@ -17,11 +17,11 @@
 	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>-->
 	<!--<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>-->
 	<dataDir>/star/institutions/rice/jdb/run14/auau15/TofCalibration/geomAlign/t14Data0/output/</dataDir>
-	<maxFiles>50</maxFiles>
+	<maxFiles>60</maxFiles>
 
 
 	<!-- Calibration options -->
-	<numIterations>4</numIterations>
+	<numIterations>3</numIterations>
 	<variableBinning>false</variableBinning>
 	<removeOffset>true</removeOffset>
 	<outlierRejection>true</outlierRejection>
@@ -30,7 +30,9 @@
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
-	<numTOTBins>40</numTOTBins>
+	<numTOTBins>200</numTOTBins>
+	<minTOT>10</minTOT>
+	<maxTOT>60</maxTOT>
 
 
 	<vzOutlierCut>
@@ -47,11 +49,6 @@
 		<v>1</v>
 		<v>0.6</v> <!-- las value is for all remaining iterations -->
 	</avgNTimingCut>
-
-	<!-- After N steps if the difference in correction between this step and step N-1 is larger than zeroCorrectionCut, then the correction parameter is set to the value of the closest good value (by same criteria ) -->
-	<zeroCorrectionCut>0.5</zeroCorrectionCut>
-	<!-- The N above, the step at which the zeroCorrectionCut is applied. Should be greater than or equal to 1, start counting at 0, defaults to 2 -->
-	<zeroStepN>3</zeroStepN>
 
 
 </config>

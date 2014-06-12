@@ -4,7 +4,7 @@ project = vpd
 # source suffix
 source = .cpp 
 # object files to make
-objects = vpd.o histoBook.o calib.o chainLoader.o TOFrPicoDst.o xmlConfig.o splineMaker.o utils.o
+objects = vpd.o histoBook.o calib.o chainLoader.o TOFrPicoDst.o xmlConfig.o splineMaker.o utils.o reporter.o
 
 # ROOT libs and includes
 ROOTCFLAGS    	= $(shell root-config --cflags)

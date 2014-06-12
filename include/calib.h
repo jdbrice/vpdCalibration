@@ -16,6 +16,7 @@
 #include "unistd.h"
 #include "xmlConfig.h"
 #include "utils.h"
+#include "reporter.h"
 
 
 class calib{
@@ -23,7 +24,7 @@ class calib{
 private:
 
 	// the canvas used to draw report hidtos
-	TCanvas* can;
+	reporter* report;
 
 	// the total number of iterations to try
 	uint maxIterations;
@@ -39,10 +40,14 @@ private:
 	double initialOffsets[ constants::nChannels ];
 	// the west - east offset
 	double westMinusEast;
+	double finalWestOffset;
 
 	// number of tot bins to use
 	// defaults to constants::numTOTBins if not set in config
 	int numTOTBins;
+
+	// the minimum and maximum tot range to calibrate
+	double minTOT, maxTOT;
 
 	// the corrections for each channel as a function of ToT
 	double * correction[ constants::nChannels ];
@@ -59,6 +64,7 @@ private:
 	// variable bins for tot values -> helps with low statistics
 	// calculated in binTOT
 	Double_t * totBins[ constants::nChannels ];
+	bool * useTOTBin[ constants::nChannels ];
 
 	// Interpolation based corrections
 	splineMaker * spline[ constants::nChannels ];
@@ -101,6 +107,7 @@ public:
 
 	// calculates the inital offsets of each channel
 	void offsets( );
+	void getInitialOffsets();
 
 	// determines the binning in tot space for each channel
 	void binTOT( bool variableBinning = true );
@@ -112,6 +119,9 @@ public:
 	void step( );
 	void prepareStepHistograms();
 
+	// after everything calculate the reference offset on channel 1 on the west
+	void referenceOffset();
+
 	// get the correction for a given channel, given tot value
 	double getCorrection( int vpdChannel, double tot );
 	// get the bin for a given tot value ona given channel
@@ -122,7 +132,6 @@ public:
 	
 	// reports
 	void stepReport();
-	void savePage();
 
 protected:
 

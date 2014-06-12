@@ -1,0 +1,46 @@
+<config>
+
+	<!-- 	calibrate - for producing a new calibration 
+			genReport - for reading in a calibration and producing qa -->
+	<jobType>paramReport</jobType>
+
+	<!-- output files -->
+	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
+	<baseName>pReport</baseName>
+	<!--	root, params, report filename appended to baseName -->
+	<rootOutput>rep.root</rootOutput>
+	<reportOutput>rep.pdf</reportOutput>
+	<!--<paramsInput>params.dat</paramsInput>-->
+	<paramsInput>
+		<v>fparams.dat</v>
+		<v>aparams.dat</v>
+	</paramsInput>
+	<paramsLegend>
+		<v>run13 PP 510</v>
+		<v>run14 AuAu 15</v>
+	</paramsLegend>
+
+	<!-- Data input -->
+	<!--
+	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>-->
+	<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>
+	<!--<dataDir>/star/institutions/rice/jdb/run14/auau15/TofCalibration/geomAlign/t14Data0/output/</dataDir>-->
+	<maxFiles>60</maxFiles>
+
+
+	<!-- Calibration options -->
+	<numIterations>4</numIterations>
+	<variableBinning>false</variableBinning>
+	<removeOffset>false</removeOffset>
+	<outlierRejection>false</outlierRejection>
+	<!-- 	linear: for linear interpolation
+			cspline: for cubic spline interpolation
+			akima:	for akima spline interpolation 
+			anything else for bin based corrections -->
+	<splineType>akima</splineType>
+	<numTOTBins>200</numTOTBins>
+	<minTOT>10</minTOT>
+	<maxTOT>60</maxTOT>
+
+
+</config>

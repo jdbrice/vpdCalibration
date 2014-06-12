@@ -20,3 +20,4 @@
 /bin/*.xml
 # but keep the sample config
 !/bin/config.xml
+!/bin/report.xml

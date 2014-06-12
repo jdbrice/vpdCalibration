@@ -157,7 +157,7 @@ std::vector<double> xmlConfig::getAsDoubleVector( char* nName ){
 
 	vector<string> str = getAsStringVector( nName );
 	vector<double> res;
-	for ( int i = 0; i < str.size(); i++ ){
+	for ( uint i = 0; i < str.size(); i++ ){
 		res.push_back( atof( str[ i ].c_str() ) );
 	}
 	return res;
@@ -181,9 +181,9 @@ void xmlConfig::display( char* nName ){
 	// if it is a vector print it that way
 	stringstream sstr;
 	std::vector<string> v = getAsStringVector( nName );
-	if ( v.size() >= 1 && v[ 0 ] != getAsString( nName ) ){
+	if ( isVector( nName ) ){
 		
-		for ( int i = 0; i < v.size(); i++ ){
+		for ( uint i = 0; i < v.size(); i++ ){
 			sstr.str("");
 			sstr << nName << "[ " << i << " ] ";
 			cout << "[" << fname <<  "] " << std::left <<  setw(20) << sstr.str() << v[i] << endl;
@@ -214,4 +214,17 @@ bool xmlConfig::nodeExists( char* nName ){
 	}
 
 	return false;
+}
+
+bool xmlConfig::isVector( char* nName ){
+
+	if ( nodeExists( nName )){
+		std::vector<string> v = getAsStringVector( nName );
+		if ( v.size() >= 1 && v[ 0 ] != getAsString( nName ) ){
+			return true;
+		}
+		return false;
+	} else {
+		return false;
+	}
 }

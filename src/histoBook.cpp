@@ -17,6 +17,8 @@ histoBook::histoBook( string name ){
 
 	legend = new TLegend( 0.75, 0.75, 0.9, 0.9);
 	legend->SetFillColor( kWhite );
+	legend->Draw();
+	legend->Clear();
 
 	globalStyle();
 
@@ -57,7 +59,7 @@ void histoBook::add( string name, TH1* h ){
 *
 * TODO:: add support for full subdirectory trees
 */
-string histoBook::cd( string sdir = "/", bool subd ){
+string histoBook::cd( string sdir = "/" ){
 
 	string old = currentDir;
 
@@ -68,9 +70,8 @@ string histoBook::cd( string sdir = "/", bool subd ){
 		file->cd( csdir );
 	} else {
 		//cout << "[histoBook.cd] creating directory " << sdir << endl;
-		TDirectory* d = file->mkdir( csdir );
+		file->mkdir( csdir );
 		file->cd( csdir );
-
 	}
 
 	currentDir = sdir;
@@ -94,6 +95,15 @@ void histoBook::make1D( string name, string title, uint nBins, double low, doubl
 
 	this->add( name, h );
 }
+
+void histoBook::make1D( string name, string title, uint nBins, const Double_t* bins  ){
+
+	TH1D* h;
+	h = new TH1D( name.c_str(), title.c_str(), nBins, bins );
+
+	this->add( name, h );
+}
+
 void histoBook::make2D( string name, string title, uint nBinsX, double lowX, double hiX, uint nBinsY, double lowY, double hiY ){
 
 	TH2D* h;
@@ -116,14 +126,16 @@ TH1* histoBook::get( string name, string sdir  ){
 		sdir = currentDir;
 	return book[ ( sdir  + name  ) ];
 }
+TH2* histoBook::get2D( string name, string sdir  ){
+	if ( sdir.compare("") == 0)
+		sdir = currentDir;
+	return (TH2*)book[ ( sdir  + name  ) ];
+}
 
 void histoBook::fill( string name, double bin, double weight ){ 
 	if ( get( name ) != 0)
 		get( name )->Fill( bin, weight );
 }
-
-
-
 
 
 void histoBook::globalStyle(){
@@ -160,20 +172,27 @@ histoBook* histoBook::style( string histName ){
 	return this;
 }
 
-histoBook* histoBook::set( string param, string value ){
+histoBook* histoBook::set( string param, string p1, string p2, string p3, string p4 ){
+	
+	// force the param name to lowercase
 	transform(param.begin(), param.end(), param.begin(), ::tolower);
-	int n = 0;
-
 
     TH1* h = get( styling );
     if ( h ){
 
 	    if ( "title" == param ){
-	    	h->SetTitle( value.c_str() );
+	    	h->SetTitle( p1.c_str() );
 	    } else if ( "x" == param ){
-	    	h->GetXaxis()->SetTitle( value.c_str() );
+	    	h->GetXaxis()->SetTitle( p1.c_str() );
 	    } else if ( "y" == param ){
-	    	h->GetYaxis()->SetTitle( value.c_str() );
+	    	h->GetYaxis()->SetTitle( p1.c_str() );
+	    } else if ( "legend" == param ){
+	    	if ( p2 == "")
+	    		p2="lpf";
+	    	legend->AddEntry( h, p1.c_str(), p2.c_str() );
+			legend->Draw();
+	    } else if ( "draw" == param ){
+	    	drawOption = p1;
 	    }
 	}
 
@@ -183,8 +202,6 @@ histoBook* histoBook::set( string param, string value ){
 histoBook* histoBook::set( string param, double p1, double p2, double p3, double p4  ){
 
 	transform(param.begin(), param.end(), param.begin(), ::tolower);
-	int n = 0;
-
 
     TH1* h = get( styling );
     if ( h ){
@@ -220,6 +237,18 @@ histoBook* histoBook::set( string param, double p1, double p2, double p3, double
 	    	h->SetMarkerColor( (int)p1 );
 	    } else if ( "markerstyle" == param ) {
 	    	h->SetMarkerStyle( (int)p1 );
+	    } else if ( "legend" == param ){
+	    	// p1 - alignmentX
+	    	// p2 - alignmentY
+	    	// p3 - width
+	    	// p4 - height
+
+	    	// make sure option is valid
+	    	if ( !(legendAlignment::center == p1 || legendAlignment::left == p1 || legendAlignment::right == p1) )
+	    		p1 = legendAlignment::best;
+	    	if ( !(legendAlignment::center == p2 || legendAlignment::top == p2 || legendAlignment::bottom == p2) )
+	    		p2 = legendAlignment::best;
+	    	placeLegend( p1, p2, p3, p4 );
 	    }
 
     }
@@ -232,42 +261,28 @@ histoBook* histoBook::set( string param, double p1, double p2, double p3, double
 }
 
 
-histoBook* histoBook::draw(string name, Option_t* opt, bool leg ){
+histoBook* histoBook::draw(string name, Option_t* opt ){
 
-	TH1* h = get( name );
-	if ( h ){
-		h->Draw( opt );
-
-		if ( leg ){
-			legend->AddEntry( h, name.c_str() );
-			legend->Draw();
+	// no parameters
+	if ( name == ""){
+		TH1* h = get( styling );
+		if ( h ){
+			// use the draw option set in its styling
+			h->Draw( drawOption.c_str() );
+			drawOption = "";
+		}	
+	} else {
+		TH1* h = get( name );
+		if ( h ){
+			h->Draw( opt );
 		}
 	}
 	
-
 	return this;
 }
 
-histoBook* histoBook::draw( Option_t* opt, bool leg ){
 
-	if ( styling == "" )
-		return this;
-
-	TH1* h = get( styling );
-	if ( h ){
-		h->Draw( opt );
-
-		if ( leg ){
-			legend->AddEntry( h, styling.c_str() );
-			legend->Draw();
-		}
-	}
-	
-
-	return this;
-}
-
-histoBook* histoBook::placeLegend( int alignment, double width, double height ){
+histoBook* histoBook::placeLegend( int alignmentX, int alignmentY, double width, double height ){
 
 	double mR = 1 - gPad->GetRightMargin();
 	double mL = gPad->GetLeftMargin();
@@ -281,32 +296,42 @@ histoBook* histoBook::placeLegend( int alignment, double width, double height ){
 	if ( height <= 0 || height > 1 )
 		height = .2;
 
-	if ( 	legendAlignment::topLeft ==  alignment ||
-			legendAlignment::bottomLeft ==  alignment ){
+	// alignment best needs a current histo
+	if ( !(get( styling )) ){
+		if ( legendAlignment::best == alignmentX )
+			alignmentX = legendAlignment::right;
+		if ( legendAlignment::best == alignmentY )
+			alignmentY = legendAlignment::top;
+	} else {
+
+		//TODO
+
+	}
+
+
+	if ( 	legendAlignment::left ==  alignmentX ){
 		x1 =  mL ;
 		x2 =  mL + width;
 	}
-	if ( 	legendAlignment::topRight ==  alignment ||
-			legendAlignment::bottomRight ==  alignment ){
+	if ( 	legendAlignment::right ==  alignmentX ){
 		x1 =  mR - width;
 		x2 =  mR ;
 	}
-	if ( 	legendAlignment::topCenter ==  alignment ||
-			legendAlignment::bottomCenter ==  alignment ){
+	if ( 	legendAlignment::center ==  alignmentX ){
 		x1 =  0.55 - width/2.0;
 		x2 =  0.55 + width/2.0;
 	}
-	if ( 	legendAlignment::topRight ==  alignment ||
-			legendAlignment::topCenter ==  alignment ||
-			legendAlignment::topLeft ==  alignment ){
+	if ( 	legendAlignment::top ==  alignmentY ){
 		y1 =  mT - height;
 		y2 = mT ;
 	}
-	if ( 	legendAlignment::bottomRight ==  alignment ||
-			legendAlignment::bottomCenter ==  alignment ||
-			legendAlignment::bottomLeft ==  alignment ){
+	if ( 	legendAlignment::bottom ==  alignmentY ){
 		y1 =  mB ;
 		y2 =  mB + height;
+	}
+	if ( 	legendAlignment::center ==  alignmentY ){
+		y1 =  0.55 - height/2.0;
+		y2 =  0.55 + height/2.0;
 	}
 	legend->SetX1NDC( x1 );
 	legend->SetX2NDC( x2 );
