@@ -39,7 +39,6 @@ private:
 	// the initial offsets for each channel relative to the 1st channel on the west side
 	double initialOffsets[ constants::nChannels ];
 	// the west - east offset
-	double westMinusEast;
 	double finalWestOffset;
 
 	// number of tot bins to use
@@ -64,10 +63,11 @@ private:
 	// variable bins for tot values -> helps with low statistics
 	// calculated in binTOT
 	Double_t * totBins[ constants::nChannels ];
-	bool * useTOTBin[ constants::nChannels ];
 
 	// Interpolation based corrections
 	splineMaker * spline[ constants::nChannels ];
+	Interpolation::Type splineType;
+	bool useSpline;
 
 
 	// outlier rejection
@@ -94,6 +94,7 @@ private:
 	
 
 public:
+
 
 	// Constructor
 	calib( TChain * chain, uint nIterations, xmlConfig config );
@@ -132,6 +133,15 @@ public:
 	
 	// reports
 	void stepReport();
+
+	// used for generalizing the slewing correction to the trigger side signals.
+	// Use the configuration file to set the variables to use
+	// Default are the TOF-side electronics Leading edge time (TDC) and time-over-threshold (TOT)
+	double getX( int channel );	// default is TOT
+	double getY( int channel );	// default is TDC
+
+	string xVariable;
+	string yVariable;
 
 protected:
 

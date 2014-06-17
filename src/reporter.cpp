@@ -1,12 +1,17 @@
 
 #include "reporter.h"
+#include "utils.h"
 
+int reporter::instances = 0;
+using namespace jdbUtils;
 
 reporter::reporter( string filename, int w, int h ){
 
 	this->filename = filename;
-	canvas = new TCanvas( "reporter", "canvas", w, h);
+
+	canvas = new TCanvas( ("reporter"+ts(instances)).c_str() , "canvas", w, h);
 	canvas->Print( ( filename + "[" ).c_str() );
+	instances++;
 }
 
 reporter::~reporter() {

@@ -5,30 +5,29 @@
 #include <fstream>
 #include <sstream>
 
-
 // provides my own string shortcuts etc.
 using namespace jdbUtils;
 
-/*
-*	Constructor
-*
-* 	Parameters:
-*	chain:	The chain object containing all data compatible with the TOFrPicoDST format
-*	nIterations:	Max number of iterations to run
-*	xmlConfig:		The xml configuration defining key aspects of the calibration
-*					such as number of tot bins to use, data location etc. See repo Readme
-*					for a sample configuration.		
-*/
+
+/**
+ * Constructor - Initializes all of the calibration parameters from the configuration file
+ * @param chain       The chain object containing all data compatible with the TOFrPicoDST format
+ * @param nIterations Max number of iterations to run
+ * @param con         The xml configuration defining key aspects of the calibration
+ *					such as number of tot bins to use, data location etc. See repo Readme
+ *					for a sample configuration.
+ */
 calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	cout << "[calib.calib] " << endl;
 	
+	gErrorIgnoreLevel=kError;
+
 	config = con;
 
 	// default number of tot bins is defined in constants in case non is given in config file
 	numTOTBins = constants::numTOTBins;
 	
-	// set the number of tot bins from the config if given
-	
+	// set the number of tot bins and the range from the config if given 
 	numTOTBins = config.getAsInt( "numTOTBins", constants::numTOTBins );
 	minTOT = config.getAsDouble( "minTOT", constants::minTOT );
 	maxTOT = config.getAsDouble( "maxTOT", constants::maxTOT );
@@ -37,7 +36,6 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	for ( int j = 0; j < constants::nChannels; j++){
 		correction[ j ] 	= new double[ numTOTBins + 1 ];
 		totBins[ j ] 		= new double[ numTOTBins + 1 ];
-		useTOTBin[ j ] 		= new bool[ numTOTBins + 1 ];
 
 		deadDetector[ j ]	= false;
 	}
@@ -53,18 +51,21 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	
 	// set the maximum number of iterations
 	maxIterations = nIterations;
+
 	// create the histogram book
 	book = new histoBook( ( config.getAsString( "baseName" ) + config.getAsString( "rootOutput" ) ) );
 
+	// keep the chain variable and make the picoDST var
 	_chain = chain;
 	pico = new TOFrPicoDst( _chain );
 
+	// set the histogram info verbosity to show nothing
 	gStyle->SetOptStat( 0 );
 
+	// start at step 0
 	currentIteration = 0;
 
-	gErrorIgnoreLevel=kError;
-	// create a canvas for report building 
+	// create a report builder 
 	report = new reporter( config.getAsString( "baseName" ) + config.getAsString( "reportOutput" ) );
 
 
@@ -90,12 +91,34 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 
 	avgNBackgroundCut = config.getAsDouble( "avgNBackgroundCut", 10 );
 
+
+	// set the spline type
+   	// default to akima
+   	Interpolation::Type type = ROOT::Math::Interpolation::kAKIMA;
+   	useSpline = false;
+   	if ( "akima" == config.getAsString( "splineType", "akima" ) ){
+    	type = ROOT::Math::Interpolation::kAKIMA;	
+    	useSpline = true; 
+    } else if ( "linear" == config.getAsString( "splineType" ) ){
+    	type = ROOT::Math::Interpolation::kLINEAR;	
+    	useSpline = true;
+    } else if ( "cspline" == config.getAsString( "splineType" ) ){
+    	type =  ROOT::Math::Interpolation::kCSPLINE;	
+    	useSpline = true;
+    }
+
+    splineType = type;
+
+
+    // set the variable types
+    xVariable = config.getAsString( "xVariable", "tof-tot" );
+    yVariable = config.getAsString( "yVariable", "tof-tdc" );
+
 }
 
-/*
-*	Destructor
-*	Deletes the histoBook ensuring it is saved.
-*/
+/**
+ *	Destructor - Deletes the histoBook ensuring it is saved.
+ */
 calib::~calib() {
 	
 	delete book;
@@ -104,8 +127,6 @@ calib::~calib() {
 	for ( int j = 0; j < constants::nChannels; j++){
 		delete [] correction[j];
 		delete [] totBins[j];
-		if ( useTOTBin[ j ])
-			delete [] useTOTBin[ j ];
 		if ( spline [ j ] )
 			delete spline[ j ];
 	
@@ -113,12 +134,53 @@ calib::~calib() {
 	cout << "[calib.~calib] " << endl;
 }
 
-/*
-*	Offsets
-*	Calculates the initial offsets for each channel with respect to channel 1 on the west side.
-*	Then performs the offset calculation again after all corrections have been applied
-*	
-*/
+/**
+ * Generalizes the calibration method to allow any combination of the trigger
+ * or time-of-flight electronic's descriminators to be used.
+ * @param  channel - the VPD channel for which the value should be retrieved. West = 1-19, East = 20-38
+ * @return         returns the channel's timing value
+ */
+double calib::getX( int channel ) {
+	
+	if ( (string)"tof-tot" == xVariable )
+		return pico->channelTOT( channel );
+	else if ( (string)"trg-adc" == xVariable )
+		return 0;
+
+	// the y varaibles in case you want to do non-standard comparisons
+	if ( (string)"tof-tdc" == xVariable )
+		return pico->channelTDC( channel );
+
+	// default to the tof tot
+	return pico->channelTOT( channel );	
+}
+
+/**
+ * Gerealizes the calibration method to allow any combination of the trigger
+ * or time-of-flight electronic's descriminators to be used
+ * @param  channel - the VPD channel for which the value should be retrieved. West = 1-19, East = 20-38
+ * @return         returns the channel's timing value
+ */
+double calib::getY( int channel ){
+
+	if ( (string)"tof-tdc" == yVariable )
+		return pico->channelTDC( channel );
+	else if ( (string)"trg-tdc" == yVariable )
+		return 0;
+
+	// the x varaibles in case you want to do non-standard comparisons
+	if ( (string)"tof-tot" == yVariable )
+		return pico->channelTOT( channel );
+
+	// default to the tof tot
+	return pico->channelTDC( channel );		
+}
+
+/**
+ *	Offsets
+ *	Calculates the initial offsets for each channel with respect to channel 1 on the west side.
+ *	Then performs the offset calculation again after all corrections have been applied
+ */
 void calib::offsets() {
 
 	startTimer();
@@ -135,7 +197,7 @@ void calib::offsets() {
 	book->cd( "initialOffset" );
 	
 	// make all the histos the first round
-	book->make2D( "tdc", "tdc relative to channel 0", constants::nChannels, -0.5, constants::nChannels-0.5, 600, -100, 100 );
+	book->make2D( "tdc", "tdc relative to channel 0", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
 	book->make1D( "tdcMean", "tdc relative to channel 0", constants::nChannels, -0.5, constants::nChannels-0.5 );
 	book->make2D( "correctedOffsets", "corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 200, -100, 100 );
 	book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels, 0, constants::nChannels, 1000, 0, 51200 );
@@ -174,8 +236,8 @@ void calib::offsets() {
 			if ( nHits < constants::minHits ) 
 				continue;
 
-			double tdc = pico->channelTDC( j );
-	    	double tot = pico->channelTOT( j );
+			double tdc = getY( j );
+	    	double tot = getX( j );
 	    
 	    	book->fill( "tdcRaw", j, tdc );
 
@@ -192,18 +254,31 @@ void calib::offsets() {
 
 	for ( int i = constants::startWest; i < constants::endEast; i++ ){
 		TH1D* tmp = tdc->ProjectionY( "tmp", i+1, i+1 );
-		cout << "Channel [ " << i+1 << " ] Offset = " << tmp->GetMean() << endl;
+		cout << "Channel [ " << i+1 << " ] Offset = " << tmp->GetMean() << " ns " << endl;
 
-		this->initialOffsets[ i ] = tmp->GetMean();
+		if ( i == constants::startWest )
+			this->initialOffsets[ i ] = 0;
+		else
+			this->initialOffsets[ i ] = tmp->GetMean();
 		book->get( "tdcMean" )->SetBinContent( i+1, this->initialOffsets[ i ] );
 		book->get( "tdcMean" )->SetBinError( i+1, tmp->GetMeanError() );
 
 		delete tmp;
 	}
 
+	// calculate what the final mean of the west side channels would be if no offsets where removed.
+	// It is the average using equal weight for each channel 
+	double totalWest = 0;
+	for ( int k = constants::startWest; k < constants::endWest; k++){
+		totalWest += this->initialOffsets[ k ];
+	}
+	finalWestOffset = (totalWest / 19.0);
+	cout << "Channel 0 floating offset : " << finalWestOffset << " ns " << endl;
+
 	
 
-	// get the east / west offset
+	// get the east / west offset just for plotting
+	double westMinusEast = 0;
 	TH1D* west = tdc->ProjectionY( "westOffset", 2, 19 );
 	book->add( "westOffset", west );
 	TH1D* east = tdc->ProjectionY( "eastOffset", 20, 38 );
@@ -211,9 +286,9 @@ void calib::offsets() {
 
 	westMinusEast = ( west->GetMean() - east->GetMean() );
 	
-	cout << "West Mean = " << west->GetMean() << endl;
-	cout << "East Mean = " << east->GetMean() << endl;
-	cout << "West - East offset: " << westMinusEast << endl; 
+	cout << "West Mean = " << west->GetMean() << " ns " << endl;
+	cout << "East Mean = " << east->GetMean() << " ns " <<endl;
+	cout << "West - East offset: " << westMinusEast << " ns " << endl; 
 
 	report->newPage( 1, 2);
 
@@ -246,14 +321,13 @@ void calib::offsets() {
 	cout << "[calib." << __FUNCTION__ << "] completed in " << elapsed() << " seconds " << endl;
 }
 
-/*
-*	binTOT
-*	variableBinning:
-*		false	- fixed binning the tot space from minTOT to maxTOT
-*		true	- calculates variable binning for tot space such that 
-*				the number of events is roughly equal for each tot bin
-*
-*/
+/**
+ * Produces the bins to use when histogramming the values in TOT space
+ * @param variableBinning 
+ *        True  	Calculates variable binning for tot space such that 
+ *        			the number of events is roughly equal for each tot bin
+ *        False 	Fixed binning the tot space from minTOT to maxTOT
+ */
 void calib::binTOT( bool variableBinning ) {
 
 	cout << "[calib." << __FUNCTION__ << "] Starting " << endl;
@@ -294,7 +368,7 @@ void calib::binTOT( bool variableBinning ) {
 		    if( numWest > constants::minHits){
 		        
 		    	for(Int_t j = 0; j < constants::endWest; j++) {
-		        	Double_t tot = pico->channelTOT( j );
+		        	Double_t tot = getX( j );
 		          
 		        	if(tot > minTOT && tot < maxTOT ) 
 		          		tots[j].push_back(tot);
@@ -305,7 +379,7 @@ void calib::binTOT( bool variableBinning ) {
 	  		if( numEast > constants::minHits ){
 	    
 	    		for(Int_t j = constants::startEast; j < constants::endEast; j++) {
-	      			Double_t tot = pico->channelTOT( j );
+	      			Double_t tot = getX( j );
 	      
 			        if( tot > minTOT && tot < maxTOT) 
 			        	tots[j].push_back(tot);
@@ -372,25 +446,34 @@ void calib::binTOT( bool variableBinning ) {
 		}	
 	}
 	cout << "[calib." << __FUNCTION__ << "] completed in " << elapsed() << " seconds " << endl;
-
 }
 
+/**
+ * Retrieves the Slewing correction for a given tot value for a given channel
+ * @param  vpdChannel VPD Channel for the slewing correction 
+ * @param  tot        The TOT value for the correction
+ * @return            The TDC correction for the channel at the given tot value
+ */
 double calib::getCorrection( int vpdChannel, double tot ){
 	
-	//if ( currentIteration <= 0 )
-	//	return 0;
 
-	if ( spline[ vpdChannel ] && spline[ vpdChannel ]->getSpline() ){
-		
+	// use splines to get the correction value if set to
+	if ( useSpline && spline[ vpdChannel ] && spline[ vpdChannel ]->getSpline() ){
 		return spline[ vpdChannel ]->getSpline()->Eval( tot );
 	}
 	
+	// if not fall back to doing bin based corrections
 	int totBin = binForTOT( vpdChannel, tot ); 
-	
 	return correction[ vpdChannel ][ totBin ];
 
 }
 
+/**
+ * Determines which bin corresponds to a given TOT value
+ * @param  vpdChannel The Channel whose binning should be used
+ * @param  tot        The TOT value
+ * @return            Returns the bin for the given tot value
+ */
 int calib::binForTOT( int vpdChannel, double tot ){
 
 	stringstream sstr; 
@@ -410,7 +493,15 @@ int calib::binForTOT( int vpdChannel, double tot ){
 
 }
 
-
+/**
+ * Performs the outlier rejection calculations for each event.
+ * Calculates the VPD zVertex for all combinations of east and west detectors
+ * and uses the detectors only in pairs which are within a given cut from the TPC
+ * zVertex
+ * @param reject 
+ *        True 		Performs outlier reject
+ *        False 	Uses all detectors, all events
+ */	
 void calib::outlierRejection( bool reject ) {
 
 	// must be called from inside event loop in the calib step
@@ -457,8 +548,8 @@ void calib::outlierRejection( bool reject ) {
 
 		if ( deadDetector[ j ] ) continue;
 
-		double tdcWest = pico->channelTDC( j );
-	    double totWest = pico->channelTOT( j );
+		double tdcWest = getY( j );
+	    double totWest = getX( j );
 
 	    tdcWest -= this->initialOffsets[ j ];
 
@@ -475,8 +566,8 @@ void calib::outlierRejection( bool reject ) {
 			
 			if ( deadDetector[ k ] ) continue;
 
-			double tdcEast = pico->channelTDC( k );
-	    	double totEast = pico->channelTOT( k );
+			double tdcEast = getY( k );
+	    	double totEast = getX( k );
 
 	    	tdcEast -= this->initialOffsets[ k ];
 
@@ -538,6 +629,9 @@ void calib::outlierRejection( bool reject ) {
 
 }
 
+/**
+ * Prepares the histograms for each step of the calibration
+ */
 void calib::prepareStepHistograms() {
 	
 	// for names
@@ -603,6 +697,14 @@ void calib::prepareStepHistograms() {
 
 }
 
+
+/**
+ * Performs a single step of the slewing calibration. 
+ * Loops over all events, performs the outlier rejection and averageN calulations.
+ * Then each channel is looped over. For each channel the average of all times from other
+ * channels is calculated. The slewing curve for each channel is then plotted against the 
+ * average from other channels.
+ */
 void calib::step( ) {
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Start " << endl;
@@ -666,8 +768,8 @@ void calib::step( ) {
     		if ( deadDetector[ j ] ) continue;
 			if ( !useDetector[ j ] ) continue;
 
-    		tot[ j ] = pico->channelTOT( j );
-    		tdc[ j ] = pico->channelTDC( j );
+    		tot[ j ] = getX( j );
+    		tdc[ j ] = getY( j );
     		if ( removeOffset )
    	 			off[ j ] = this->initialOffsets[ j ];
    	 		else 
@@ -809,12 +911,10 @@ void calib::step( ) {
 	
 }
 
-/*
-*
-*	finish
-*	called *after* the last iteration to perform final cuts and finish the calibration calculations
-*
-*/
+/**
+ * Performs the fitting after all calibration steps have been completed
+ * and outputs the report plots for each detectors resolution.
+ */
 void calib::finish( ){
 
 	int last = currentIteration - 1;
@@ -907,29 +1007,12 @@ void calib::finish( ){
 
 	report->savePage();	
 
-
-	// get the final channel offsets
-	book->cd( "initialOffset" );
-
-	// calculate the offsets
-  	TH2D* tdc = (TH2D*) book->get( iStr + "Offsets" );
-	for ( int i = constants::startWest; i < constants::endEast; i++ ){
-		TH1D* tmp = tdc->ProjectionY( "tmp", i+1, i+1 );
-		delete tmp;
-	}
-
-	// get the east / west offset
-	TH1D* west = tdc->ProjectionY( "westOffsetFinal", 2, 19 );
-	book->add( "westOffsetFinal", west );
-	TH1D* westAll = tdc->ProjectionY( "westOffsetAllFinal", 1, 19 );
-	book->add( "westOffsetAllFinal", westAll );
-
-	finalWestOffset = ( west->GetMean() + westAll->GetMean() ) / 2.0;
-	cout << "Final West Offset : " << finalWestOffset << endl;
-
-
 }
 
+/**
+ * Executes the given number of calibration steps and then
+ * calls the finish() function to fit the single detector resolution.
+ */
 void calib::loop( ) {
 
 	for ( unsigned int i = 0; i < maxIterations; i++ ){
@@ -939,44 +1022,23 @@ void calib::loop( ) {
 
 }
 
+
+/**
+ * After each calibration step the corrections are calculated from the slewing curves.
+ * If Splines are used the spline is perpared and both the slewing curve and spline are drawn.
+ */
 void calib::makeCorrections( ){
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Start " << endl;
-	
-
-	string iStr = "it" + ts( currentIteration );
 	startTimer();
 
+	bool removeOffset = config.getAsBool( "removeOffset" );
 
-	/**
-	 * First time generate the list of good / bad bins if using fixed binning
-	 */
-	if ( 0 == currentIteration && false == config.getAsBool( "variableBinning" ) ){
-		
-
-		for( int k = constants::startWest; k < constants::endEast; k++) {
-			book->cd( "channel" + ts( k ) );
-
-			// slewing curve without correction applied to channel k
-	    	TH2D* pre = (TH2D*) book->get( iStr + "tdctot" );
-	    	double total = pre->Integral();
-
-	    	// if there are less than N% the number of events that would be in each bin 
-	    	// assuming equal distribution then reject the bin
-	    	double minEvents = total / ( numTOTBins * 5.0);
-	    	for ( int ib = 1; ib <= numTOTBins ; ib ++ ){
-	    		useTOTBin[ k ][ ib ] = true;
-	    		double binTotal = pre->Integral( ib, ib );
-	    		if ( binTotal <= minEvents ){
-	    			useTOTBin[ k ][ ib ] = false;
-	    			//cout << " Channel [ " << k << " ] Bin [ " << ib << " ] set to false " << endl;
-	    		}
-	    	}
-		}
-	}
+	string iStr = "it" + ts( currentIteration );
+	// Bins with greater error on the fitslicesY mean will not be used in final correction
+	double maxError = config.getAsDouble( "binMaxError", 0.10);
 	
-
-
+	
 	report->newPage( 4, 5);
 
 	// get the corrections for the next iteration 
@@ -1029,35 +1091,22 @@ void calib::makeCorrections( ){
 	    book->add( ("it" + ts( currentIteration ) + "difcor").c_str(), dif  );
 
 	    double reset = 0;
+	    
 	    for ( int ib = 1; ib <= numTOTBins ; ib ++ ){
 
-	    	// reject outlier bins
-	    	if ( ib >= 2 && ib <= numTOTBins - 1){
-
-	    		double s1 = cor->GetBinContent( ib - 1 );
-	    		double s2 = cor->GetBinContent( ib + 1 );
-	    		double avgSides = (s1 + s2 ) / 2.0;
-	    		double val = cor->GetBinContent( ib );
-
-	    		if ( 	TMath::Abs( val - avgSides ) >= 1 && TMath::Abs( val - s1 ) >= .75 && TMath::Abs( val - s2 ) >= .75 ) /////// TODO
-	    			cor->SetBinContent( ib, avgSides );
-
-	    	} else if ( ib == 1 ){	// first bin
-	    		double val = cor->GetBinContent( ib );
-	    		double s2 = cor->GetBinContent( ib + 1 );
-	    		if ( TMath::Abs( val - s2 ) >= 1 )
-	    			cor->SetBinContent( ib, s2 );
-	    	} else if ( ib == numTOTBins ){	// last bin
-	    		double val = cor->GetBinContent( ib );
-	    		double s1 = cor->GetBinContent( ib - 1 );
-	    		if ( TMath::Abs( val - s1 ) >= 1 )
-	    			cor->SetBinContent( ib, s1 );
+	    	if ( removeOffset ){
+				// reject low statistics bins and instead interpolate between good bins
+		    	if ( ib > 1){
+			    	if ( preMean->GetBinError( ib ) < maxError && preMean->GetBinError( ib ) != 0 )
+			    		reset = cor->GetBinContent( ib );
+			    	else {
+			    		cor->SetBinContent( ib, reset );
+			    		dif->SetBinContent( ib, 0 );
+			    	}
+		    	} 
 	    	}
-	    	
-	    	if ( useTOTBin[ k ][ ib ]  )
-	    		reset = cor->GetBinContent( ib );
-	    	else{
-	    		cor->SetBinContent( ib, reset );
+
+	    	if ( currentIteration >= 1 && TMath::Abs( dif->GetBinContent( ib ) ) > 1 ){
 	    		dif->SetBinContent( ib, 0 );
 	    	}
 
@@ -1068,37 +1117,23 @@ void calib::makeCorrections( ){
 
 	    if ( spline[ k ])
 	    	delete spline[ k ];
-	   
-	   	// set the spline type
-	   	// default to none
-	   	Interpolation::Type type = ROOT::Math::Interpolation::kAKIMA;
-	   	bool useSpline = false;
-	   	if ( "akima" == config.getAsString( "splineType", "akima" ) ){
-	    	type = ROOT::Math::Interpolation::kAKIMA;	
-	    	useSpline = true; 
-	    } else if ( "linear" == config.getAsString( "splineType" ) ){
-	    	type = ROOT::Math::Interpolation::kLINEAR;	
-	    	useSpline = true;
-	    } else if ( "cspline" == config.getAsString( "splineType" ) ){
-	    	type =  ROOT::Math::Interpolation::kCSPLINE;	
-	    	useSpline = true;
-	    }
 	    
 	    if ( useSpline )
-		    spline[ k ] = new splineMaker( cor, splineAlignment::center, type );
+		    spline[ k ] = new splineMaker( cor, splineAlignment::center, splineType );
 
 		splineMaker* vSpline;
 		if ( currentIteration == 0 ) 
 			vSpline = spline[ k ];
 		else
-			vSpline = new splineMaker( dif, splineAlignment::center, type );
+			vSpline = new splineMaker( dif, splineAlignment::center, splineType );
 	    
 	    if ( currentIteration <= 1 || currentIteration == maxIterations - 1){
 		    
-
-		    book->style( ("it"+ts(currentIteration)+"tdccor") )
-		    	->set( "range", -5.0, 5.0);
-
+		    if ( removeOffset )
+		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "range", -5.0, 5.0);
+		    else
+		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "dynamicdomain", 1, -1, -1, 2 );
+		    	
 
 		    post->Draw( "colz" );
 		    
@@ -1109,7 +1144,7 @@ void calib::makeCorrections( ){
 		    	g->SetMarkerColor( kRed );
 		    	g->Draw( "same cp" );
 			}
-			post->GetYaxis()->SetRangeUser( -5, 5);
+			
 			if ( currentIteration != 0 ) 
 				delete vSpline;
 
@@ -1126,9 +1161,15 @@ void calib::makeCorrections( ){
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " completed in " << elapsed() << " seconds " << endl;
 }
 
+/**
+ * Outputs the slewing curve corrections in DB format
+ * Adds the offsets back as well as the channel 1 relative offset
+ * so that the corrected time is true to the initial time.
+ */
 void calib::writeParameters(  ){
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Start " << endl;
+
 
 	string outName = config.getAsString( "baseName" ) + config.getAsString( "paramsOutput" );
 
@@ -1144,7 +1185,10 @@ void calib::writeParameters(  ){
 
 	for ( int j = constants::startWest; j < constants::endEast; j++ ){
 
-		book->make1D( "slewingCor" +ts(j), "Channel "+ts(j+1)+ "Slewing Correction", numTOTBins, minTOT, maxTOT  );
+		book->make1D( "slewingCor" +ts(j), "Channel "+ts(j+1)+ " : Slewing Correction", numTOTBins, minTOT, maxTOT  );
+		if ( useSpline )
+			book->make1D( "splineSlewingCor" +ts(j), "Channel "+ts(j+1)+ " : Spline Slewing Correction", numTOTBins, minTOT, maxTOT  );
+		book->make1D( "slewingNoOffset" +ts(j), "Channel "+ts(j+1)+ " : Slewing Correction", numTOTBins, minTOT, maxTOT  );
 
 		f << (j + 1) << endl;
 		f << numTOTBins << endl;
@@ -1154,59 +1198,37 @@ void calib::writeParameters(  ){
 		}
 		f << endl;
 		for ( int i = 0; i <= numTOTBins; i++ ){
+
+			double totStep = (( maxTOT - minTOT ) / (double)numTOTBins);
+			double tot = minTOT + totStep * (double)i;
+
 			double off = 0;
 			if ( removeOffset ){
-				off = initialOffsets[ j ] - finalWestOffset;
-				if ( j >= constants::startEast && j < constants::endEast )
-					off += westMinusEast;
+				off = initialOffsets[ j ] ;
 			}
-			double fCor = correction[ j ][ i + 1 ] + off;
-			book->get( "slewingCor" +ts(j) )->SetBinContent( i+1, fCor );
-			f << ( fCor ) << " ";
-		}
-		f << endl;
-	} 
+			
+			// bin based corrections
+			double bCor = correction[ j ][ i + 1 ] + off;
+			book->get( "slewingCor" +ts(j) )->SetBinContent( i+1, bCor );
 
-	f.close();
-
-	outName = config.getAsString( "baseName" ) + "_spline_" + config.getAsString( "paramsOutput" );
-
-	if ( outName.length() <= 4 )
-		return;
-
-	f.open( outName.c_str() );
-
-	
-
-	for ( int j = constants::startWest; j < constants::endEast; j++ ){
-
-		book->make1D( "splineSlewingCor" +ts(j), "Channel "+ts(j+1)+ " : Slewing Correction", numTOTBins, minTOT, maxTOT );
-
-		f << (j + 1) << endl;
-		f << numTOTBins << endl;
-
-		for ( int i = 0; i <= numTOTBins; i++ ){
-			f << totBins[ j ][ i ] << " ";
-		}
-		f << endl;
-		for ( double tot = minTOT; tot <= maxTOT; tot += (maxTOT - minTOT)/(double)numTOTBins ){
-			double off = 0;
-			if ( removeOffset ){
-				off = initialOffsets[ j ] - finalWestOffset;
-				if ( j >= constants::startEast && j < constants::endEast )
-					off += westMinusEast;
-			}
-			double cor = spline[ j ]->getSpline()->Eval( tot );
-			double fCor = cor + off;
+			// spline based corrections
+			double sCor = spline[ j ]->getSpline()->Eval( tot ) + off;
 			book->get( "splineSlewingCor" +ts(j) )->SetBinContent( book->get( "splineSlewingCor" +ts(j) )->GetXaxis()->FindBin( tot ), 
-				cor );
+				sCor );
 
-			f << ( fCor ) << " ";
+			if ( useSpline ){
+				f << ( sCor ) << " ";
+				book->get( "slewingNoOffset" +ts(j))->SetBinContent( i, sCor - off );
+			} else {	// use the bin based corrections only
+				f << ( bCor ) << " ";
+				book->get( "slewingNoOffset" +ts(j))->SetBinContent( i, bCor - off );
+			}
 		}
 		f << endl;
 	} 
 
 	f.close();
+
 
 	//draw the parameters
 	report->newPage( 3, 4 );
@@ -1217,7 +1239,10 @@ void calib::writeParameters(  ){
 		if ( j != constants::startEast && j != constants::startWest )
 			report->next();
 
-		book->style( "splineSlewingCor" +ts(j) )->set("lineColor", kRed )->set( "range", -5, 5)->draw();
+		if ( removeOffset )
+			book->style( "slewingNoOffset"+ts(j) )->set("lineColor", kRed )->set( "range", -5, 5)->draw();
+		else
+			book->style( "slewingNoOffset"+ts(j) )->set("lineColor", kRed )->draw();
 
 		if ( j == constants::endWest - 1 || j == constants::endEast - 1){
 			report->savePage();
@@ -1229,8 +1254,15 @@ void calib::writeParameters(  ){
 
 }
 
+
+/**
+ * Reads parameter files in either to compare or to run
+ * and produce calibration plots from the existing parameter files
+ */
 void calib::readParameters(  ){
 
+
+	
 
 	
 
@@ -1242,8 +1274,6 @@ void calib::readParameters(  ){
 	
 	if ( config.isVector( "paramsInput") ){
 
-
-		
 
 		bool good = true;
 		std::vector<string> files = config.getAsStringVector( "paramsInput" );
@@ -1266,7 +1296,7 @@ void calib::readParameters(  ){
 
 					int tBins = 0;
 					infile >> tBins;
-				
+					cout << "tBins " << tBins << endl;
 					if ( 	channel >= 1 && channel <= 38 && 
 							tBins == numTOTBins ){
 
@@ -1279,14 +1309,21 @@ void calib::readParameters(  ){
 						
 						// create a hist
 						book->cd( "params" );
-						book->make1D( "file"+ts(fi)+"channel"+ts(channel-1), "Channel "+ts(channel)+" Slewing Corrections", tBins, totBins[ channel-1] );
+						book->make1D( "file"+ts(fi)+"channel"+ts(channel-1), "Channel "+ts(channel)+" Slewing Corrections; tot [ns]; tdc [ns]", tBins, totBins[ channel-1] );
 
 
 						for ( int j=0; j <= tBins; j++ ){
 							infile >> tmp;
 							correction[ channel - 1 ][ j ] = tmp;
+
 							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, tmp );
 						}
+						// TODO : tmp workaround for variable binning bug
+						//correction[ channel - 1 ][ 0 ] = correction[ channel - 1 ][ 1 ];
+						for ( int j=0; j <= tBins; j++ ){ 
+							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, correction[ channel - 1 ][ j ] - correction[ channel - 1 ][ 0 ] );
+						}
+
 						
 					} else {
 						cout << "[calib." << __FUNCTION__ <<  "] " << "Bad file format, cannot load parameters" << endl;
@@ -1312,6 +1349,9 @@ void calib::readParameters(  ){
 
 				for ( uint fi = 0; fi < files.size(); fi ++ ){
 				
+					if ( files.size() == 1 && (string)"checkParams" == config.getAsString( "jobType" ) ){
+						spline[ k ] = new splineMaker( (TH1D*)book->get("file"+ts(fi)+"channel"+ts(k)), splineAlignment::center, splineType );
+					}
 					
 					
 				    book->style( "file"+ts(fi)+"channel"+ts(k) )
@@ -1342,10 +1382,16 @@ void calib::readParameters(  ){
 	cout << "[calib." << __FUNCTION__ <<  "] " << " completed in " << elapsed() << " seconds " << endl;
 }
 
+
+/**
+ * Outputs the outlier rejection and slewing curve summary figures to a pdf report
+ */
 void calib::stepReport() {
 
 	string iStr = "it"+ts(currentIteration);
 
+	if ( config.getAsBool( "outlierRejection" ) == false )
+		return;
 
 	double vzCut = 40;
 	if ( currentIteration < vzOutlierCut.size() )
@@ -1398,6 +1444,9 @@ void calib::stepReport() {
 	report->savePage();
 }
 
+/**
+ * Plots the 1 - < N > distribution for all channels
+ */
 void calib::averageN() {
 
 	string iStr = "it"+ts(currentIteration);
@@ -1426,8 +1475,8 @@ void calib::averageN() {
 		if ( deadDetector[ j ] ) continue;
 		if ( !useDetector[ j ] ) continue;
 
-		tot[ j ] = pico->channelTOT( j );
-		tdc[ j ] = pico->channelTDC( j );
+		tot[ j ] = getX( j );
+		tdc[ j ] = getY( j );
 		off[ j ] = this->initialOffsets[ j ];	
 		tAll[ j ] = tdc[ j ] - off[ j ];
 		
@@ -1505,7 +1554,20 @@ void calib::averageN() {
 	} // loop sides
 }
 
-
+/**
+ * The functional form for the difference between 
+ * sampling a gaussian and the mean of n samples of the same gaussian.
+ * Note that especially in high multiplicity the low N range of the fit 
+ * Doesn not follow the fit closesly since detector-to-detector variations play a larger role.
+ *
+ * Exact form would include weighting each detector by its sigma (unknown). 
+ * However this form converges to the same value. For large enough statistics this isn't
+ * a poblem
+ * 
+ * @param  x   The number of gaus distributions being sampled
+ * @param  par The single detector sigma
+ * @return     measured variance in the 1 - <N>
+ */
 Double_t calib::detectorResolution(Double_t *x, Double_t *par){
 	Double_t resval = 0.0;
 	if (x[0]>0){
@@ -1515,3 +1577,4 @@ Double_t calib::detectorResolution(Double_t *x, Double_t *par){
 		return 0.0;
 	}
 }
+

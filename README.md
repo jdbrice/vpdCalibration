@@ -33,6 +33,8 @@ The default value is given for optional tags.
 performs a geometry alignment job
   2. **paramReport**  
 plots the parameter files given in the <paramInput> tag in the configuration file and compares them. Useful for comparing calibrations over time / different runs etc.
+  3. **checkParams**
+Readins in a parameter file then runs the calibration steps to produce qa plots.
 
 ###baseName
 Default : ""
@@ -49,6 +51,15 @@ Default : ""
 ###paramsOutput
 * Default : "params.dat"
 * The name specific to the data output file. The full name will be baseName+paramsOutput. The '.dat' suffix should be specified.
+
+###paramsInput
+* Default : {""}
+* Vector of parameter file names to read in. Does not use the baseName prefix. If only one name is given and jobType=checkParams then the parameter file is applied and the calibration loop is started from there. If not or more than 1 filename is given, then the parameter files are plotted in overlay.
+
+###paramsLegend
+* Default : {""}
+* Vector of parameter legend names to use when comparing parameter files. Does not use the baseName prefix.
+
 
 ###dataDir
 * REQUIRED
@@ -95,6 +106,10 @@ Default : ""
 * **cspline** - use a cubic slpine to fit the slewing curves and extract the corrections
 * **linear** - use linear interpolation to fit the slewing curves and extract the corrections 
 * **none** - use histogram bins to exctract the slewing corrections. Often causes discontinuities in the correction parameters.
+
+###binMinPercent
+* Default : 0.10 
+* When using fixed binning, reject bins with too few events. threshold = (totalTotEvents/numTOTBins) * percent
 
 ###vzOutlierCut
 * Default : { 40, 15, 8, 5} [cm]

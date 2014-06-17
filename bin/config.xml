@@ -4,9 +4,14 @@
 			genReport - for reading in a calibration and producing qa -->
 	<jobType>calibrate</jobType>
 
+	<!-- The dep/indep variables to use for the slewing correction -->
+	<!-- can be used to look at the tof-side or trigger-side electronics, or a combination -->
+	<xVariable>tof-tot</xVariable>
+	<yVariable>tof-tdc</yVariable>
+
 	<!-- output files -->
 	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
-	<baseName>a</baseName>
+	<baseName></baseName>
 	<!--	root, params, report filename appended to baseName -->
 	<rootOutput>qa.root</rootOutput>
 	<paramsOutput>params.dat</paramsOutput>
@@ -15,31 +20,32 @@
 	<!-- Data input -->
 	<!--
 	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>-->
-	<!--<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>-->
-	<dataDir>/star/institutions/rice/jdb/run14/auau15/TofCalibration/geomAlign/t14Data0/output/</dataDir>
-	<maxFiles>60</maxFiles>
+	<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>
+	<!--<dataDir>/star/institutions/rice/jdb/run14/auau15/TofCalibration/geomAlign/t14Data0/output/</dataDir>-->
+	<maxFiles>400</maxFiles>
 
 
 	<!-- Calibration options -->
-	<numIterations>3</numIterations>
+	<numIterations>5</numIterations>
 	<variableBinning>false</variableBinning>
-	<removeOffset>true</removeOffset>
-	<outlierRejection>true</outlierRejection>
+	<removeOffset>false</removeOffset>
+	<outlierRejection>false</outlierRejection>
 	<!-- 	linear: for linear interpolation
 			cspline: for cubic spline interpolation
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
-	<numTOTBins>200</numTOTBins>
+	<numTOTBins>60</numTOTBins>
 	<minTOT>10</minTOT>
-	<maxTOT>60</maxTOT>
+	<maxTOT>40</maxTOT>
 
-
+	<binMaxError>1.5</binMaxError>
+	
 	<vzOutlierCut>
 		<v>40</v>
 		<v>15</v>
 		<v>8</v>
-		<v>5</v> <!-- las value is for all remaining iterations -->
+		<v>5</v> <!-- last value is for all remaining iterations -->
 	</vzOutlierCut>
 
 	<!-- Background cut applied to the avgN->FitSlicesY() when calculating detector resolution -->
@@ -47,7 +53,7 @@
 	<avgNTimingCut>
 		<v>2</v>
 		<v>1</v>
-		<v>0.6</v> <!-- las value is for all remaining iterations -->
+		<v>0.6</v> <!-- last value is for all remaining iterations -->
 	</avgNTimingCut>
 
 

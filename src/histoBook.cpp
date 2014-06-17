@@ -15,7 +15,10 @@ histoBook::histoBook( string name ){
 	file = new TFile( filename.c_str(), "recreate" );
 	file->cd();
 
-	legend = new TLegend( 0.75, 0.75, 0.9, 0.9);
+	
+	// make the legend and draw it once to apply styles etc. 
+	// for some reason needed to make styling work on the first draw
+	legend = new TLegend( 0.65, 0.65, 0.9, 0.9);
 	legend->SetFillColor( kWhite );
 	legend->Draw();
 	legend->Clear();
@@ -217,16 +220,23 @@ histoBook* histoBook::set( string param, double p1, double p2, double p3, double
 	    	double thresh = p1;
 	    	int min = (int)p2;
 	    	int max = (int)p3;
+	    	int axis = (int)p4;		// 1 = x, 2 = y
+
+	    	if ( 1 != axis && 2 != axis )
+	    		axis = 1;
 	    	
 	    	if ( thresh >= 0) {
 	    		if ( -1 >= min )
-	    			min = h->FindFirstBinAbove( thresh );
+	    			min = h->FindFirstBinAbove( thresh, axis );
 	    		if ( -1 >= max )
-	    			max = h->FindLastBinAbove( thresh );
-	    		
+	    			max = h->FindLastBinAbove( thresh, axis );
 	    	}
 	    	
-		    h->GetXaxis()->SetRange( min, max );
+	    	if ( 1 == axis )
+		  	  h->GetXaxis()->SetRange( min, max );
+		  	else if ( 2 == axis )
+		  		h->GetYaxis()->SetRange( min, max );
+
 	    }  else if ( "range" == param ){
 
 	    	double min = p1;

@@ -4,7 +4,7 @@
 class reporter
 {
 public:
-	reporter( string filename, int w = 800, int h = 1024 );
+	reporter( string filename, int w = 791, int h = 1024 );
 	~reporter();
 
 	void newPage( int dx = 1, int dy = 1);
@@ -20,5 +20,6 @@ private:
 	int dx, dy;
 
 	string filename;
+	static int instances;
 
 };

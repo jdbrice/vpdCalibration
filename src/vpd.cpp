@@ -34,11 +34,15 @@ int main( int argc, char* argv[] ) {
     config.display( "paramsInput" );
     config.display( "paramsLegend" );
     cout << endl;
+    config.display( "xVariable" );
+    config.display( "yVariable" );
+    cout << endl;
     config.display( "dataDir" );
     config.display( "maxFiles" );
     cout << endl;
     config.display( "numIterations" );
     config.display( "variableBinning" );
+    config.display( "binMinPercent" );
     config.display( "removeOffset" );
     config.display( "outlierRejection" );
     config.display( "numTOTBins" );
@@ -68,12 +72,17 @@ int main( int argc, char* argv[] ) {
     calib vpdCalib( chain, numIterations, config );
  
 
-    if ( jobType == (string)"paramReport" ){
+    if ( (string)"paramReport" == jobType  ){
 
         vpdCalib.readParameters(  );
 
-    }
-    if ( jobType == (string)"calibrate" ){
+    } else if ( (string)"checkParams" == jobType  ){
+
+        vpdCalib.readParameters(  );
+
+        vpdCalib.step();
+
+    } else if ( (string)"calibrate" == jobType ){
 
         // determine the variable binning in tot space
         vpdCalib.binTOT( config.getAsBool( "variableBinning")  );     

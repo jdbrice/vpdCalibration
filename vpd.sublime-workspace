@@ -4,24 +4,128 @@
 		"selected_items":
 		[
 			[
+				"Get",
+				"GetMaximum"
+			],
+			[
+				"getAs",
+				"getAsBool"
+			],
+			[
+				"mi",
+				"minEvents"
+			],
+			[
+				"remo",
+				"removeOffset"
+			],
+			[
+				"rem",
+				"removeOffset"
+			],
+			[
+				"use",
+				"useSpline"
+			],
+			[
+				"max",
+				"maxTOT"
+			],
+			[
+				"west",
+				"westMinusEast"
+			],
+			[
+				"start",
+				"startWest"
+			],
+			[
+				"getAsS",
+				"getAsStringVector"
+			],
+			[
+				"node",
+				"nodeExists"
+			],
+			[
+				"s",
+				"size"
+			],
+			[
+				"params",
+				"paramsInput"
+			],
+			[
+				"xml",
+				"xmlConfig"
+			],
+			[
+				"final",
+				"finalWestOffset"
+			],
+			[
+				"ch",
+				"channel"
+			],
+			[
+				"Offset",
+				"Offsets"
+			],
+			[
+				"initi",
+				"initialOffset"
+			],
+			[
+				"lege",
+				"legend"
+			],
+			[
+				"outlier",
+				"outlierRejection"
+			],
+			[
+				"sta",
+				"startWest"
+			],
+			[
+				"report",
+				"report"
+			],
+			[
+				"new",
+				"newPage"
+			],
+			[
+				"re",
+				"reporter"
+			],
+			[
+				"draw",
+				"drawOption"
+			],
+			[
+				"leg",
+				"legendAlignment"
+			],
+			[
+				"ali",
+				"alignmentX"
+			],
+			[
+				"legend",
+				"legendAlignment"
+			],
+			[
+				"get",
+				"getCorrection"
+			],
+			[
 				"refe",
 				"reference"
 			],
 			[
 				"reference",
 				"referenceOffset"
-			],
-			[
-				"max",
-				"maxIterations"
-			],
-			[
-				"use",
-				"useTOTBin"
-			],
-			[
-				"getAs",
-				"getAsBool"
 			],
 			[
 				"zer",
@@ -72,16 +176,8 @@
 				"getAsStringVector"
 			],
 			[
-				"lege",
-				"legendAlignment"
-			],
-			[
 				"Cle",
 				"clearLegend"
-			],
-			[
-				"leg",
-				"legend"
 			],
 			[
 				"str",
@@ -122,10 +218,6 @@
 			[
 				"progr",
 				"progressBar"
-			],
-			[
-				"sta",
-				"startWest"
 			],
 			[
 				"nAcc",
@@ -220,20 +312,8 @@
 				"eastIsGood"
 			],
 			[
-				"west",
-				"westIsGood"
-			],
-			[
 				"tdcSum",
 				"tdcSumWest"
-			],
-			[
-				"initi",
-				"initialOffsets"
-			],
-			[
-				"start",
-				"startEast"
 			],
 			[
 				"West",
@@ -272,10 +352,6 @@
 				"genParticleTree"
 			],
 			[
-				"Get",
-				"GetEntries"
-			],
-			[
 				"ge",
 				"genParticleTree"
 			],
@@ -290,14 +366,6 @@
 			[
 				"outl",
 				"outliers"
-			],
-			[
-				"outlier",
-				"outliers"
-			],
-			[
-				"re",
-				"removeOffset"
 			],
 			[
 				"text",
@@ -416,10 +484,6 @@
 				"tray8A"
 			],
 			[
-				"new",
-				"newOffsets"
-			],
-			[
 				"t0",
 				"t0Offset"
 			],
@@ -448,26 +512,18 @@
 	"buffers":
 	[
 		{
-			"file": "src/vpd.cpp",
-			"settings":
-			{
-				"buffer_size": 2464,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/calib.cpp",
-			"settings":
-			{
-				"buffer_size": 46830,
-				"line_ending": "Unix"
-			}
-		},
-		{
 			"file": "bin/config.xml",
 			"settings":
 			{
-				"buffer_size": 2187,
+				"buffer_size": 2012,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/vpd.cpp",
+			"settings":
+			{
+				"buffer_size": 2627,
 				"line_ending": "Unix"
 			}
 		},
@@ -475,23 +531,7 @@
 			"file": "include/histoBook.h",
 			"settings":
 			{
-				"buffer_size": 1914,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "include/calib.h",
-			"settings":
-			{
-				"buffer_size": 3618,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "include/constants.h",
-			"settings":
-			{
-				"buffer_size": 589,
+				"buffer_size": 2308,
 				"line_ending": "Unix"
 			}
 		}
@@ -499,9 +539,13 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 392.0,
+		"height": 348.0,
 		"selected_items":
 		[
+			[
+				"ss xml",
+				"Set Syntax: XML"
+			],
 			[
 				"ssc++",
 				"Set Syntax: C++"
@@ -544,11 +588,38 @@
 	},
 	"file_history":
 	[
-		"/home/daniel/bnl/jdb/work/vpdCalibration/README.md",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
+		"/home/daniel/bnl/jdb/work/muapp.cxx",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/report.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/params.dat",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/histoBook.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/reporter.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/reporter.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/logAuAu015.txt",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/logAuAu200.txt",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/log.txt",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/run14_auau200_vb_params.dat",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/run14_auau015_vb_params.dat",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/run13_pp510_vb_params.dat",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/README.md",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/check.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/config.xml",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau200/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/vpd.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/exploreStat.C",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/utils.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/.gitignore",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/pp510.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau200.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau015.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/xmlConfig.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/xmlConfig.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/histoBook.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/Makefile",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/splineMaker.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/allroot.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/constants.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau200/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau015/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/compare.C",
 		"/home/daniel/bnl/jdb/work/LearnCalib/TOFCalib/doCalib/fit/getX0.C",
@@ -557,26 +628,16 @@
 		"/home/daniel/bnl/jdb/work/LearnCalib/TOFCalib/doCalib/ana/analysis.cxx",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/plotCorrections.C",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/config.xml",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/histoBook.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/histoBook.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/xmlConfig.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/xmlConfig.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/auau15.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/rapidXML.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/detRes.C",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/utils.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/utils.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/splineMaker.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/splineMaker.cpp",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/Makefile",
 		"/home/daniel/bnl/jdb/work/testInterpolation.cxx",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/gslSpline.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/go.sh",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/.gitignore",
 		"/home/daniel/bnl/tmp/detRes.C",
 		"/home/daniel/bnl/tmp/testInterpolation.cxx",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/allroot.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/refresh.sh",
 		"/home/daniel/bnl/root/config.log",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/wo/config.xml",
@@ -654,24 +715,7 @@
 		"/home/daniel/star/work/vpd/src/vpd.cpp",
 		"/home/daniel/star/work/vpd/doCalib.cpp",
 		"/home/daniel/star/work/vpd/src/calib.cpp",
-		"/home/daniel/star/work/vpd/include/calib.h",
-		"/home/daniel/star/work/vpd/src/Makefile",
-		"/home/daniel/star/work/vpd/joey/src/doCalib.cpp",
-		"/home/daniel/star/work/vpd/include/constants.h",
-		"/home/daniel/star/work/vpd/joey/src/Makefile",
-		"/home/daniel/star/work/vpd/spline/Makefile",
-		"/home/daniel/star/work/vpd/script/fitPoly.C",
-		"/run/user/1000/gvfs/sftp:host=rftpexp.rhic.bnl.gov,user=jdb/direct/star+u/jdb/WORK/cleanTOFCalib/condor.xml",
-		"/home/daniel/Downloads/Litrani/SplineFit/Makefile",
-		"/home/daniel/Downloads/Litrani/SplineFit/main.cpp",
-		"/home/daniel/Downloads/Litrani/TwoPad/Makefile",
-		"/home/daniel/star/work/vpd/src/TSplineFit/Makefile",
-		"/home/daniel/star/work/MuDst/StRoot/StMuDSTMaker/COMMON/StMuDst.h",
-		"/home/daniel/star/work/MuDst/StRoot/StMuDSTMaker/COMMON/StMuDst.cxx",
-		"/home/daniel/star/work/vpd/src/chainLoader.cpp",
-		"/home/daniel/star/work/vpd/src/histoBook.cpp",
-		"/tmp/fz3temp-1/schedule_nTupleDay75And80.xml",
-		"/home/daniel/.ssh/config"
+		"/home/daniel/star/work/vpd/include/calib.h"
 	],
 	"find":
 	{
@@ -689,6 +733,19 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"fChai",
+			"pico->channelTDC",
+			"pico->channelTOT",
+			"-999",
+			"nan",
+			"maxSigma",
+			"minBin",
+			"Interpolation",
+			"v",
+			"report",
+			"Output",
+			"savePage",
+			"value",
 			"reference",
 			"constants::maxTOT",
 			"constants::minTOT",
@@ -803,20 +860,7 @@
 			"nhChannel",
 			"iwest",
 			"ieast",
-			"iwest",
-			"ieast",
-			"hpvpd",
-			"tdc",
-			"minpVPDHits",
-			"tdcco",
-			"flag",
-			"min",
-			"minTOT_pVPD",
-			"pvpdcorr",
-			"pvpdTOTBins",
-			"hcorr",
-			"htotPVPD",
-			"write"
+			"iwest"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -824,6 +868,11 @@
 		"regex": false,
 		"replace_history":
 		[
+			"getY",
+			"getX",
+			"0",
+			"-999",
+			"report->savePage",
 			"maxTOT",
 			"minTOT",
 			"numTOTBins",
@@ -838,23 +887,98 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "src/vpd.cpp",
+					"file": "bin/config.xml",
 					"settings":
 					{
-						"buffer_size": 2464,
+						"buffer_size": 2012,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2404,
-								2404
+								1159,
+								1159
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/XML/XML.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 234.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/vpd.cpp",
+					"settings":
+					{
+						"buffer_size": 2627,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								805,
+								805
 							]
 						],
 						"settings":
@@ -912,175 +1036,25 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1716.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "src/calib.cpp",
-					"settings":
-					{
-						"buffer_size": 46830,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								5153,
-								5153
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close"
-							],
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 2496.0,
+						"translation.y": 390.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 2,
-					"file": "bin/config.xml",
-					"settings":
-					{
-						"buffer_size": 2187,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								993,
-								993
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close"
-							],
-							"syntax": "Packages/XML/XML.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 221.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
 					"file": "include/histoBook.h",
 					"settings":
 					{
-						"buffer_size": 1914,
+						"buffer_size": 2308,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								856,
+								856
 							]
 						],
 						"settings":
@@ -1137,157 +1111,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1092.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "include/calib.h",
-					"settings":
-					{
-						"buffer_size": 3618,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2344,
-								2344
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close"
-							],
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 2418.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "include/constants.h",
-					"settings":
-					{
-						"buffer_size": 589,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								200,
-								200
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close"
-							],
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 2106.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1367,6 +1191,6 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 160.0,
+	"side_bar_width": 237.0,
 	"status_bar_visible": true
 }

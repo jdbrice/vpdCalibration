@@ -6,26 +6,27 @@
 
 	<!-- output files -->
 	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
-	<baseName>pReport</baseName>
+	<baseName>report_fb_</baseName>
 	<!--	root, params, report filename appended to baseName -->
-	<rootOutput>rep.root</rootOutput>
-	<reportOutput>rep.pdf</reportOutput>
+	<rootOutput>qa.root</rootOutput>
+	<reportOutput>qa.pdf</reportOutput>
 	<!--<paramsInput>params.dat</paramsInput>-->
 	<paramsInput>
-		<v>fparams.dat</v>
-		<v>aparams.dat</v>
+		<v>run13/run13_pp510_fb_params.dat</v>
+		<v>params.dat</v>
+		
 	</paramsInput>
 	<paramsLegend>
 		<v>run13 PP 510</v>
-		<v>run14 AuAu 15</v>
+		<v>run13 PP 510 (no or)</v>
 	</paramsLegend>
 
 	<!-- Data input -->
 	<!--
 	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>-->
-	<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>
+	<!--<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>-->
 	<!--<dataDir>/star/institutions/rice/jdb/run14/auau15/TofCalibration/geomAlign/t14Data0/output/</dataDir>-->
-	<maxFiles>60</maxFiles>
+	<!--<maxFiles>60</maxFiles>-->
 
 
 	<!-- Calibration options -->
@@ -38,9 +39,9 @@
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
-	<numTOTBins>200</numTOTBins>
+	<numTOTBins>60</numTOTBins>
 	<minTOT>10</minTOT>
-	<maxTOT>60</maxTOT>
+	<maxTOT>40</maxTOT>
 
 
 </config>
