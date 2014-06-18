@@ -27,6 +27,9 @@ public:
 
 	static const Double_t c = 29.9792458;	// 29.979 * 10^7 m/s
 
+	static const Double_t tacToNS = 0.01773; // from bill llope
+
+
 	
 };
 

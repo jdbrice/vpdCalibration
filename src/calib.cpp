@@ -144,8 +144,11 @@ double calib::getX( int channel ) {
 	
 	if ( (string)"tof-tot" == xVariable )
 		return pico->channelTOT( channel );
-	else if ( (string)"trg-adc" == xVariable )
-		return 0;
+	else if ( (string)"bbq-adc" == xVariable ){
+		return ( (double)pico->bbqADC( channel )  );
+	} else if ( (string)"mxq-adc" == xVariable ){
+		return ( (double)pico->mxqADC( channel )  );
+	}
 
 	// the y varaibles in case you want to do non-standard comparisons
 	if ( (string)"tof-tdc" == xVariable )
@@ -165,8 +168,11 @@ double calib::getY( int channel ){
 
 	if ( (string)"tof-tdc" == yVariable )
 		return pico->channelTDC( channel );
-	else if ( (string)"trg-tdc" == yVariable )
-		return 0;
+	else if ( (string)"bbq-tdc" == yVariable ){
+		return ( (double)pico->bbqTDC( channel ) * constants::tacToNS );
+	} else if ( (string)"mxq-tdc" == yVariable ){
+		return ( (double)pico->mxqTDC( channel ) * constants::tacToNS );
+	}
 
 	// the x varaibles in case you want to do non-standard comparisons
 	if ( (string)"tof-tot" == yVariable )
@@ -199,7 +205,7 @@ void calib::offsets() {
 	// make all the histos the first round
 	book->make2D( "tdc", "tdc relative to channel 0", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
 	book->make1D( "tdcMean", "tdc relative to channel 0", constants::nChannels, -0.5, constants::nChannels-0.5 );
-	book->make2D( "correctedOffsets", "corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 200, -100, 100 );
+	book->make2D( "correctedOffsets", "corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
 	book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels, 0, constants::nChannels, 1000, 0, 51200 );
 
 
@@ -222,8 +228,8 @@ void calib::offsets() {
 
 
 		// channel 1 on the west side is the reference channel
-    	double reference = pico->vpdLeWest[0];
-
+    	double reference = getY( 0 );
+    	
 
 		for( int j = constants::startWest; j < constants::endEast; j++) {
 
@@ -238,7 +244,7 @@ void calib::offsets() {
 
 			double tdc = getY( j );
 	    	double tot = getX( j );
-	    
+
 	    	book->fill( "tdcRaw", j, tdc );
 
 	    	if(tot <= minTOT || tot >= maxTOT) continue;	    
@@ -254,6 +260,12 @@ void calib::offsets() {
 
 	for ( int i = constants::startWest; i < constants::endEast; i++ ){
 		TH1D* tmp = tdc->ProjectionY( "tmp", i+1, i+1 );
+
+		double max = tmp->GetBinCenter( tmp->GetMaximumBin() );
+		double rms = 1.2*tmp->GetRMS();
+		//cout << "maximum [ " << i << " ] ---> ( " << max - rms << " -> " << max + rms << " ) " << endl;
+		tmp->GetXaxis()->SetRangeUser( max - rms, max + rms  );
+
 		cout << "Channel [ " << i+1 << " ] Offset = " << tmp->GetMean() << " ns " << endl;
 
 		if ( i == constants::startWest )
@@ -425,7 +437,7 @@ void calib::binTOT( bool variableBinning ) {
 	      		// sort into ascending order
 	        	std::sort( tots[i].begin(), tots[i].end());
 	        	
-	        	totBins[ i ][0] = tots[ i ].at(0);
+	        	totBins[ i ][0] = minTOT;
 	        	totBins[ i ][ numTOTBins ] = maxTOT;
 	        	
 	        	for( Int_t j = 1; j < numTOTBins ; j++) {
@@ -433,7 +445,8 @@ void calib::binTOT( bool variableBinning ) {
 	        		double d1 = tots[i].at( step * j );
 	        		double d2 = tots[ i ].at( step * (j - 1) );
 	        	
-	        		totBins[ i ][ j ] = ( d1 + d2 ) / 2.0;
+	        		//totBins[ i ][ j ] = ( d1 + d2 ) / 2.0;
+	        		totBins[ i ][ j ] = d1;
 	            	
 	        	}	// loop over tot bins
 
@@ -583,6 +596,8 @@ void calib::outlierRejection( bool reject ) {
 
 	    	// calculate the VPD z Vertex
 	    	double vpdZ = constants::c * ( tdcEast - tdcWest) / 2.0;
+	    	if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable )
+	    		vpdZ = constants::c * ( tdcWest - tdcEast) / 2.0;
 
 	    	book->get( iStr+"All" )->Fill( tpcZ - vpdZ );
 	    	book->get( iStr +"zTPCzVPD" )->Fill( tpcZ, vpdZ );
@@ -603,7 +618,10 @@ void calib::outlierRejection( bool reject ) {
 	} // loop channel j
 
 	if ( countEast >= 1 && countWest >= 1){
+
 		double vpdZ = constants::c * ( (sumEast/countEast) - (sumWest/countWest)) / 2.0;	
+		if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable )
+			vpdZ = constants::c * ( (sumWest/countWest) - (sumEast/countEast)) / 2.0;	
 		book->fill( iStr+"zTPCzVPDAvg", tpcZ, vpdZ );
 		book->fill( iStr+"avg", ( tpcZ-vpdZ ));
 	}
@@ -639,14 +657,7 @@ void calib::prepareStepHistograms() {
 	// for titles
 	string step = "Step " + ts( currentIteration+1 ) + " : ";
 
-	/*
-	* check that our histos are made for this iteration
-	*/
-	if ( book->get( "correctedOffsets", "initialOffset"  ) == 0){
-		book->cd( "initialOffset" );
-		
-	}
-	
+
 	for ( int ch = constants::startWest; ch < constants::endEast; ch++ ){
 		
 		book->cd( "channel" + ts(ch) );
@@ -691,7 +702,7 @@ void calib::prepareStepHistograms() {
 	// offsets
 	book->cd( "initialOffset" );
 	book->make2D( 	iStr + "Offsets", step + " tdc wrt Channel 1; Detector ; [#] ",
-							constants::nChannels, -0.5, constants::nChannels-0.5, 600, -100, 100 );
+							constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Histograms Booked " << endl;
 
@@ -737,7 +748,8 @@ void calib::step( ) {
 
 	// make sure the histograms are ready
 	prepareStepHistograms();
-	
+
+	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Calibrating " << endl;
 
 	Int_t nevents = (int)_chain->GetEntries();
 	for(Int_t i = 0; i < nevents; i++) {
@@ -781,7 +793,7 @@ void calib::step( ) {
   			corr[ j ] = getCorrection( j, tot[ j ] );
   			tAll[ j ] -= corr[ j ];
     	}
-    	reference = pico->vpdLeWest[0];
+    	reference = getY( 0 );
 
 		// loop over every channel on the west and then on the east side
 		for( int j = constants::startWest; j < constants::endEast; j++) {
@@ -1044,10 +1056,15 @@ void calib::makeCorrections( ){
 	// get the corrections for the next iteration 
 	for( int k = constants::startWest; k < constants::endEast; k++) {
 
+
+		TF1* g = new TF1( "g", "gaus", -5, 5 );
+		if ( !removeOffset )
+			g->SetRange( -100, 100 );
+
 		if ( currentIteration <= 1 || currentIteration == maxIterations - 1){
 			if ( deadDetector[ k ] ){
 				report->next();
-				if ( k == constants::endWest - 1){
+				if ( k == constants::endWest - 1 || constants::endEast - 1 == k){
 			    	report->savePage();
 			    	report->newPage( 4, 5);
 		    	}
@@ -1069,13 +1086,12 @@ void calib::makeCorrections( ){
 		book->cd( "channel" + ts( k ) + "/fit" );
 
 		// do the fit
-	    pre->FitSlicesY();
+	    pre->FitSlicesY( g );
 
 	    TH1D* preMean = (TH1D*) gDirectory->FindObject( 
 	    					(iStr + "tdctot_1").c_str() );
 
 	    // do the fit
-	    TF1* g = new TF1( "g", "gaus", -1, 1 );
 	    post->FitSlicesY( g );
 	    delete g;
 
@@ -1122,9 +1138,9 @@ void calib::makeCorrections( ){
 		    spline[ k ] = new splineMaker( cor, splineAlignment::center, splineType );
 
 		splineMaker* vSpline;
-		if ( currentIteration == 0 ) 
-			vSpline = spline[ k ];
-		else
+		//if ( currentIteration == 0 ) 
+		//	vSpline = spline[ k ];
+		//else
 			vSpline = new splineMaker( dif, splineAlignment::center, splineType );
 	    
 	    if ( currentIteration <= 1 || currentIteration == maxIterations - 1){
@@ -1145,7 +1161,7 @@ void calib::makeCorrections( ){
 		    	g->Draw( "same cp" );
 			}
 			
-			if ( currentIteration != 0 ) 
+			//if ( currentIteration != 0 ) 
 				delete vSpline;
 
 		
@@ -1184,6 +1200,7 @@ void calib::writeParameters(  ){
 	book->cd( "correctionParameters" );
 
 	for ( int j = constants::startWest; j < constants::endEast; j++ ){
+		
 
 		book->make1D( "slewingCor" +ts(j), "Channel "+ts(j+1)+ " : Slewing Correction", numTOTBins, minTOT, maxTOT  );
 		if ( useSpline )
@@ -1199,6 +1216,8 @@ void calib::writeParameters(  ){
 		f << endl;
 		for ( int i = 0; i <= numTOTBins; i++ ){
 
+
+
 			double totStep = (( maxTOT - minTOT ) / (double)numTOTBins);
 			double tot = minTOT + totStep * (double)i;
 
@@ -1208,11 +1227,19 @@ void calib::writeParameters(  ){
 			}
 			
 			// bin based corrections
-			double bCor = correction[ j ][ i + 1 ] + off;
+			double bCor = 0;
+			
+			if ( !deadDetector[ j ] )
+				bCor = correction[ j ][ i + 1 ] + off;
+			
 			book->get( "slewingCor" +ts(j) )->SetBinContent( i+1, bCor );
 
+			
+
 			// spline based corrections
-			double sCor = spline[ j ]->getSpline()->Eval( tot ) + off;
+			double sCor = 0;
+			if ( !deadDetector[ j ] )
+				sCor = spline[ j ]->getSpline()->Eval( tot ) + off;
 			book->get( "splineSlewingCor" +ts(j) )->SetBinContent( book->get( "splineSlewingCor" +ts(j) )->GetXaxis()->FindBin( tot ), 
 				sCor );
 

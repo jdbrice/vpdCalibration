@@ -6,8 +6,8 @@
 
 	<!-- The dep/indep variables to use for the slewing correction -->
 	<!-- can be used to look at the tof-side or trigger-side electronics, or a combination -->
-	<xVariable>tof-tot</xVariable>
-	<yVariable>tof-tdc</yVariable>
+	<xVariable>mxq-adc</xVariable>
+	<yVariable>mxq-tdc</yVariable>
 
 	<!-- output files -->
 	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
@@ -18,28 +18,28 @@
 	<reportOutput>qa.pdf</reportOutput>
 
 	<!-- Data input -->
-	<!--
-	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>-->
-	<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>
+	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/june18/output/</dataDir>
+	<!--<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>-->
+	<!--<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>-->
 	<!--<dataDir>/star/institutions/rice/jdb/run14/auau15/TofCalibration/geomAlign/t14Data0/output/</dataDir>-->
-	<maxFiles>400</maxFiles>
+	<maxFiles>1</maxFiles>
 
 
 	<!-- Calibration options -->
-	<numIterations>5</numIterations>
-	<variableBinning>false</variableBinning>
-	<removeOffset>false</removeOffset>
-	<outlierRejection>false</outlierRejection>
+	<numIterations>3</numIterations>
+	<variableBinning>true</variableBinning>
+	<removeOffset>true</removeOffset>
+	<outlierRejection>true</outlierRejection>
 	<!-- 	linear: for linear interpolation
 			cspline: for cubic spline interpolation
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
-	<numTOTBins>60</numTOTBins>
-	<minTOT>10</minTOT>
-	<maxTOT>40</maxTOT>
+	<numTOTBins>20</numTOTBins>
+	<minTOT>1</minTOT>
+	<maxTOT>1000</maxTOT>
 
-	<binMaxError>1.5</binMaxError>
+	<binMaxError>1000.5</binMaxError>
 	
 	<vzOutlierCut>
 		<v>40</v>

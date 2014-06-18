@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"remove",
+				"removeOffset"
+			],
+			[
 				"Get",
 				"GetMaximum"
 			],
@@ -515,7 +519,7 @@
 			"file": "bin/config.xml",
 			"settings":
 			{
-				"buffer_size": 2012,
+				"buffer_size": 2105,
 				"line_ending": "Unix"
 			}
 		},
@@ -532,6 +536,46 @@
 			"settings":
 			{
 				"buffer_size": 2308,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/calib.cpp",
+			"settings":
+			{
+				"buffer_size": 47286,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/TOFrPicoDst.cpp",
+			"settings":
+			{
+				"buffer_size": 8155,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "include/TOFrPicoDst.h",
+			"settings":
+			{
+				"buffer_size": 6049,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "include/constants.h",
+			"settings":
+			{
+				"buffer_size": 652,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/splineMaker.cpp",
+			"settings":
+			{
+				"buffer_size": 1951,
 				"line_ending": "Unix"
 			}
 		}
@@ -588,6 +632,9 @@
 	},
 	"file_history":
 	[
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/splineMaker.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/splineMaker.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/constants.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
 		"/home/daniel/bnl/jdb/work/muapp.cxx",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
@@ -616,9 +663,7 @@
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/xmlConfig.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/histoBook.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/Makefile",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/splineMaker.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/allroot.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/constants.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau200/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau015/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/compare.C",
@@ -632,7 +677,6 @@
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/rapidXML.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/detRes.C",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/utils.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/splineMaker.cpp",
 		"/home/daniel/bnl/jdb/work/testInterpolation.cxx",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/gslSpline.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/go.sh",
@@ -733,6 +777,28 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"MXQ",
+			"Adc(",
+			"ADC",
+			"Tdc(",
+			"TDC",
+			"BBQ",
+			"MXQ",
+			"TDC",
+			"ADC",
+			"BBQ",
+			"MXQ",
+			"TDC",
+			"ADC",
+			"BBQ",
+			"bbq",
+			"endEast",
+			"endWest",
+			"BBQ",
+			"bbq",
+			"Double_t",
+			"BBQ",
+			"kNumVpdTriggerTubes",
 			"fChai",
 			"pico->channelTDC",
 			"pico->channelTOT",
@@ -838,29 +904,7 @@
 			"maxpvpdNBin",
 			"tsfM",
 			"tsfPVPD",
-			";\n",
-			"cor[",
-			"sstr << currentIteration << \"",
-			"<< currentIteration << \"",
-			"tot",
-			"htPVPD",
-			"StMtdCol",
-			"skipDead",
-			"tsfPVPD",
-			"run14AuAu15TofCalibration/TofCalibration/geomAlign",
-			"doIdealGeom",
-			"nHitsDedx",
-			"nHits",
-			"nHit",
-			"vzCut",
-			"excludeTrays",
-			"MYLIBS",
-			"numTOTBin",
-			"numTOTBins",
-			"nhChannel",
-			"iwest",
-			"ieast",
-			"iwest"
+			";\n"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -887,7 +931,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 7,
 			"sheets":
 			[
 				{
@@ -895,15 +939,15 @@
 					"file": "bin/config.xml",
 					"settings":
 					{
-						"buffer_size": 2012,
+						"buffer_size": 2105,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1159,
-								1159
+								709,
+								709
 							]
 						],
 						"settings":
@@ -977,8 +1021,8 @@
 						"selection":
 						[
 							[
-								805,
-								805
+								2441,
+								2441
 							]
 						],
 						"settings":
@@ -1036,7 +1080,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 390.0,
+						"translation.y": 1950.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1112,6 +1156,383 @@
 						},
 						"translation.x": 0.0,
 						"translation.y": 2106.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/calib.cpp",
+					"settings":
+					{
+						"buffer_size": 47286,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5285,
+								5285
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 858.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "src/TOFrPicoDst.cpp",
+					"settings":
+					{
+						"buffer_size": 8155,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1755,
+								1755
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1976.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "include/TOFrPicoDst.h",
+					"settings":
+					{
+						"buffer_size": 6049,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								565,
+								565
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 3,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "include/constants.h",
+					"settings":
+					{
+						"buffer_size": 652,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								109,
+								109
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "src/splineMaker.cpp",
+					"settings":
+					{
+						"buffer_size": 1951,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1707,
+								1707
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1794.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

@@ -79,11 +79,11 @@ TGraph * splineMaker::graph( double xmin, double xmax, double step ){
 	if ( xmax > domainMax )
 		xmax = domainMax;
 
-   	const Int_t n = ( (xmax - xmin ) / step)  + 1;
+   	const Int_t n = ( (xmax - xmin ) / step)  ;
    	Int_t i = 0;
    	Float_t xcoord[n], ycoord[n];
 
-   	for ( double xi = xmin; xi < xmax; xi += step) { 
+   	for ( double xi = xmin+step; xi < xmax; xi += step) { 
       	xcoord[i] = xi;
       	ycoord[i] = spline->Eval(xi);
       	i++; 

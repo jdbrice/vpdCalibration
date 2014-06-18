@@ -34,6 +34,19 @@ public :
    Double_t        vpdLeWest[19];
    Double_t        vpdTotEast[19];
    Double_t        vpdTotWest[19];
+
+   // VPD trigger side bbq electronics
+   UShort_t    vpdBbqAdcEast[16], 
+               vpdBbqTdcEast[16];
+   UShort_t    vpdBbqAdcWest[16], 
+               vpdBbqTdcWest[16];
+
+    // VPD trigger side mxq electronics
+   UShort_t    vpdMxqAdcEast[16], 
+               vpdMxqTdcEast[16];
+   UShort_t    vpdMxqAdcWest[16], 
+               vpdMxqTdcWest[16];
+
    Int_t           nTofHits;
    Int_t           tray[8000];   //[nTofHits]
    Int_t           module[8000];   //[nTofHits]
@@ -87,6 +100,14 @@ public :
    TBranch        *b_vpdLeWest;   //!
    TBranch        *b_vpdTotEast;   //!
    TBranch        *b_vpdTotWest;   //!
+   TBranch        *b_vpdBbqAdcWest; 
+   TBranch        *b_vpdBbqTdcWest; 
+   TBranch        *b_vpdBbqAdcEast; 
+   TBranch        *b_vpdBbqTdcEast; 
+   TBranch        *b_vpdMxqAdcWest; 
+   TBranch        *b_vpdMxqTdcWest; 
+   TBranch        *b_vpdMxqAdcEast; 
+   TBranch        *b_vpdMxqTdcEast;
    TBranch        *b_nTofHits;   //!
    TBranch        *b_tray;   //!
    TBranch        *b_module;   //!
@@ -128,9 +149,11 @@ public :
 
    static const Int_t startWest = 0;
    static const Int_t endWest = 19;
+   static const Int_t trgEndWest = 16;
 
    static const Int_t startEast = 19;
    static const Int_t endEast = 38;
+   static const Int_t trgEndEast = 35;
 
    virtual ~TOFrPicoDst();
    virtual Int_t    Cut(Long64_t entry);
@@ -146,6 +169,10 @@ public :
    virtual Int_t        numHits( Int_t channel );
    virtual Double_t     channelTOT( Int_t channel );
    virtual Double_t     channelTDC( Int_t channel );
+   virtual UShort_t     bbqADC( Int_t channel );
+   virtual UShort_t     bbqTDC( Int_t channel );
+   virtual UShort_t     mxqADC( Int_t channel );
+   virtual UShort_t     mxqTDC( Int_t channel );
 };
 
 #endif
