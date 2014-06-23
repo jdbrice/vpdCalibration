@@ -1,0 +1,5 @@
+
+cd ../src
+make
+cd ../bin
+./vpd config.xml

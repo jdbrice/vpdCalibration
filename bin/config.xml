@@ -6,8 +6,10 @@
 
 	<!-- The dep/indep variables to use for the slewing correction -->
 	<!-- can be used to look at the tof-side or trigger-side electronics, or a combination -->
-	<xVariable>mxq-adc</xVariable>
-	<yVariable>mxq-tdc</yVariable>
+	<xVariable>bbq-adc</xVariable>
+	<yVariable>bbq-tdc</yVariable>
+
+	
 
 	<!-- output files -->
 	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
@@ -17,16 +19,20 @@
 	<paramsOutput>params.dat</paramsOutput>
 	<reportOutput>qa.pdf</reportOutput>
 
+	<!-- if true the trigger channels will be mapped to coresponding tof channels for easier comparison etc. -->
+	<mapTriggerToTof>true</mapTriggerToTof>
+	<channelMap>vpdTriggerToTofMap.dat</channelMap>
+
 	<!-- Data input -->
 	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/june18/output/</dataDir>
 	<!--<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>-->
 	<!--<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>-->
 	<!--<dataDir>/star/institutions/rice/jdb/run14/auau15/TofCalibration/geomAlign/t14Data0/output/</dataDir>-->
-	<maxFiles>1</maxFiles>
+	<maxFiles>5</maxFiles>
 
 
 	<!-- Calibration options -->
-	<numIterations>3</numIterations>
+	<numIterations>1</numIterations>
 	<variableBinning>true</variableBinning>
 	<removeOffset>true</removeOffset>
 	<outlierRejection>true</outlierRejection>
@@ -35,7 +41,7 @@
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
-	<numTOTBins>20</numTOTBins>
+	<numTOTBins>40</numTOTBins>
 	<minTOT>1</minTOT>
 	<maxTOT>1000</maxTOT>
 

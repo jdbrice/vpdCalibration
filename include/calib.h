@@ -70,10 +70,6 @@ private:
 	bool useSpline;
 
 
-	// outlier rejection
-	// for each event we will want 
-	// # of pairs east vs west
-
 	// list of detectors with prompt hits for this event and usable in calibration
 	// calculated for each event in outlierRejection()
 	bool useDetector[ constants::nChannels ];
@@ -91,6 +87,23 @@ private:
 	vector<double> avgNTimingCut;
 	vector<double> vzOutlierCut;
 	double avgNBackgroundCut;
+
+	// the variables to use for calibration
+	// tof-le / tof-tot
+	// bbq-tdc / bbq-adc
+	// mxq-tdc / mxq-adc
+	// or combination
+	string xVariable;
+	string yVariable;
+
+	// labels built from the x/y variable choice
+	string xLabel, yLabel;
+
+
+	// store the trigger to tof channel map
+	int triggerToTofMap[ constants::nChannels ];
+	int tofToTriggerMap[ constants::nChannels ];
+	bool mapTriggerToTof;
 	
 
 public:
@@ -140,8 +153,7 @@ public:
 	double getX( int channel );	// default is TOT
 	double getY( int channel );	// default is TDC
 
-	string xVariable;
-	string yVariable;
+	
 
 protected:
 
@@ -152,6 +164,8 @@ protected:
 	void outlierRejection( bool reject = true );
 
 	void averageN();
+
+	void readTriggerToTofMap();
 
 	static Double_t detectorResolution(Double_t *x, Double_t *par);
 

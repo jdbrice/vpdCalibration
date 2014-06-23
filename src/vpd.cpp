@@ -27,12 +27,16 @@ int main( int argc, char* argv[] ) {
     xmlConfig config( argv[ 1 ] );
 
     config.display( "jobType" );
+    cout << endl;
     config.display( "baseName" );
     config.display( "rootOutput" );
     config.display( "reportOutput" );
     config.display( "paramsOutput" );
     config.display( "paramsInput" );
     config.display( "paramsLegend" );
+    cout << endl;
+    config.display( "channelMap" );
+    config.display( "mapTriggerToTof" );
     cout << endl;
     config.display( "xVariable" );
     config.display( "yVariable" );

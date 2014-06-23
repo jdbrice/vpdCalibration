@@ -112,7 +112,24 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 
     // set the variable types
     xVariable = config.getAsString( "xVariable", "tof-tot" );
-    yVariable = config.getAsString( "yVariable", "tof-tdc" );
+    yVariable = config.getAsString( "yVariable", "tof-le" );
+
+    if ( (string)"tof-tot" == xVariable )
+    	xLabel = xVariable + " [ns] ";
+    else
+    	xLabel = xVariable;
+    yLabel = yVariable + " [ns] ";
+
+
+    for ( int i = 0; i < constants::nChannels; i++ ){
+    	triggerToTofMap[ i ] = -1;
+    	tofToTriggerMap[ i ] = -1;
+    }
+    if ( 	config.nodeExists( "channelMap" ) ){
+    	readTriggerToTofMap();
+    }
+
+    mapTriggerToTof = config.getAsBool( "mapTriggerToTof", false );
 
 }
 
@@ -142,6 +159,14 @@ calib::~calib() {
  */
 double calib::getX( int channel ) {
 	
+	if ( mapTriggerToTof ){
+		if ( (string)"bbq-adc" == xVariable || (string)"mxq-adc" == xVariable ){
+			channel = tofToTriggerMap[ channel ];
+		}
+	}
+	
+
+
 	if ( (string)"tof-tot" == xVariable )
 		return pico->channelTOT( channel );
 	else if ( (string)"bbq-adc" == xVariable ){
@@ -166,7 +191,13 @@ double calib::getX( int channel ) {
  */
 double calib::getY( int channel ){
 
-	if ( (string)"tof-tdc" == yVariable )
+	if ( mapTriggerToTof ){
+		if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable ){
+			channel = tofToTriggerMap[ channel ];
+		}
+	}
+
+	if ( (string)"tof-le" == yVariable )
 		return pico->channelTDC( channel );
 	else if ( (string)"bbq-tdc" == yVariable ){
 		return ( (double)pico->bbqTDC( channel ) * constants::tacToNS );
@@ -203,9 +234,9 @@ void calib::offsets() {
 	book->cd( "initialOffset" );
 	
 	// make all the histos the first round
-	book->make2D( "tdc", "tdc relative to channel 0", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
-	book->make1D( "tdcMean", "tdc relative to channel 0", constants::nChannels, -0.5, constants::nChannels-0.5 );
-	book->make2D( "correctedOffsets", "corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
+	book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
+	book->make1D( "tdcMean", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5 );
+	book->make2D( "correctedOffsets", "Corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
 	book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels, 0, constants::nChannels, 1000, 0, 51200 );
 
 
@@ -306,10 +337,8 @@ void calib::offsets() {
 
 
 	book->style( "tdc" )
-		->set( "title", "Channel TDC wrt West Channel 1")
 		->set( "range", -35.0, 35.0 )->draw();
 	book->style( "tdcMean" )
-		->set( "title", "Channel TDC wrt West Channel 1")
 		->set( "markerStyle", 20)->set( "markerColor", 2 )
 		->set( "linecolor", 2)->set( "draw", "same ple" )
 		->draw();
@@ -664,16 +693,15 @@ void calib::prepareStepHistograms() {
 
 		// make channel titles start at 1
 		string sCh = "Channel "+ts(ch+1);
+		string title2D = step + sCh + " " + yVariable + " vs " + xVariable + ";" + xLabel + ";" + yLabel ;
+		string title1D = step + sCh + " " + yVariable + ";" + yLabel + "; [ # ] "  ;
 
-		book->make2D( 	iStr + "tdctot", step +sCh+" TDC vs TOT ;tot [ns];tdc [ns]", 
-							numTOTBins , totBins[ ch ], 1000, -40, 40 );
-		book->make2D( 	iStr + "tdccor", step +sCh+" TDC vs TOT ;tot [ns];tdc [ns]", 
-							numTOTBins , totBins[ ch ], 1000, -20, 20 );
-		book->make1D( 	iStr + "tdc", step + sCh+" TDC;tot [ns];tdc [ns]", 
-							500, -10, 10 );
-		book->make2D( 	iStr + "avgN", step + sCh + " : 1 - <N>;# of Detectors;tdc [ns]", 
+		book->make2D( 	iStr + "tdctot", 	title2D, numTOTBins , totBins[ ch ], 1000, -40, 40 );
+		book->make2D( 	iStr + "tdccor", 	title2D, numTOTBins , totBins[ ch ], 1000, -20, 20 );
+		book->make1D( 	iStr + "tdc", 		title1D, 500, -10, 10 );
+		book->make2D( 	iStr + "avgN", 		step + sCh + " : 1 - <N>;# of Detectors;" + yLabel, 
 						constants::nChannels/2, 1, constants::nChannels/2, 1000, -20, 20 );
-		book->make2D( 	iStr + "cutAvgN", step + sCh + " : 1 - <N>;# of Detectors;tdc [ns]", 
+		book->make2D( 	iStr + "cutAvgN", 	step + sCh + " : 1 - <N>;# of Detectors;" + yLabel, 
 							constants::nChannels/2, 1, constants::nChannels/2, 1000, -20, 20 );
 	}
 
@@ -701,7 +729,7 @@ void calib::prepareStepHistograms() {
 
 	// offsets
 	book->cd( "initialOffset" );
-	book->make2D( 	iStr + "Offsets", step + " tdc wrt Channel 1; Detector ; [#] ",
+	book->make2D( 	iStr + "Offsets", step + yLabel + " wrt West Channel 1; Detector ; [#] ",
 							constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Histograms Booked " << endl;
@@ -982,6 +1010,7 @@ void calib::finish( ){
 										->set( "y", "Time [ns]")
 										->set( "markerStyle", 17)
 										->set( "markerColor", 2)
+										->set( "numberOfTicks", 10, 2 )
 										->set( "range", -0.2, max + .1 )
 										->draw();
 		book->style( iCh + "sigmaMean" )->set( "markerStyle", kCircle )->set( "draw", "same")
@@ -993,7 +1022,7 @@ void calib::finish( ){
 			chiDoF	= chi/((Float_t)(np-1));
 		}
 
-		text->DrawLatex(0.25,0.86, ("#sigma = " + ts( fr->GetParameter( 0 ) )).c_str() );
+		text->DrawLatex(0.25,0.86, ("#sigma = " + ts( fr->GetParameter( 0 ) ) + " [ns] "  ).c_str() );
 		text->DrawLatex(0.25,0.81, ("#chi^{2}/DOF = " + ts( chiDoF) ).c_str() );
 
 		
@@ -1007,15 +1036,19 @@ void calib::finish( ){
 
 	double max = sigmas->GetMaximum();
 
+	TF1 * avgFit = new TF1( "avgFit", "pol0", 0, 39 );
+
 
 	book->cd ( "final" );
 	book->add( "detSigma", sigmas );
-	book->get( "detSigma" )->Fit( "pol0", "Q" );
+	book->get( "detSigma" )->Fit( "avgFit", "QR" );
 	book->style( "detSigma" )
 		->set( "markerStyle", 17)
 		->set( "markerColor", 2 )
 		->set( "range", 0, max + .015 )
 		->draw();
+
+	text->DrawLatex(0.25,0.25, ("Average #sigma = " + ts( avgFit->GetParameter( 0 ) ) + " [ns] ").c_str() );
 
 	report->savePage();	
 
@@ -1137,11 +1170,9 @@ void calib::makeCorrections( ){
 	    if ( useSpline )
 		    spline[ k ] = new splineMaker( cor, splineAlignment::center, splineType );
 
+		// make a spline for drawing
 		splineMaker* vSpline;
-		//if ( currentIteration == 0 ) 
-		//	vSpline = spline[ k ];
-		//else
-			vSpline = new splineMaker( dif, splineAlignment::center, splineType );
+		vSpline = new splineMaker( dif, splineAlignment::center, splineType );
 	    
 	    if ( currentIteration <= 1 || currentIteration == maxIterations - 1){
 		    
@@ -1150,6 +1181,8 @@ void calib::makeCorrections( ){
 		    else
 		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "dynamicdomain", 1, -1, -1, 2 );
 		    	
+		    if ( xVariable.find( "adc" ) != string::npos )
+		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "numberOfTicks", (maxTOT - minTOT)/100.0, 5);
 
 		    post->Draw( "colz" );
 		    
@@ -1161,14 +1194,13 @@ void calib::makeCorrections( ){
 		    	g->Draw( "same cp" );
 			}
 			
-			//if ( currentIteration != 0 ) 
-				delete vSpline;
-
-		
 		    if ( k == constants::endEast - 1 || k == constants::endWest - 1){
 		    	report->savePage();
 		    	report->newPage( 4, 5);
 	    	}
+
+	    	// delete the spline for drawing
+			delete vSpline;
     	}
 	    
 
@@ -1201,11 +1233,13 @@ void calib::writeParameters(  ){
 
 	for ( int j = constants::startWest; j < constants::endEast; j++ ){
 		
+		string title = "Channel "+ts(j+1)+ " : Slewing Correction ;" + xLabel + ";" + yLabel;
+		string sTitle = "Channel "+ts(j+1)+ " : Spline Slewing Correction ;" + xLabel + ";" + yLabel;
 
-		book->make1D( "slewingCor" +ts(j), "Channel "+ts(j+1)+ " : Slewing Correction", numTOTBins, minTOT, maxTOT  );
+		book->make1D( "slewingCor" +ts(j), title, numTOTBins, minTOT, maxTOT  );
 		if ( useSpline )
-			book->make1D( "splineSlewingCor" +ts(j), "Channel "+ts(j+1)+ " : Spline Slewing Correction", numTOTBins, minTOT, maxTOT  );
-		book->make1D( "slewingNoOffset" +ts(j), "Channel "+ts(j+1)+ " : Slewing Correction", numTOTBins, minTOT, maxTOT  );
+			book->make1D( "splineSlewingCor" +ts(j), sTitle, numTOTBins, minTOT, maxTOT  );
+		book->make1D( "slewingNoOffset" +ts(j), title, numTOTBins, minTOT, maxTOT  );
 
 		f << (j + 1) << endl;
 		f << numTOTBins << endl;
@@ -1240,8 +1274,9 @@ void calib::writeParameters(  ){
 			double sCor = 0;
 			if ( !deadDetector[ j ] )
 				sCor = spline[ j ]->getSpline()->Eval( tot ) + off;
-			book->get( "splineSlewingCor" +ts(j) )->SetBinContent( book->get( "splineSlewingCor" +ts(j) )->GetXaxis()->FindBin( tot ), 
-				sCor );
+
+			book->get( "splineSlewingCor" +ts(j) )->SetBinContent( 
+				book->get( "splineSlewingCor" +ts(j) )->GetXaxis()->FindBin( tot ), sCor );
 
 			if ( useSpline ){
 				f << ( sCor ) << " ";
@@ -1270,6 +1305,9 @@ void calib::writeParameters(  ){
 			book->style( "slewingNoOffset"+ts(j) )->set("lineColor", kRed )->set( "range", -5, 5)->draw();
 		else
 			book->style( "slewingNoOffset"+ts(j) )->set("lineColor", kRed )->draw();
+
+		if ( xVariable.find( "adc" ) != string::npos )
+			book->style( "slewingNoOffset"+ts(j) )->set( "numberOfTicks", (maxTOT - minTOT)/100.0, 5);
 
 		if ( j == constants::endWest - 1 || j == constants::endEast - 1){
 			report->savePage();
@@ -1334,9 +1372,10 @@ void calib::readParameters(  ){
 							
 						}
 						
+						string title = "Channel "+ts(channel)+" Slewing Corrections; " + xLabel + ";" + yLabel ;
 						// create a hist
 						book->cd( "params" );
-						book->make1D( "file"+ts(fi)+"channel"+ts(channel-1), "Channel "+ts(channel)+" Slewing Corrections; tot [ns]; tdc [ns]", tBins, totBins[ channel-1] );
+						book->make1D( "file"+ts(fi)+"channel"+ts(channel-1), title, tBins, totBins[ channel-1] );
 
 
 						for ( int j=0; j <= tBins; j++ ){
@@ -1437,18 +1476,26 @@ void calib::stepReport() {
 	report->newPage(2, 2);
 	
 	gPad->SetLogy(1);
-	book->style( iStr+"All" )->draw();
+	book->style( iStr+"All" )
+		->set( "numberOfTicks", 5, 5)
+		->draw();
 	fill->Draw("same" );
 
 	report->cd( 2, 1 );
 	gPad->SetLogy(1);
-	book->style( iStr+"avg" )->set( "draw", "" )->draw();
+	book->style( iStr+"avg" )
+		->set( "numberOfTicks", 5, 5)
+		->set( "draw", "" )->draw();
 
 	report->cd( 1, 2 );
-	book->style( iStr+"zTPCzVPD" )->set( "draw", "colz" )->draw();
+	book->style( iStr+"zTPCzVPD" )
+		->set( "numberOfTicks", 5, 5)
+		->set( "draw", "colz" )->draw();
 
 	report->cd( 2, 2 );
-	book->style( iStr+"zTPCzVPDAvg" )->set( "draw", "colz" )->draw();
+	book->style( iStr+"zTPCzVPDAvg" )
+		->set( "numberOfTicks", 5, 5 )
+		->set( "draw", "colz" )->draw();
 	report->savePage();
 
 	
@@ -1605,3 +1652,100 @@ Double_t calib::detectorResolution(Double_t *x, Double_t *par){
 	}
 }
 
+void calib::readTriggerToTofMap(){
+
+	cout << "[calib." << __FUNCTION__ << "] " << " Start " << endl;
+	startTimer();
+
+	// maximum possible number of trigger tubes per side of vpd
+  	// currently there are only 16 PMTs active on the trigger side
+	short 	eastTriggerToTofMap[ constants::nhChannels ],
+	    	westTriggerToTofMap[ constants::nhChannels ];
+
+	for(int i = 0; i < constants::nhChannels; i++ ) {
+		eastTriggerToTofMap[ i ] = -1;
+		westTriggerToTofMap[ i ] = -1;
+	}
+
+	ifstream inData;
+	inData.open( config.getAsString( "channelMap" ).c_str() );
+
+	string eastWest = "";
+	short nPMTs = 0;
+	inData >> eastWest;    // "east" or "west" lowercase
+	inData >> nPMTs;
+
+	for ( short j = 0; j < nPMTs; j++ ) {
+		short triggerIndex = -1;
+		short tofIndex = -1;
+
+		inData >> triggerIndex >> tofIndex;
+
+		// ensure that the trigger index is valid
+		if ( triggerIndex >= 0 ){
+		  
+		  if ( "east" == eastWest )
+		    eastTriggerToTofMap[ triggerIndex  ] = tofIndex ;
+		  else if ( "west" == eastWest )
+		    westTriggerToTofMap[ triggerIndex  ] = tofIndex ;
+		    
+
+		} else {
+		  cout << " Malformed map file " << endl;
+		  return;
+		}
+
+	}
+
+	// now read the other side
+	eastWest = "";
+
+	inData >> eastWest;    // "east" or "west" lowercase
+	inData >> nPMTs;
+	for ( short j = 0; j < nPMTs; j++ ) {
+		short triggerIndex = -1;
+		short tofIndex = -1;
+
+		inData >> triggerIndex >> tofIndex;
+
+		// ensure that the trigger index is valid
+		if ( triggerIndex >= 0 ){
+		  
+		  if ( "east" == eastWest )
+		    eastTriggerToTofMap[ triggerIndex  ] = tofIndex ;
+		  else if ( "west" == eastWest )
+		    westTriggerToTofMap[ triggerIndex  ] = tofIndex ;
+
+		} else {
+		  cout << " Malformed map file " << endl;
+		  return;
+		}
+
+	}
+
+	inData.close();
+
+
+	// now copy the maps into the class array
+	for ( int i = 0; i < constants::nhChannels; i++ ){
+		triggerToTofMap[ i ] = westTriggerToTofMap[ i ]  ;
+		triggerToTofMap[ i + constants::nhChannels ] = eastTriggerToTofMap[ i ] + constants::nhChannels;
+		
+		if ( 0 <= westTriggerToTofMap[ i ])
+			tofToTriggerMap[ westTriggerToTofMap[ i ] ] = i;
+		if ( 0 <= eastTriggerToTofMap[ i ] )
+			tofToTriggerMap[ eastTriggerToTofMap[ i ] + constants::nhChannels ] = i + constants::nhChannels;
+
+		/*
+		if ( westTriggerToTofMap[ i ] != -1 )
+			cout << "west " << left << setw( 4 ) << i << " -> " << westTriggerToTofMap[ i ] << endl;
+		
+		if ( eastTriggerToTofMap[ i ] != -1 )
+			cout << "east " << left << setw( 4 ) << i << " -> " << eastTriggerToTofMap[ i ] << endl; 
+		*/
+	}
+
+	cout << "[calib." << __FUNCTION__ << "] " << " completed in " << elapsed() << " seconds " << endl;
+
+
+}

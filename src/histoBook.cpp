@@ -204,6 +204,7 @@ histoBook* histoBook::set( string param, string p1, string p2, string p3, string
 
 histoBook* histoBook::set( string param, double p1, double p2, double p3, double p4  ){
 
+
 	transform(param.begin(), param.end(), param.begin(), ::tolower);
 
     TH1* h = get( styling );
@@ -259,6 +260,18 @@ histoBook* histoBook::set( string param, double p1, double p2, double p3, double
 	    	if ( !(legendAlignment::center == p2 || legendAlignment::top == p2 || legendAlignment::bottom == p2) )
 	    		p2 = legendAlignment::best;
 	    	placeLegend( p1, p2, p3, p4 );
+	    } else if ( "numberofticks" == param ){
+	    	// p1 - # of primary divisions
+	    	// p2 - # of secondary divisions
+	    	// p3 - axis : 0 or 1 = x, 2 = y
+	    	
+	    	if ( p2 == -1 )
+	    		p2 = 0;
+
+		    if ( 2 == (int)p3 )
+		    	h->GetYaxis()->SetNdivisions( (int) p1, (int) p2, 0, true );
+		    else 
+		    	h->GetXaxis()->SetNdivisions( (int) p1, (int) p2, 0, true );
 	    }
 
     }
