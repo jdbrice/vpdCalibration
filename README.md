@@ -36,6 +36,20 @@ plots the parameter files given in the <paramInput> tag in the configuration fil
   3. **checkParams**
 Readins in a parameter file then runs the calibration steps to produce qa plots.
 
+###xVaraible
+* Default : tof-tot
+* The indep variable in the calibration procedure.
+  1. **tof-tot** - Time of Flight's time-over-threshold ( 0 - 60 [ns] )
+  2. **bbq-adc** - BBQ's adc value ( 0 - 4096 )
+  3. **mxq-adc** - MXQ's adc value ( 0 - 4096 )
+
+###yVaraible
+* Default : tof-le
+* The dep variable in the calibration procedure.
+  1. **tof-le**  - Time of Flight's leading edge time [ns]
+  2. **bbq-tdc** - BBQ's tdc value converted into ns 
+  3. **mxq-tdc** - MXQ's tdc value converted to ns
+
 ###baseName
 Default : ""
 * The name to be prepended to all output files for easier record keeping. For instance give a basename of "run14AuAu14.6GeV" to make all root, PDF, etc appear as run14AuAu14.6GeV.{root, pdf, etc. } 
@@ -59,6 +73,14 @@ Default : ""
 ###paramsLegend
 * Default : {""}
 * Vector of parameter legend names to use when comparing parameter files. Does not use the baseName prefix.
+
+###mapTriggerToTof
+* Default : false 
+* Determines wether or not the trigger (bbq and mxq ) channels will me mapped to tof channels. When producing final calibrations for the the trigger electronics, set this to false! 
+
+###channelMap
+* Default : ""
+* The file containg the trigger to tof channel map. See the offline database for details on the format. If not given then <mapTriggerToTof> should be set to false.
 
 
 ###dataDir

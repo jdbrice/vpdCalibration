@@ -32,8 +32,8 @@
 
 
 	<!-- Calibration options -->
-	<numIterations>1</numIterations>
-	<variableBinning>true</variableBinning>
+	<numIterations>3</numIterations>
+	<variableBinning>false</variableBinning>
 	<removeOffset>true</removeOffset>
 	<outlierRejection>true</outlierRejection>
 	<!-- 	linear: for linear interpolation
@@ -41,9 +41,9 @@
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
-	<numTOTBins>40</numTOTBins>
+	<numTOTBins>60</numTOTBins>
 	<minTOT>1</minTOT>
-	<maxTOT>1000</maxTOT>
+	<maxTOT>2000</maxTOT>
 
 	<binMaxError>1000.5</binMaxError>
 	

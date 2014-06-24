@@ -27,9 +27,13 @@ public:
 	TGraph* graph( double xmin, double xmax, double step );
 	//void draw( TH1D* hist, double xmin, double xmax, double step );
 
+	double eval( double x );
+
 	Interpolator* getSpline() { return spline; }
 
 	~splineMaker();
+
+
 
 	
 

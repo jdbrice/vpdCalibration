@@ -46,7 +46,7 @@ int main( int argc, char* argv[] ) {
     cout << endl;
     config.display( "numIterations" );
     config.display( "variableBinning" );
-    config.display( "binMinPercent" );
+    config.display( "binMaxError" );
     config.display( "removeOffset" );
     config.display( "outlierRejection" );
     config.display( "numTOTBins" );

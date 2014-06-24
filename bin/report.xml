@@ -6,19 +6,19 @@
 
 	<!-- output files -->
 	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
-	<baseName>report_fb_</baseName>
+	<baseName>report_vb_</baseName>
 	<!--	root, params, report filename appended to baseName -->
 	<rootOutput>qa.root</rootOutput>
 	<reportOutput>qa.pdf</reportOutput>
 	<!--<paramsInput>params.dat</paramsInput>-->
 	<paramsInput>
-		<v>run13/run13_pp510_fb_params.dat</v>
-		<v>params.dat</v>
+		<v>run13/run13_pp510_vb_params.dat</v>
+		<v>run13/run13_woff_pp510_vb_params.dat</v>
 		
 	</paramsInput>
 	<paramsLegend>
 		<v>run13 PP 510</v>
-		<v>run13 PP 510 (no or)</v>
+		<v>run13 PP 510 (no outlier rejection)</v>
 	</paramsLegend>
 
 	<!-- Data input -->

@@ -34,17 +34,6 @@ Double_t TOFrPicoDst::channelTOT( Int_t channel ) {
 
 UShort_t TOFrPicoDst::bbqTDC( Int_t channel ) {
 
-   Int_t mapW[16] =
-     {  0,  1,  2,  3,
-        6,  7,  8, 15,
-       10,  9, 12,  4,
-       11, 16, 17, 18 };
-       Int_t mapE[16] =
-     {  0,  1, 16,  3,
-        6,  7,  8,  9,
-       10, 12, 11,  4,               // 11 and 12 swapped here run 14
-       15,  2, 17, 18 };
-
    if ( channel >= startWest && channel < trgEndWest)
       return vpdBbqTdcWest[ channel ];
    else if ( channel >= startEast && channel < trgEndEast )
@@ -54,17 +43,6 @@ UShort_t TOFrPicoDst::bbqTDC( Int_t channel ) {
 }
 
 UShort_t TOFrPicoDst::bbqADC( Int_t channel ) {
-
-   Int_t mapW[16] =
-     {  0,  1,  2,  3,
-        6,  7,  8, 15,
-       10,  9, 12,  4,
-       11, 16, 17, 18 };
-       Int_t mapE[16] =
-     {  0,  1, 16,  3,
-        6,  7,  8,  9,
-       10, 12, 11,  4,               // 11 and 12 swapped here run 14
-       15,  2, 17, 18 };
 
    if ( channel >= startWest && channel < trgEndWest)
       return vpdBbqAdcWest[ channel ];
@@ -166,15 +144,21 @@ void TOFrPicoDst::Init(TTree *tree)
    fChain->SetBranchAddress("vpdTotEast", vpdTotEast, &b_vpdTotEast);
    fChain->SetBranchAddress("vpdTotWest", vpdTotWest, &b_vpdTotWest);
    
-   fChain->SetBranchAddress("vpdBbqAdcWest", vpdBbqAdcWest, &b_vpdBbqAdcWest);
-   fChain->SetBranchAddress("vpdBbqAdcEast", vpdBbqAdcEast, &b_vpdBbqAdcEast);
-   fChain->SetBranchAddress("vpdBbqTdcWest", vpdBbqTdcWest, &b_vpdBbqTdcWest);
-   fChain->SetBranchAddress("vpdBbqTdcEast", vpdBbqTdcEast, &b_vpdBbqTdcEast);
-   
-   fChain->SetBranchAddress("vpdMxqAdcWest", vpdMxqAdcWest, &b_vpdMxqAdcWest);
-   fChain->SetBranchAddress("vpdMxqAdcEast", vpdMxqAdcEast, &b_vpdMxqAdcEast);
-   fChain->SetBranchAddress("vpdMxqTdcWest", vpdMxqTdcWest, &b_vpdMxqTdcWest);
-   fChain->SetBranchAddress("vpdMxqTdcEast", vpdMxqTdcEast, &b_vpdMxqTdcEast);
+   // for backwards compatibility
+   // works either way but prints lots of errors accessing the branch without this
+   if ( fChain->GetListOfBranches()->FindObject( "vpdBbqAdcWest" ) ){
+      
+     fChain->SetBranchAddress("vpdBbqAdcWest", vpdBbqAdcWest, &b_vpdBbqAdcWest);
+     fChain->SetBranchAddress("vpdBbqAdcEast", vpdBbqAdcEast, &b_vpdBbqAdcEast);
+     fChain->SetBranchAddress("vpdBbqTdcWest", vpdBbqTdcWest, &b_vpdBbqTdcWest);
+     fChain->SetBranchAddress("vpdBbqTdcEast", vpdBbqTdcEast, &b_vpdBbqTdcEast);
+     
+     fChain->SetBranchAddress("vpdMxqAdcWest", vpdMxqAdcWest, &b_vpdMxqAdcWest);
+     fChain->SetBranchAddress("vpdMxqAdcEast", vpdMxqAdcEast, &b_vpdMxqAdcEast);
+     fChain->SetBranchAddress("vpdMxqTdcWest", vpdMxqTdcWest, &b_vpdMxqTdcWest);
+     fChain->SetBranchAddress("vpdMxqTdcEast", vpdMxqTdcEast, &b_vpdMxqTdcEast);
+   }
+
 
    fChain->SetBranchAddress("nTofHits", &nTofHits, &b_nTofHits);
    fChain->SetBranchAddress("tray", tray, &b_tray);

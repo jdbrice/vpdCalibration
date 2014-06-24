@@ -31,7 +31,18 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	numTOTBins = config.getAsInt( "numTOTBins", constants::numTOTBins );
 	minTOT = config.getAsDouble( "minTOT", constants::minTOT );
 	maxTOT = config.getAsDouble( "maxTOT", constants::maxTOT );
+
+	// set the histogram info verbosity to show nothing
+	gStyle->SetOptStat( 0 );
 	
+	// create the histogram book
+	book = new histoBook( ( config.getAsString( "baseName" ) + config.getAsString( "rootOutput" ) ) );
+	
+	// create a report builder 
+	report = new reporter( config.getAsString( "baseName" ) + config.getAsString( "reportOutput" ) );
+
+	
+
 	// now build arrays that need numTOTBins
 	for ( int j = 0; j < constants::nChannels; j++){
 		correction[ j ] 	= new double[ numTOTBins + 1 ];
@@ -52,21 +63,20 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 	// set the maximum number of iterations
 	maxIterations = nIterations;
 
-	// create the histogram book
-	book = new histoBook( ( config.getAsString( "baseName" ) + config.getAsString( "rootOutput" ) ) );
 
-	// keep the chain variable and make the picoDST var
-	_chain = chain;
-	pico = new TOFrPicoDst( _chain );
+	if ( "paramReport" != config.getAsString( "jobType" ) ){
+		// keep the chain variable and make the picoDST var
+		_chain = chain;
+		pico = new TOFrPicoDst( _chain );
+	}
 
-	// set the histogram info verbosity to show nothing
-	gStyle->SetOptStat( 0 );
+	
 
 	// start at step 0
 	currentIteration = 0;
 
-	// create a report builder 
-	report = new reporter( config.getAsString( "baseName" ) + config.getAsString( "reportOutput" ) );
+	
+
 
 
 	std::vector<double> tmp = config.getAsDoubleVector( "vzOutlierCut" );
@@ -108,6 +118,8 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
     }
 
     splineType = type;
+
+
 
 
     // set the variable types
@@ -294,15 +306,15 @@ void calib::offsets() {
 
 		double max = tmp->GetBinCenter( tmp->GetMaximumBin() );
 		double rms = 1.2*tmp->GetRMS();
-		//cout << "maximum [ " << i << " ] ---> ( " << max - rms << " -> " << max + rms << " ) " << endl;
 		tmp->GetXaxis()->SetRangeUser( max - rms, max + rms  );
-
-		cout << "Channel [ " << i+1 << " ] Offset = " << tmp->GetMean() << " ns " << endl;
 
 		if ( i == constants::startWest )
 			this->initialOffsets[ i ] = 0;
 		else
 			this->initialOffsets[ i ] = tmp->GetMean();
+
+		cout << "Channel [ " << i+1 << " ] Offset = " << this->initialOffsets[ i ] << " ns " << endl;
+
 		book->get( "tdcMean" )->SetBinContent( i+1, this->initialOffsets[ i ] );
 		book->get( "tdcMean" )->SetBinError( i+1, tmp->GetMeanError() );
 
@@ -382,85 +394,78 @@ void calib::binTOT( bool variableBinning ) {
 
 	startTimer();
 
-	if ( variableBinning == false ){
 
-		for(Int_t i=0; i<constants::nChannels; i++) {
-			for ( int s = 0; s <= numTOTBins; s++ ){
-				double edge = ((maxTOT - minTOT) / (double) numTOTBins) * s;
-				edge += minTOT;
-				totBins[ i ][ s ] = edge;
-			}
-		} // loop channels
 
-	} else { // variableBinning == true ( default )
+	Int_t nevents = (int)_chain->GetEntries();
+	vector<double> tots[ constants::nChannels];
 
-		Int_t nevents = (int)_chain->GetEntries();
-		vector<double> tots[ constants::nChannels];
+	cout << "[calib." << __FUNCTION__ << "] Processing " <<  nevents << " events" << endl;
 
-		cout << "[calib." << __FUNCTION__ << "] Processing " <<  nevents << " events" << endl;
+	for(Int_t i=0; i<nevents; i++) {
+    	_chain->GetEntry(i);
 
-		for(Int_t i=0; i<nevents; i++) {
-	    	_chain->GetEntry(i);
+		progressBar( i, nevents, 75 );
+    	Int_t numEast = pico->numberOfVpdEast;
+      	Int_t numWest = pico->numberOfVpdWest;
+     
+	    if( numWest > constants::minHits){
+	        
+	    	for(Int_t j = 0; j < constants::endWest; j++) {
+	        	Double_t tot = getX( j );
+	          
+	        	if(tot > minTOT && tot < maxTOT ) 
+	          		tots[j].push_back(tot);
+	        }
 
-			progressBar( i, nevents, 75 );
-	    	Int_t numEast = pico->numberOfVpdEast;
-	      	Int_t numWest = pico->numberOfVpdWest;
-	     
-		    if( numWest > constants::minHits){
-		        
-		    	for(Int_t j = 0; j < constants::endWest; j++) {
-		        	Double_t tot = getX( j );
-		          
-		        	if(tot > minTOT && tot < maxTOT ) 
-		          		tots[j].push_back(tot);
-		        }
+	    }
 
-		    }
+  		if( numEast > constants::minHits ){
+    
+    		for(Int_t j = constants::startEast; j < constants::endEast; j++) {
+      			Double_t tot = getX( j );
+      
+		        if( tot > minTOT && tot < maxTOT) 
+		        	tots[j].push_back(tot);
+    		}
 
-	  		if( numEast > constants::minHits ){
-	    
-	    		for(Int_t j = constants::startEast; j < constants::endEast; j++) {
-	      			Double_t tot = getX( j );
-	      
-			        if( tot > minTOT && tot < maxTOT) 
-			        	tots[j].push_back(tot);
-	    		}
+  		}
 
-	  		}
+	} // lopp events 	
 
-		} // lopp events 	
+	// get a threshold for a dead detector
+	int threshold = 0;
+	for(Int_t i=0; i<constants::nChannels; i++) {
+		Int_t size = tots[i].size();
+		threshold += size;
+	}
+	threshold /= (double)constants::nChannels; // the average of all detectors
+	threshold *= .25;
 
-		// get a threshold for a dead detector
-		int threshold = 0;
-		for(Int_t i=0; i<constants::nChannels; i++) {
-			Int_t size = tots[i].size();
-			threshold += size;
-		}
-		threshold /= (double)constants::nChannels; // the average of all detectors
-		threshold *= .25;
+	// loop through the channels and determine binning
+	for(Int_t i=0; i<constants::nChannels; i++) {
+      
+    	Int_t size = tots[i].size();
+      	cout << "[calib.binTOT] Channel[ " << i << " ] : " << size << " hits" << endl;
+      	
+      	if( size < threshold ) { // check for dead channels
+        	
+        	Double_t step = ( maxTOT - minTOT ) / numTOTBins;
 
-		// loop through the channels and determine binning
-		for(Int_t i=0; i<constants::nChannels; i++) {
-	      
-	    	Int_t size = tots[i].size();
-	      	cout << "[calib.binTOT] Channel[ " << i << " ] : " << size << " hits" << endl;
-	      	
-	      	if( size < threshold ) { // check for dead channels
-	        	
-	        	Double_t step = ( maxTOT - minTOT ) / numTOTBins;
+        	for(Int_t j=0; j <= numTOTBins; j++) {
 
-	        	for(Int_t j=0; j <= numTOTBins; j++) {
+                totBins[ i ][ j ] = ( step * j ) + minTOT; 
+        	}
+        	cout  << "[calib.binTOT] VPD Channel [ " << i << " ] is dead! " << "( " << size << " hits)" <<endl;
+        	
+        	// set this detector to dead
+        	deadDetector[ i ] = true;
 
-	                totBins[ i ][ j ] = ( step * j ) + minTOT; 
-	        	}
-	        	cout  << "[calib.binTOT] VPD Channel [ " << i << " ] is dead! " << "( " << size << " hits)" <<endl;
-	        	
-	        	// set this detector to dead
-	        	deadDetector[ i ] = true;
+      	} else { // channel not dead
 
-	      	} else { // channel not dead
+      		deadDetector[ i ] = false;
 
-	      		deadDetector[ i ] = false;
+      		if ( variableBinning ){
+	      		
 	      		Int_t step = size / (numTOTBins + 1 ); 
 	    
 	      		// sort into ascending order
@@ -472,21 +477,28 @@ void calib::binTOT( bool variableBinning ) {
 	        	for( Int_t j = 1; j < numTOTBins ; j++) {
 
 	        		double d1 = tots[i].at( step * j );
-	        		double d2 = tots[ i ].at( step * (j - 1) );
-	        	
-	        		//totBins[ i ][ j ] = ( d1 + d2 ) / 2.0;
 	        		totBins[ i ][ j ] = d1;
 	            	
 	        	}	// loop over tot bins
+        	}	// end variable binning 
+        	else { // fixed binning
 
-	      } // end channle not dead
+				for ( int s = 0; s <= numTOTBins; s++ ){
+					double edge = ((maxTOT - minTOT) / (double) numTOTBins) * s;
+					edge += minTOT;
+					totBins[ i ][ s ] = edge;
+				}
+			
+        	}
 
-	  	} // end loop channles
-	  	
-		for(Int_t i = 0; i< constants::nChannels; i++) {
-			tots[i].clear();
-		}	
-	}
+      } // end channle not dead
+
+  	} // end loop channles
+  	
+	for(Int_t i = 0; i< constants::nChannels; i++) {
+		tots[i].clear();
+	}	
+	
 	cout << "[calib." << __FUNCTION__ << "] completed in " << elapsed() << " seconds " << endl;
 }
 
@@ -501,7 +513,8 @@ double calib::getCorrection( int vpdChannel, double tot ){
 
 	// use splines to get the correction value if set to
 	if ( useSpline && spline[ vpdChannel ] && spline[ vpdChannel ]->getSpline() ){
-		return spline[ vpdChannel ]->getSpline()->Eval( tot );
+		//return spline[ vpdChannel ]->getSpline()->Eval( tot );
+		return spline[ vpdChannel ]->eval( tot );
 	}
 	
 	// if not fall back to doing bin based corrections
@@ -1182,7 +1195,7 @@ void calib::makeCorrections( ){
 		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "dynamicdomain", 1, -1, -1, 2 );
 		    	
 		    if ( xVariable.find( "adc" ) != string::npos )
-		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "numberOfTicks", (maxTOT - minTOT)/100.0, 5);
+		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "numberOfTicks", 5, 5);
 
 		    post->Draw( "colz" );
 		    
@@ -1219,10 +1232,7 @@ void calib::writeParameters(  ){
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Start " << endl;
 
 
-	string outName = config.getAsString( "baseName" ) + config.getAsString( "paramsOutput" );
-
-	if ( outName.length() <= 4 )
-		return;
+	string outName = config.getAsString( "baseName" ) + config.getAsString( "paramsOutput", "params.dat" );
 
 	ofstream f;
 	f.open( outName.c_str() );
@@ -1233,6 +1243,7 @@ void calib::writeParameters(  ){
 
 	for ( int j = constants::startWest; j < constants::endEast; j++ ){
 		
+
 		string title = "Channel "+ts(j+1)+ " : Slewing Correction ;" + xLabel + ";" + yLabel;
 		string sTitle = "Channel "+ts(j+1)+ " : Spline Slewing Correction ;" + xLabel + ";" + yLabel;
 
@@ -1273,7 +1284,7 @@ void calib::writeParameters(  ){
 			// spline based corrections
 			double sCor = 0;
 			if ( !deadDetector[ j ] )
-				sCor = spline[ j ]->getSpline()->Eval( tot ) + off;
+				sCor = spline[ j ]->eval( tot ) + off;
 
 			book->get( "splineSlewingCor" +ts(j) )->SetBinContent( 
 				book->get( "splineSlewingCor" +ts(j) )->GetXaxis()->FindBin( tot ), sCor );
@@ -1307,7 +1318,7 @@ void calib::writeParameters(  ){
 			book->style( "slewingNoOffset"+ts(j) )->set("lineColor", kRed )->draw();
 
 		if ( xVariable.find( "adc" ) != string::npos )
-			book->style( "slewingNoOffset"+ts(j) )->set( "numberOfTicks", (maxTOT - minTOT)/100.0, 5);
+			book->style( "slewingNoOffset"+ts(j) )->set( "numberOfTicks", 5, 5);
 
 		if ( j == constants::endWest - 1 || j == constants::endEast - 1){
 			report->savePage();
@@ -1387,7 +1398,7 @@ void calib::readParameters(  ){
 						// TODO : tmp workaround for variable binning bug
 						//correction[ channel - 1 ][ 0 ] = correction[ channel - 1 ][ 1 ];
 						for ( int j=0; j <= tBins; j++ ){ 
-							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, correction[ channel - 1 ][ j ] - correction[ channel - 1 ][ 0 ] );
+							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, correction[ channel - 1 ][ j ] - correction[ channel - 1 ][ 5 ] );
 						}
 
 						
@@ -1425,6 +1436,7 @@ void calib::readParameters(  ){
 				    if ( 0 == fi ){
 				    	book->clearLegend();
 					    book->style( "file"+ts(fi)+"channel"+ts(k) )
+					    	->set( "domain", minTOT, maxTOT )
 							->draw()
 							->set( "legend", lNames[ fi ] )->set( "legend", legendAlignment::right, legendAlignment::top, .4);
 					} else {
@@ -1652,6 +1664,10 @@ Double_t calib::detectorResolution(Double_t *x, Double_t *par){
 	}
 }
 
+/**
+ * Reads in the trigger to tof map produced by the DB reader for the vpdTriggerToTofMap Table
+ * Used to compare the trigger (bbq and mxq) channels directly to the tof channels
+ */
 void calib::readTriggerToTofMap(){
 
 	cout << "[calib." << __FUNCTION__ << "] " << " Start " << endl;

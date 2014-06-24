@@ -94,3 +94,18 @@ TGraph * splineMaker::graph( double xmin, double xmax, double step ){
 
 	return gr;
 }
+
+
+double splineMaker::eval( double x ){
+
+	double ex = x;
+	if ( ex < domainMin )
+		ex = domainMin;
+	else if ( ex > domainMax )
+		ex = domainMax;
+
+	if ( !spline )
+		return 0;
+
+	return spline->Eval( ex );
+}
