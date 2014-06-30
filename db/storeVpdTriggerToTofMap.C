@@ -17,7 +17,7 @@ void storeVpdTriggerToTofMap( bool test = true, const char* time = "2010-01-01 0
 
   //-- load dBase and Table definition libraries
   gSystem->Load("St_base");
-  gSystem->Load("StChain");
+  gROOT->Macro("LoadLogger.C");
   gSystem->Load("StUtilities");
   gSystem->Load("St_Tables.so");
 
@@ -41,6 +41,7 @@ void storeVpdTriggerToTofMap( bool test = true, const char* time = "2010-01-01 0
   // maximum possible number of trigger tubes per side of vpd
   // currently there are only 16 PMTs active on the trigger side
   const short maxPMTs = 19;
+  const Int_t MAX_DB_INDEX = 38;
   short eastTriggerToTofMap[ maxPMTs ],
         westTriggerToTofMap[ maxPMTs ];
 
@@ -121,30 +122,38 @@ void storeVpdTriggerToTofMap( bool test = true, const char* time = "2010-01-01 0
     cout << " " << (i ) << " ---> " << westTriggerToTofMap[ i ] << endl;
   }
 
+  
+
+  // like StBeamDirection enumeration
+  int east = 0;
+  int west = 1;
+
+  vpdTriggerToTofMap_st vpdMap [ MAX_DB_INDEX ];
+
+  for ( int i = 0; i < maxPMTs; i++ ){
+    vpdMap[ i ].eastWest = east;
+    vpdMap[ i ].triggerIndex = i;
+    vpdMap[ i ].tofIndex = eastTriggerToTofMap[ i ];
+  }
+  for ( int i = 0; i < maxPMTs; i++ ){
+    vpdMap[ i + maxPMTs ].eastWest = west;
+    vpdMap[ i + maxPMTs ].triggerIndex = i;
+    vpdMap[ i + maxPMTs ].tofIndex = westTriggerToTofMap[ i ];
+  }
+
   if ( false == test ){
-
-    vpdTriggerToTofMap_st *vpdMap = new vpdTriggerToTofMap_st[ maxPMTs * 2 ];
-
-    for ( int i = 0; i < maxPMTs; i++ ){
-      vpdMap[ i ]->eastWest = east;
-      vpdMap[ i ]->triggerIndex = i;
-      vpdMap[ i ]->tofIndex = eastTriggerToTofMap[ i ];
-    }
-    for ( int i = 0; i < maxPMTs; i++ ){
-      vpdMap[ i + maxPMTs ]->eastWest = west;
-      vpdMap[ i + maxPMTs ]->triggerIndex = i;
-      vpdMap[ i + maxPMTs ]->tofIndex = westTriggerToTofMap[ i ];
-    }
+    cout << "Setting DB_ACCESS_MODE to write" << endl;
+    gSystem->Setenv("DB_ACCESS_MODE","write");
 
     cout << "Uploading VPD trigger to tof channel map" << endl;
-    triggerToTofMap->SetTable( (char*) vpdMap, maxPMTs*2 );
+    triggerToTofMap->SetTable( (char*) &vpdMap, MAX_DB_INDEX );
 
     cout << "Setting store time to : " << writeTime << endl;
     dbManager->setStoreTime( writeTime.c_str() );
 
-    dbManager->storeTable( triggerToTofMap );
+    dbManager->storeDbTable( triggerToTofMap );
 
-    cout << " vpdTriggerToTofMap Uploaded " << endl;
+    cout << "vpdTriggerToTofMap Uploaded " << endl;
 
   }
 

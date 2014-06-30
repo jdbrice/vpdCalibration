@@ -37,19 +37,19 @@ void readVpdTriggerToTofMap(const char* time = "2010-01-01 00:00:00")
   dbManager->fetchDbTable( triggerToTofMap );
 
   // output some table details
-  cout<<vpdTriggerToTofMap->getVersion()<<endl;
-  cout<<vpdTriggerToTofMap->getBeginDateTime()<<endl;
-  cout<<vpdTriggerToTofMap->getEndDateTime()<<endl;
+  cout<<triggerToTofMap->getVersion()<<endl;
+  cout<<triggerToTofMap->getBeginDateTime()<<endl;
+  cout<<triggerToTofMap->getEndDateTime()<<endl;
 
 
-  vpdTriggerToTofMap_st* table = static_cast<vpdTriggerToTofMap_st*>(vpdTriggerToTofMap->GetTable());
+  vpdTriggerToTofMap_st* table = static_cast<vpdTriggerToTofMap_st*>(triggerToTofMap->GetTable());
   
   if( !table ) {
     cout << " Table is invalid, exiting! " << endl;
     return;
   }
 
-  Int_t nRows = vpdTriggerToTofMap->GetNRows();
+  Int_t nRows = triggerToTofMap->GetNRows();
   
   cout << " Number of rows = " << nRows << endl;
 
@@ -66,6 +66,8 @@ void readVpdTriggerToTofMap(const char* time = "2010-01-01 00:00:00")
 
   cout<<"<---------------- Read out from DataBase -------------->"<<endl;
 
+  const int east = 0;
+  const int west = 1;
 
   ofstream outData;
   outData.open("vpdTriggerToTofMap_read.dat");
@@ -87,13 +89,13 @@ void readVpdTriggerToTofMap(const char* time = "2010-01-01 00:00:00")
   outData << "east" << endl;
   outData << maxPMTs << endl;
   for ( int i = 0; i < maxPMTs; i++ ){
-    outData << i << " " << eastTriggerToTofMap[ i ] << endl;
+    outData << i << "\t" << eastTriggerToTofMap[ i ] << endl;
   }
 
   outData << "west" << endl;
   outData << maxPMTs << endl;
   for ( int i = 0; i < maxPMTs; i++ ){
-    outData << i << " " << westTriggerToTofMap[ i ] << endl;
+    outData << i << "\t" << westTriggerToTofMap[ i ] << endl;
   }
   
   outData.close();
