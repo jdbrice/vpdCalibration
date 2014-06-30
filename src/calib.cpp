@@ -324,11 +324,25 @@ void calib::offsets() {
 	// calculate what the final mean of the west side channels would be if no offsets where removed.
 	// It is the average using equal weight for each channel 
 	double totalWest = 0;
+	double numWest = 0;
 	for ( int k = constants::startWest; k < constants::endWest; k++){
+		if ( deadDetector[ k ] ) continue;
 		totalWest += this->initialOffsets[ k ];
+		numWest++;
 	}
-	finalWestOffset = (totalWest / 19.0);
+	finalWestOffset = (totalWest / numWest );
 	cout << "Channel 0 floating offset : " << finalWestOffset << " ns " << endl;
+
+	double totalEast = 0;
+	double numEast = 0;
+	for ( int k = constants::startEast; k < constants::endEast; k++){
+		if ( deadDetector[ k ] ) continue;
+		totalEast += this->initialOffsets[ k ];
+		numEast++;
+	}
+	double eastOffset = (totalEast / numEast );
+	eastWestOffset = (finalWestOffset - eastOffset);
+	cout << "West - East : " << (finalWestOffset - eastOffset) << " ns " << endl;
 
 	
 
@@ -1268,7 +1282,10 @@ void calib::writeParameters(  ){
 
 			double off = 0;
 			if ( removeOffset ){
-				off = initialOffsets[ j ] ;
+				off = initialOffsets[ j ] - finalWestOffset;
+			} else {
+				if ( j >= constants::startEast && j < constants::endEast )
+					off = 0 - eastWestOffset;
 			}
 			
 			// bin based corrections
@@ -1398,7 +1415,7 @@ void calib::readParameters(  ){
 						// TODO : tmp workaround for variable binning bug
 						//correction[ channel - 1 ][ 0 ] = correction[ channel - 1 ][ 1 ];
 						for ( int j=0; j <= tBins; j++ ){ 
-							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, correction[ channel - 1 ][ j ] - correction[ channel - 1 ][ 5 ] );
+							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, correction[ channel - 1 ][ j ] /*- correction[ channel - 1 ][ 5 ]*/ );
 						}
 
 						

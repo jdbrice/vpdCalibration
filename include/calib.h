@@ -38,7 +38,9 @@ private:
 
 	// the initial offsets for each channel relative to the 1st channel on the west side
 	double initialOffsets[ constants::nChannels ];
-	// the west - east offset
+	// the west - east offset only needed for the case of not removing initial offsets
+	double eastWestOffset;
+	// the floating channel 1 offset
 	double finalWestOffset;
 
 	// number of tot bins to use

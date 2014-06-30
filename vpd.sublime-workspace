@@ -4,6 +4,14 @@
 		"selected_items":
 		[
 			[
+				"sta",
+				"startEast"
+			],
+			[
+				"eastWes",
+				"eastWestOffset"
+			],
+			[
 				"dom",
 				"domainMax"
 			],
@@ -134,10 +142,6 @@
 			[
 				"outlier",
 				"outlierRejection"
-			],
-			[
-				"sta",
-				"startWest"
 			],
 			[
 				"report",
@@ -510,10 +514,6 @@
 			[
 				"fitT",
 				"fitTray8A"
-			],
-			[
-				"tray8",
-				"tray8A"
 			]
 		]
 	},
@@ -584,31 +584,38 @@
 	},
 	"file_history":
 	[
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/run13_woff_pp510_tof_fb_config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/run13_pp510_tof_fb_config.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/report.xml",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/storeVpdTriggerToTofMap_C.txt",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/storeVpdTriggerToTofMap.C",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/readVpdTriggerToTofMap_C.txt",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/readVpdTriggerToTofMap.C",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/src/vpd.cpp",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/vpdTriggerToTofMap.idl",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/vpdTriggerToTofMap_idl.txt",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/script/vpdTriggerToTofMap_dat.txt",
+		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/run13_pp510_fb_params.dat",
 		"/home/daniel/.bashrc",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/pp510.xml",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/calib.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/withOffPP510.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/config.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/TOFrPicoDst.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/run13_pp510_vb_params.dat",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run13/run13_woff_pp510_vb_params.dat",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/report.xml",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/run14/auau200Bbq.xml",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/src/vpd.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/splineMaker.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/splineMaker.cpp",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/README.md",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/include/calib.h",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/src/histoBook.cpp",
 		"/home/daniel/bnl/local/plot_trgwindow.C",
 		"/home/daniel/bnl/local/raw.h",
 		"/home/daniel/bnl/local/billauau200.dat",
 		"/home/daniel/bnl/local/old.dat",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/constants.h",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/script/storeVpdTriggerToTofMap.C",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/script/vpdTriggerToTofMap.idl",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/vpdTriggerToTofMap.dat",
-		"/home/daniel/bnl/jdb/work/vpdCalibration/script/readVpdTriggerToTofMap.C",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/script/writeVpdTriggerToTofMap.C",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/bin/test",
 		"/home/daniel/bnl/jdb/work/vpdCalibration/include/TOFrPicoDst.h",
@@ -704,14 +711,7 @@
 		"/home/daniel/bnl/jdb/work/vpdStart/script/calib.dat",
 		"/home/daniel/bnl/jdb/work/vpdStart/script/cor.dat",
 		"/home/daniel/bnl/jdb/work/vpdStart/script/cor2.dat",
-		"/home/daniel/Dropbox/WORK/t0Fitter/sixth/t0Modify.C",
-		"/home/daniel/bnl/jdb/work/vpdStart/script/plot.py",
-		"/home/daniel/bnl/work/vpdStart/src/chainLoader.cpp",
-		"/home/daniel/bnl/work/vpdStart/include/chainLoader.h",
-		"/home/daniel/bnl/work/vpdStart/src/vpd.cpp",
-		"/home/daniel/bnl/work/vpdStart/include/calib.h",
-		"/home/daniel/bnl/work/vpdStart/src/calib.cpp",
-		"/home/daniel/bnl/work/billCal/cal/cal_loop.cxx"
+		"/home/daniel/Dropbox/WORK/t0Fitter/sixth/t0Modify.C"
 	],
 	"find":
 	{
@@ -729,6 +729,7 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"West",
 			"	",
 			",",
 			"reportOutput",
@@ -855,8 +856,7 @@
 			"TSplineFit",
 			"$(ObjSuf)",
 			"TBandedLE",
-			".$(ObjSuf) ",
-			"$(ObjSuf)"
+			".$(ObjSuf) "
 		],
 		"highlight": true,
 		"in_selection": false,

@@ -12,13 +12,13 @@
 	<reportOutput>qa.pdf</reportOutput>
 	<!--<paramsInput>params.dat</paramsInput>-->
 	<paramsInput>
-		<v>run13/run13_pp510_vb_params.dat</v>
-		<v>run13/run13_woff_pp510_vb_params.dat</v>
+		<v>run13/run13_pp510_tof_fb_params.dat</v>
+		<v>run13/run13_woff_pp510_tof_fb_params.dat</v>
 		
 	</paramsInput>
 	<paramsLegend>
-		<v>run13 PP 510</v>
-		<v>run13 PP 510 (no outlier rejection)</v>
+		<v>w Outlier Rejection</v>
+		<v>wo Outlier Rejection</v>
 	</paramsLegend>
 
 	<!-- Data input -->
@@ -39,9 +39,9 @@
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
-	<numTOTBins>60</numTOTBins>
-	<minTOT>10</minTOT>
-	<maxTOT>40</maxTOT>
+	<numTOTBins>128</numTOTBins>
+	<minTOT>0</minTOT>
+	<maxTOT>64</maxTOT>
 
 
 </config>
