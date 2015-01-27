@@ -8,6 +8,7 @@ objects = vpd.o histoBook.o calib.o chainLoader.o TOFrPicoDst.o xmlConfig.o spli
 
 # ROOT libs and includes
 ROOTCFLAGS    	= $(shell root-config --cflags)
+ROOTLDFLAGS    	= $(shell root-config --ldflags)
 ROOTLIBS      	= $(shell root-config --libs)
 ROOTGLIBS     	= $(shell root-config --glibs)
 
@@ -18,9 +19,9 @@ libraries 			= 	$(ROOTLIBS) -lGui -lHtml -lGuiHtml -lMathCore -lMathMore $(CERNL
 #					$(ROOTDEV)/lib/libTwoPad.so
 
 cxx 		= g++ -std=c++0x
-flags 		= -Wall -g $(ROOTCFLAGS) $(includes) -Wno-write-strings -m32 -fno-inline
+flags 		= -Wall -g $(ROOTCFLAGS) $(includes) -Wno-write-strings -fno-inline
 compile 	= $(cxx) $(flags) -c 
-ldFlags  	= -m32 -g
+ldFlags  	= $(ROOTLDFLAGS) -g
 
 all: $(project)
 

@@ -42,11 +42,11 @@ splineMaker::splineMaker( TH1D* hist, int place, Interpolation::Type type , int 
 		double _y = hist->GetBinContent( i );
 		double _x = bEdge;
 		if ( splineAlignment::left == place )
-			_x = bEdge;
+			_x = bEdge + .0000001; 		// makes sure there are no troubles with doubles on the edge
 		else if ( splineAlignment::center == place )
 			_x = (bEdge + (bWidth/2.0));
 		else if ( splineAlignment::right == place )
-			_x = ( bEdge + bWidth );
+			_x = ( bEdge + bWidth - .0000001 );// makes sure there are no troubles with doubles on the edge
 
 		x[ j ] = _x;
 		y[ j ] = _y;

@@ -57,6 +57,7 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 			correction[ j ] [ k ] = 0;
 		}
 		initialOffsets[ j ] = 0;
+		outlierOffsets[ j ] = 0;
 		spline[ j ] = NULL;
 	}
 	
@@ -246,10 +247,14 @@ void calib::offsets() {
 	book->cd( "initialOffset" );
 	
 	// make all the histos the first round
-	book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
-	book->make1D( "tdcMean", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5 );
-	book->make2D( "correctedOffsets", "Corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
-	book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels, 0, constants::nChannels, 1000, 0, 51200 );
+	if ( ! book->get( "tdc" ) ){
+		book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
+		book->make1D( "tdcMean", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5 );
+		book->make2D( "correctedOffsets", "Corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
+		book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels, 0, constants::nChannels, 1000, 0, 51200 );	
+		book->make2D( "tdcOffsetRemoved", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
+	}
+	
 
 
 	cout << "[calib." << __FUNCTION__ << "] Made Histograms " << endl;
@@ -321,6 +326,47 @@ void calib::offsets() {
 		delete tmp;
 	}
 
+	// loop over all events to draw them with offsets removed
+	for(Int_t i=0; i<nevents; i++) {
+    	_chain->GetEntry(i);
+		
+		progressBar( i, nevents, 75 );
+
+		// perform the cuts used in calibration step to ensure the distributions match
+		double tpcZ = pico->vertexZ;
+		float vx = pico->vertexX;
+    	float vy = pico->vertexY;
+    	float vxy = TMath::Sqrt( vx*vx + vy*vy );
+    	if ( vxy > 1 ) continue;
+    	if ( pico->nTofHits <= 1 ) continue;
+    	if ( TMath::Abs( tpcZ ) > 100 ) continue;
+
+
+		// channel 1 on the west side is the reference channel
+    	double reference = getY( 0 );
+    	
+
+		for( int j = constants::startWest; j < constants::endEast; j++) {
+
+			
+			// skip dead detectors
+			if ( deadDetector[ j ] ) continue;
+
+			int nHits = pico->numHits( j );
+			
+			if ( nHits < constants::minHits ) 
+				continue;
+
+			double tdc = getY( j );
+	    	double tot = getX( j );
+
+	    	if(tot <= minTOT || tot >= maxTOT) continue;	    
+
+		    book->fill( "tdcOffsetRemoved", j, tdc - reference - initialOffsets[ j ] );
+
+		}	
+	} // end loop on events
+
 	// calculate what the final mean of the west side channels would be if no offsets where removed.
 	// It is the average using equal weight for each channel 
 	double totalWest = 0;
@@ -348,9 +394,9 @@ void calib::offsets() {
 
 	// get the east / west offset just for plotting
 	double westMinusEast = 0;
-	TH1D* west = tdc->ProjectionY( "westOffset", 2, 19 );
+	TH1D* west = tdc->ProjectionY( "westOffset", constants::startWest+2, constants::endWest );
 	book->add( "westOffset", west );
-	TH1D* east = tdc->ProjectionY( "eastOffset", 20, 38 );
+	TH1D* east = tdc->ProjectionY( "eastOffset", constants::startEast+1, constants::endEast );
 	book->add( "eastOffset", east );
 
 	westMinusEast = ( west->GetMean() - east->GetMean() );
@@ -384,6 +430,105 @@ void calib::offsets() {
 		->set( "legend", "East")->set( "legend", legendAlignment::right, legendAlignment::top);
 	
 	report->savePage();
+
+	cout << "[calib." << __FUNCTION__ << "] completed in " << elapsed() << " seconds " << endl;
+}
+
+void calib::finalOffsets() {
+
+	startTimer();
+
+	if ( !_chain ){
+		cout << "[calib." << __FUNCTION__ << "] ERROR: Invalid chain " << endl;
+		return;
+	}
+
+
+	Int_t nevents = (Int_t)_chain->GetEntries();
+	cout << "[calib." << __FUNCTION__ << "] Loaded: " << nevents << " events " << endl;
+
+	book->cd( "finalOffset" );
+	
+	// make all the histos the first round
+	if ( ! book->get( "tdc" ) ){
+		book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
+		book->make1D( "tdcMean", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5 );
+		book->make2D( "correctedOffsets", "Corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
+		book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels, 0, constants::nChannels, 1000, 0, 51200 );	
+		book->make2D( "tdcOffsetRemoved", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
+	}
+	
+
+
+	cout << "[calib." << __FUNCTION__ << "] Made Histograms " << endl;
+
+	// loop over all events
+	for(Int_t i=0; i<nevents; i++) {
+    	_chain->GetEntry(i);
+		
+		progressBar( i, nevents, 75 );
+
+		// perform the cuts used in calibration step to ensure the distributions match
+		double tpcZ = pico->vertexZ;
+		float vx = pico->vertexX;
+    	float vy = pico->vertexY;
+    	float vxy = TMath::Sqrt( vx*vx + vy*vy );
+    	if ( vxy > 1 ) continue;
+    	if ( pico->nTofHits <= 1 ) continue;
+    	if ( TMath::Abs( tpcZ ) > 100 ) continue;
+
+
+		// channel 1 on the west side is the reference channel
+    	double reference = getY( 0 ) - getCorrection( 0, getX( 0 ) );
+    	
+
+		for( int j = constants::startWest; j < constants::endEast; j++) {
+
+			
+			// skip dead detectors
+			if ( deadDetector[ j ] ) continue;
+
+			int nHits = pico->numHits( j );
+			
+			if ( nHits < constants::minHits ) 
+				continue;
+			double tot = getX( j );
+			double tdc = getY( j ) - getCorrection( j, tot );
+
+	    	if(tot <= minTOT || tot >= maxTOT) continue;	    
+
+
+		    book->fill( "tdc", j, tdc - reference );
+
+		}	
+	} // end loop on events
+
+	// calculate the offsets
+  	TH2D* tdc = (TH2D*) book->get( "tdc" );
+
+	for ( int i = constants::startWest; i < constants::endEast; i++ ){
+		TH1D* tmp = tdc->ProjectionY( "tmp", i+1, i+1 );
+
+		double max = tmp->GetBinCenter( tmp->GetMaximumBin() );
+		double rms = 1.2*tmp->GetRMS();
+		tmp->GetXaxis()->SetRangeUser( max - rms, max + rms  );
+
+		if ( i == constants::startWest )
+			this->initialOffsets[ i ] = 0;
+		else
+			this->initialOffsets[ i ] = tmp->GetMean();
+
+		//if ( i >= constants::startEast && i < constants::endEast ){
+
+		//}
+
+		cout << "Channel [ " << i+1 << " ] Offset = " << this->initialOffsets[ i ] << " ns " << endl;
+
+		book->get( "tdcMean" )->SetBinContent( i+1, this->initialOffsets[ i ] );
+		book->get( "tdcMean" )->SetBinError( i+1, tmp->GetMeanError() );
+
+		delete tmp;
+	}
 
 	cout << "[calib." << __FUNCTION__ << "] completed in " << elapsed() << " seconds " << endl;
 }
@@ -620,7 +765,7 @@ void calib::outlierRejection( bool reject ) {
 		double tdcWest = getY( j );
 	    double totWest = getX( j );
 
-	    tdcWest -= this->initialOffsets[ j ];
+	    tdcWest -= (this->initialOffsets[ j ] + this->outlierOffsets[ j ]);
 
 	  
 	    if( totWest <= minTOT || totWest > maxTOT) continue;
@@ -638,7 +783,7 @@ void calib::outlierRejection( bool reject ) {
 			double tdcEast = getY( k );
 	    	double totEast = getX( k );
 
-	    	tdcEast -= this->initialOffsets[ k ];
+	    	tdcEast -= (this->initialOffsets[ k ] + this->outlierOffsets[ k ]);
 
 	    	if( totEast <= minTOT || totEast > maxTOT) continue;
 	    	
@@ -848,7 +993,7 @@ void calib::step( ) {
   			corr[ j ] = getCorrection( j, tot[ j ] );
   			tAll[ j ] -= corr[ j ];
     	}
-    	reference = getY( 0 );
+    	reference = getY( 0 ) - getCorrection( 0, tot[ 0 ] );
 
 		// loop over every channel on the west and then on the east side
 		for( int j = constants::startWest; j < constants::endEast; j++) {
@@ -971,11 +1116,184 @@ void calib::step( ) {
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " completed in " << elapsed() << " seconds " << endl;
 	
 	makeCorrections();
+	
 	stepReport();
 
 	currentIteration++;
 
 	
+}
+
+void calib::checkStep( ) {
+
+	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Start " << endl;
+	
+	string iStr = "it"+ts(currentIteration);
+	int zBins = 600, zRange = 200;
+
+	book->cd( "Vertex_Z");
+	book->make1D( 	iStr+"all", iStr + "z_{TPC} - z_{VPD}; [#]", zBins, -zRange, zRange );
+	book->make1D( 	iStr+"avg", "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} - z_{VPD} [cm]; [#]", 	zBins, -zRange, zRange );
+	book->make2D( 	iStr+"zTPCzVPD", "TPC vs. VPD z Vertex; z_{TPC};z_{VPD}", zBins/2, -zRange/2, zRange/2, zBins/2, -zRange/2, zRange/2 );
+	book->make2D( 	iStr+"zTPCzVPDAvg", "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} [cm];z_{VPD} [cm]", zBins/2, -zRange/2, zRange/2, zBins/2, -zRange/2, zRange/2 );
+
+	startTimer();
+
+	for ( int j = constants::startWest; j < constants::endEast; j++ ){
+		//cout << "Offset[ " << j << " ] = " << initialOffsets[ j ] << endl;
+	}
+
+	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Calibrating " << endl;
+
+	double avgCountEast = 0;
+	double neEast = 0;
+	double avgCountWest = 0;
+	double neWest = 0;
+
+	Int_t nevents = (int)_chain->GetEntries();
+	for(Int_t i = 0; i < nevents; i++) {
+    	_chain->GetEntry(i);
+
+		progressBar( i, nevents, 75 );
+
+    
+    	float vx = pico->vertexX;
+    	float vy = pico->vertexY;
+    	float vxy = TMath::Sqrt( vx*vx + vy*vy );
+    	if ( vxy > 1 ) continue;
+
+    	double tpcZ = pico->vertexZ;
+    	if ( pico->nTofHits <= 1 ) continue;
+    	if ( TMath::Abs( tpcZ ) > 100 ) continue;
+
+    	double sumEast = 0;
+		double sumWest = 0;
+		double countEast = 0;
+		double countWest = 0;
+		stringstream sstr;
+
+		for ( int j = constants::startWest; j < constants::endWest; j++ ){
+
+			double tdcWest = getY( j );
+		    double totWest = getX( j );
+		  
+		    if( totWest <= minTOT || totWest > maxTOT) continue;
+		    
+		    double corWest = getCorrection( j, totWest ) +initialOffsets[ j ];
+		    tdcWest -= corWest;
+
+		    sumWest += tdcWest;
+		    countWest++;
+
+			for ( int k = constants::startEast; k < constants::endEast; k++ ){
+
+				double tdcEast = getY( k );
+		    	double totEast = getX( k );
+
+		    	if( totEast <= minTOT || totEast > maxTOT) continue;
+		    	
+		    	double corEast = getCorrection( k, totEast ) +initialOffsets[ k ];
+		    	tdcEast -= corEast;
+
+		    	if ( j == constants::startWest ){
+		    		sumEast += tdcEast;
+		    		countEast++;
+		    	}
+
+		    	// calculate the VPD z Vertex
+		    	double vpdZ = constants::c * ( tdcEast - tdcWest) / 2.0;
+		    	if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable )
+		    		vpdZ = constants::c * ( tdcWest - tdcEast) / 2.0;
+
+		    	book->get( iStr+"all" )->Fill( tpcZ - vpdZ );
+		    	book->get( iStr+"zTPCzVPD" )->Fill( tpcZ, vpdZ );
+			    	  			
+			} // loop channel k
+		} // loop channel j
+
+		double ovc = 1.0 / 29.9792458;
+		if ( countEast >= 1 && countWest >= 1){
+
+			//cout << "SumWest : " << sumWest << endl ;
+			//cout << "" << (ovc * -1.29 * 2 * countWest) << endl;
+			//sumWest = sumWest + (ovc * 3.35 * 2 * countWest);
+			double vpdZ = constants::c * ( (sumEast/countEast) - (sumWest/countWest)) / 2.0;	
+			//if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable )
+			//	vpdZ = constants::c * ( (sumWest/countWest) - (sumEast/countEast)) / 2.0;	
+			book->fill( iStr+"zTPCzVPDAvg", tpcZ, vpdZ );
+			book->fill( iStr+"avg", ( tpcZ-vpdZ ));
+
+			
+
+		}
+
+		if ( countEast >= 1 ){
+			neEast++;
+    		avgCountEast += countEast;
+		}
+		if ( countWest >= 1){
+			neWest++;
+			avgCountWest += countWest;
+		}
+    	
+    	
+ 		   	
+
+    		
+	}
+
+
+	cout << " Avg Count East " << (avgCountEast / neEast ) << endl;
+	cout << " Avg Count West " << (avgCountWest / neWest ) << endl;
+
+	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " completed in " << elapsed() << " seconds " << endl;
+	
+	// report the outlier rejection
+	report->newPage(2, 2);
+	
+	gPad->SetLogy(1);
+	book->style( iStr+"all" )
+		->set( "numberOfTicks", 5, 5)
+		->draw();
+	
+
+	report->cd( 2, 1 );
+	gPad->SetLogy(1);
+	book->style( iStr+"avg" )
+		->set( "numberOfTicks", 5, 5)
+		->set( "draw", "" )
+		->set( "domain", -100, 100)
+		->draw();
+
+	report->cd( 1, 2 );
+	book->style( iStr+"zTPCzVPD" )
+		->set( "numberOfTicks", 5, 5)
+		->set( "draw", "colz" )->draw();
+
+	report->cd( 2, 2 );
+	book->style( iStr+"zTPCzVPDAvg" )
+		->set( "numberOfTicks", 5, 5 )
+		->set( "draw", "colz" )
+
+		->draw();
+	report->savePage();
+
+	
+	book->clearLegend();
+
+
+	/** Determine the Offset and contrain it for the outlier rejection*/
+	double toff = book->get( iStr+"avg") -> GetMean();
+	cout << "TPC - VPD = " << toff << endl;
+	double ovc = 1.0 / constants::c;
+	double nOff = ovc * toff * 2.0;
+	cout << "Channel [ west ] += " <<nOff << endl;
+	for ( int i = constants::startWest; i < constants::endWest; i++ ){
+		this->initialOffsets[ i ] += nOff;
+	}
+
+	currentIteration++;
+
 }
 
 /**
@@ -1244,7 +1562,7 @@ void calib::makeCorrections( ){
 void calib::writeParameters(  ){
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Start " << endl;
-
+	cout << " min, max, nBins : " << minTOT << ",  " << maxTOT << ", " << numTOTBins << endl;
 
 	string outName = config.getAsString( "baseName" ) + config.getAsString( "paramsOutput", "params.dat" );
 
@@ -1261,10 +1579,10 @@ void calib::writeParameters(  ){
 		string title = "Channel "+ts(j+1)+ " : Slewing Correction ;" + xLabel + ";" + yLabel;
 		string sTitle = "Channel "+ts(j+1)+ " : Spline Slewing Correction ;" + xLabel + ";" + yLabel;
 
-		book->make1D( "slewingCor" +ts(j), title, numTOTBins, minTOT, maxTOT  );
+		book->make1D( "slewingCor" +ts(j), title, numTOTBins, totBins[ j ]  );
 		if ( useSpline )
-			book->make1D( "splineSlewingCor" +ts(j), sTitle, numTOTBins, minTOT, maxTOT  );
-		book->make1D( "slewingNoOffset" +ts(j), title, numTOTBins, minTOT, maxTOT  );
+			book->make1D( "splineSlewingCor" +ts(j), sTitle, numTOTBins, totBins[ j ]  );
+		book->make1D( "slewingNoOffset" +ts(j), title, numTOTBins, totBins[ j ] );
 
 		f << (j + 1) << endl;
 		f << numTOTBins << endl;
@@ -1274,11 +1592,15 @@ void calib::writeParameters(  ){
 		}
 		f << endl;
 		for ( int i = 0; i <= numTOTBins; i++ ){
+			double totStep = (( maxTOT - minTOT ) / (double)(numTOTBins));
+			double tot = minTOT + totStep * (double)(i);
 
-
-
-			double totStep = (( maxTOT - minTOT ) / (double)numTOTBins);
-			double tot = minTOT + totStep * (double)i;
+			if ( 0 == i )
+				tot = minTOT;
+			else if ( numTOTBins == i )
+				tot = maxTOT;
+			else
+				tot = (totBins[ j ][ i ] + totBins[ j ][ i + 1 ] ) / 2.0;
 
 			double off = 0;
 			if ( removeOffset ){
@@ -1354,11 +1676,6 @@ void calib::writeParameters(  ){
  */
 void calib::readParameters(  ){
 
-
-	
-
-	
-
 	cout << "[calib." << __FUNCTION__ << "] " << " Start " << endl;
 	
 	startTimer();
@@ -1397,7 +1714,8 @@ void calib::readParameters(  ){
 						for ( int j=0; j <= tBins; j++ ){
 							infile >> tmp;
 							totBins[ channel - 1 ][ j ] = tmp;
-							
+							if ( channel == 1 )
+								cout << " bin[ " << j << " ] = " << tmp << endl;
 						}
 						
 						string title = "Channel "+ts(channel)+" Slewing Corrections; " + xLabel + ";" + yLabel ;
@@ -1409,7 +1727,7 @@ void calib::readParameters(  ){
 						for ( int j=0; j <= tBins; j++ ){
 							infile >> tmp;
 							correction[ channel - 1 ][ j ] = tmp;
-
+							//cout << "Cor[ " << channel - 1 << " ][ " << j << " ] = " << tmp << endl;
 							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, tmp );
 						}
 						// TODO : tmp workaround for variable binning bug
@@ -1444,7 +1762,7 @@ void calib::readParameters(  ){
 				for ( uint fi = 0; fi < files.size(); fi ++ ){
 				
 					if ( files.size() == 1 && (string)"checkParams" == config.getAsString( "jobType" ) ){
-						spline[ k ] = new splineMaker( (TH1D*)book->get("file"+ts(fi)+"channel"+ts(k)), splineAlignment::center, splineType );
+						spline[ k ] = new splineMaker( (TH1D*)book->get("file"+ts(fi)+"channel"+ts(k)), splineAlignment::left, splineType );
 					}
 					
 					
@@ -1470,11 +1788,19 @@ void calib::readParameters(  ){
 			    if ( k == constants::nChannels-1)
 			    	report->savePage();
 			}
-			currentIteration = 1;
+			currentIteration = 0;
 		}
 	}
 
 	cout << "[calib." << __FUNCTION__ <<  "] " << " completed in " << elapsed() << " seconds " << endl;
+
+
+	cout << " min, max, nBins : " << minTOT << ",  " << maxTOT << ", " << numTOTBins << endl;
+	for ( int i = 0; i < 30; i ++ ){
+		double totStep = (( maxTOT - minTOT ) / (double)(numTOTBins));
+		double tot = minTOT + totStep * (double)(i);
+		cout << getCorrection( 0, tot );
+	}
 }
 
 
@@ -1514,7 +1840,9 @@ void calib::stepReport() {
 	gPad->SetLogy(1);
 	book->style( iStr+"avg" )
 		->set( "numberOfTicks", 5, 5)
-		->set( "draw", "" )->draw();
+		->set( "draw", "" )
+		->set( "domain", -vzCut, vzCut)
+		->draw();
 
 	report->cd( 1, 2 );
 	book->style( iStr+"zTPCzVPD" )
@@ -1524,7 +1852,9 @@ void calib::stepReport() {
 	report->cd( 2, 2 );
 	book->style( iStr+"zTPCzVPDAvg" )
 		->set( "numberOfTicks", 5, 5 )
-		->set( "draw", "colz" )->draw();
+		->set( "draw", "colz" )
+
+		->draw();
 	report->savePage();
 
 	
@@ -1545,6 +1875,22 @@ void calib::stepReport() {
 	book->style( iStr+"nValidPairs" )->set( "dynamicDomain", 0.0f, 1, -1 )->draw();
 
 	report->savePage();
+
+	
+	//book->style( iStr+"avg" )
+		//->set( "domain", -100, 100);
+	/** Determine the Offset and contrain it for the outlier rejection*/
+	double toff = book->get( iStr+"avg") -> GetMean();
+	cout << " VPD - TPC = " << toff << endl;
+	double ovc = 1.0 / constants::c;
+	double nOff = ovc * toff * 2;
+	cout << "Channel [ west ] += " <<nOff << endl;
+	for ( int i = constants::startWest; i < constants::endWest; i++ ){
+		this->initialOffsets[ i ] += nOff;
+	}
+
+
+
 }
 
 /**

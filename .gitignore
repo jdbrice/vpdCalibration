@@ -4,6 +4,7 @@
 # Remove data files in the script folder used for testing 
 /script/*
 !/script/*.C
+!/script/*.xml
 
 #remove OS X system files
 *_*

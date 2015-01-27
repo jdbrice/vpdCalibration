@@ -2,6 +2,9 @@
 #include "utils.h"
 #include "allroot.h"
 
+#include <stdio.h>
+#include <unistd.h>
+
 namespace jdbUtils{
 
 	std::string ts( int i ){
@@ -11,7 +14,7 @@ namespace jdbUtils{
 		return to_string( (long double) d);
 	}
 	std::string ts( uint u ){
-		return to_string( (long long uint) u);
+		return to_string( (long long unsigned int) u);
 	}
 
 	void progressBar( int i, int nevents, int max ){

@@ -38,6 +38,7 @@ private:
 
 	// the initial offsets for each channel relative to the 1st channel on the west side
 	double initialOffsets[ constants::nChannels ];
+	double outlierOffsets[ constants::nChannels ];
 	// the west - east offset only needed for the case of not removing initial offsets
 	double eastWestOffset;
 	// the floating channel 1 offset
@@ -123,6 +124,8 @@ public:
 
 	// calculates the inital offsets of each channel
 	void offsets( );
+	void finalOffsets( );
+
 	void getInitialOffsets();
 
 	// determines the binning in tot space for each channel
@@ -133,6 +136,7 @@ public:
 
 	// executes a single loop of the iterative correction process
 	void step( );
+	void checkStep( );
 	void prepareStepHistograms();
 
 	// after everything calculate the reference offset on channel 1 on the west

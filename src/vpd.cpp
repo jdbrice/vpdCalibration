@@ -84,7 +84,12 @@ int main( int argc, char* argv[] ) {
 
         vpdCalib.readParameters(  );
 
+        vpdCalib.checkStep();
         vpdCalib.step();
+
+        vpdCalib.writeParameters(  );
+        
+        
 
     } else if ( (string)"calibrate" == jobType ){
 
@@ -96,6 +101,8 @@ int main( int argc, char* argv[] ) {
         
         // run the main calibration loop
         vpdCalib.loop();
+
+        //vpdCalib.checkStep();
 
         // write out the parameters file
         vpdCalib.writeParameters(  );

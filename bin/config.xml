@@ -6,8 +6,8 @@
 
 	<!-- The dep/indep variables to use for the slewing correction -->
 	<!-- can be used to look at the tof-side or trigger-side electronics, or a combination -->
-	<xVariable>bbq-adc</xVariable>
-	<yVariable>bbq-tdc</yVariable>
+	<xVariable>tof-tot</xVariable>
+	<yVariable>tof-le</yVariable>
 
 	
 
@@ -17,23 +17,20 @@
 	<!--	root, params, report filename appended to baseName -->
 	<rootOutput>qa.root</rootOutput>
 	<paramsOutput>params.dat</paramsOutput>
-	<reportOutput>qa.pdf</reportOutput>
+	<reportOutput>rQA.pdf</reportOutput>
 
 	<!-- if true the trigger channels will be mapped to coresponding tof channels for easier comparison etc. -->
-	<mapTriggerToTof>true</mapTriggerToTof>
+	<mapTriggerToTof>false</mapTriggerToTof>
 	<channelMap>vpdTriggerToTofMap.dat</channelMap>
 
 	<!-- Data input -->
-	<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/june18/output/</dataDir>
-	<!--<dataDir>/star/institutions/rice/jdb/run14/auau200/fastOffline/vpdCalibration/nTupler/dataDay75And80/output/</dataDir>-->
-	<!--<dataDir>/star/institutions/rice/jdb/run13/pp510/tofCalibrationRun13/MuDstOutput/idealGeometry/output/</dataDir>-->
-	<!--<dataDir>/star/institutions/rice/jdb/run14/auau15/TofCalibration/geomAlign/t14Data0/output/</dataDir>-->
-	<maxFiles>5</maxFiles>
+	<dataDir>/Users/danielbrandenburg/bnl/local/data/Run13/runB_GeomAlign/</dataDir>
+	<maxFiles>250</maxFiles>
 
 
 	<!-- Calibration options -->
-	<numIterations>3</numIterations>
-	<variableBinning>false</variableBinning>
+	<numIterations>2</numIterations>
+	<variableBinning>true</variableBinning>
 	<removeOffset>true</removeOffset>
 	<outlierRejection>true</outlierRejection>
 	<!-- 	linear: for linear interpolation
@@ -42,8 +39,8 @@
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
 	<numTOTBins>60</numTOTBins>
-	<minTOT>1</minTOT>
-	<maxTOT>2000</maxTOT>
+	<minTOT>10</minTOT>
+	<maxTOT>40</maxTOT>
 
 	<binMaxError>1000.5</binMaxError>
 	

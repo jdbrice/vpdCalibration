@@ -10,7 +10,7 @@ namespace jdbUtils{
 
 	std::string ts( int );
 	std::string ts( double );
-	std::string ts( uint );
+	std::string ts( unsigned int );
 	void progressBar( int i, int nevents, int max );
 }
 

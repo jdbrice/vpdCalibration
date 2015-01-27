@@ -28,9 +28,10 @@ void chainLoader::load(
 
 	    		char fn[ 1024 ];
 	    		sprintf( fn, "%s%s", ntdir, ent->d_name );
+	    		cout << "[chainLoader] Adding file " << fn << " to chain" << endl;
 	    		chain->Add( fn );
 
-	    		//cout << "[chainLoader] Adding file " << fn << " to chain" << endl;
+	    		
 	    		nFiles++;
 
 	    	}
