@@ -2,7 +2,7 @@
 
 	<!-- 	calibrate - for producing a new calibration 
 			genReport - for reading in a calibration and producing qa -->
-	<jobType>checkParams</jobType>
+	<jobType>paramReport</jobType>
 
 	<!-- output files -->
 	<!-- The base name to use for all output of this job such as the root file, correction parameters etc.-->
@@ -15,8 +15,10 @@
 	
 	<paramsInput>
 		<v>params.dat</v>
+		<v>bill.dat</v>
 	</paramsInput>
 	<paramsLegend>
+		<v></v>
 		<v></v>
 	</paramsLegend>
 
@@ -39,7 +41,7 @@
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
-	<numTOTBins>60</numTOTBins>
+	<numTOTBins>127</numTOTBins>
 	<minTOT>10</minTOT>
 	<maxTOT>40</maxTOT>
 

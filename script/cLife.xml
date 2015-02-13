@@ -12,6 +12,9 @@
 		<logLevel>all</logLevel>
 	</Logger>
 
+	<Detector>West</Detector>
+
+
 	<Reporter>
 		<output url="rpChannelLife.pdf"/>
 	</Reporter>

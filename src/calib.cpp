@@ -858,7 +858,6 @@ void calib::prepareStepHistograms() {
 	// for titles
 	string step = "Step " + ts( currentIteration+1 ) + " : ";
 
-
 	for ( int ch = constants::startWest; ch < constants::endEast; ch++ ){
 		
 		book->cd( "channel" + ts(ch) );
@@ -880,6 +879,7 @@ void calib::prepareStepHistograms() {
 	/*
 	* outlier rejection histos
 	*/
+	gStyle->SetOptStat( 111 );
 	book->cd( "OutlierRejection" );
 
 	int zBins = 600, zRange = 200;
@@ -890,6 +890,7 @@ void calib::prepareStepHistograms() {
 	book->make2D( 	iStr + "zTPCzVPD", step + "TPC vs. VPD z Vertex; z_{TPC};z_{VPD}", zBins/2, -zRange/2, zRange/2, zBins/2, -zRange/2, zRange/2 );
 	book->make2D( 	iStr + "zTPCzVPDAvg", step + "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} [cm];z_{VPD} [cm]", zBins/2, -zRange/2, zRange/2, zBins/2, -zRange/2, zRange/2 );
 
+	gStyle->SetOptStat( 0 );
 	book->make1D( 	iStr + "nValidPairs", step + "# of Valid Pairs; # of Pairs; [#]", 500, 0, 500 );
 	book->make1D( 	iStr + "nAcceptedWest", step + "# of Accepted Detectors; # of Detectors; [#] ",
 							19, -0.5, 18.5 );
@@ -1302,6 +1303,7 @@ void calib::checkStep( ) {
  */
 void calib::finish( ){
 
+	gStyle->SetOptStat( 0 );
 	int last = currentIteration - 1;
 	string iStr = "it" + ts( last );
 
@@ -1419,6 +1421,7 @@ void calib::loop( ) {
  */
 void calib::makeCorrections( ){
 
+	gStyle->SetOptStat( 0 );
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Start " << endl;
 	startTimer();
 
@@ -1532,7 +1535,7 @@ void calib::makeCorrections( ){
 		    post->Draw( "colz" );
 		    
 		    if ( useSpline ){
-		    	TGraph* g = vSpline->graph( minTOT, maxTOT, 0.2);
+		    	TGraph* g = vSpline->graph( minTOT, maxTOT, (maxTOT - minTOT) / 50.0 );
 		    	g->GetYaxis()->SetRangeUser( -5, 5);
 		    	g->SetMarkerStyle(7);
 		    	g->SetMarkerColor( kRed );
@@ -1585,9 +1588,9 @@ void calib::writeParameters(  ){
 		book->make1D( "slewingNoOffset" +ts(j), title, numTOTBins, totBins[ j ] );
 
 		f << (j + 1) << endl;
-		f << numTOTBins << endl;
+		f << (numTOTBins + 1) << endl;
 
-		for ( int i = 0; i <= numTOTBins; i++ ){
+		for ( int i = 0; i < numTOTBins; i++ ){
 			f << totBins[ j ][ i ] << " ";
 		}
 		f << endl;
@@ -1707,11 +1710,10 @@ void calib::readParameters(  ){
 					int tBins = 0;
 					infile >> tBins;
 					cout << "tBins " << tBins << endl;
-					if ( 	channel >= 1 && channel <= 38 && 
-							tBins == numTOTBins ){
+					if ( 	channel >= 1 && channel <= 38  ){
 
 						double tmp = 0;
-						for ( int j=0; j <= tBins; j++ ){
+						for ( int j=0; j < tBins; j++ ){
 							infile >> tmp;
 							totBins[ channel - 1 ][ j ] = tmp;
 							if ( channel == 1 )
@@ -1724,7 +1726,7 @@ void calib::readParameters(  ){
 						book->make1D( "file"+ts(fi)+"channel"+ts(channel-1), title, tBins, totBins[ channel-1] );
 
 
-						for ( int j=0; j <= tBins; j++ ){
+						for ( int j=0; j < tBins; j++ ){
 							infile >> tmp;
 							correction[ channel - 1 ][ j ] = tmp;
 							//cout << "Cor[ " << channel - 1 << " ][ " << j << " ] = " << tmp << endl;
@@ -1732,7 +1734,7 @@ void calib::readParameters(  ){
 						}
 						// TODO : tmp workaround for variable binning bug
 						//correction[ channel - 1 ][ 0 ] = correction[ channel - 1 ][ 1 ];
-						for ( int j=0; j <= tBins; j++ ){ 
+						for ( int j=0; j < tBins; j++ ){ 
 							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, correction[ channel - 1 ][ j ] /*- correction[ channel - 1 ][ 5 ]*/ );
 						}
 
@@ -1809,6 +1811,7 @@ void calib::readParameters(  ){
  */
 void calib::stepReport() {
 
+	gStyle->SetOptStat( 1111 );
 	string iStr = "it"+ts(currentIteration);
 
 	if ( config.getAsBool( "outlierRejection" ) == false )
@@ -1836,6 +1839,13 @@ void calib::stepReport() {
 		->draw();
 	fill->Draw("same" );
 
+
+	/**
+	 * Fit to a gauss
+	 */
+	TF1* gaus = new TF1( "g", "gaus" );
+	gaus->SetRange( -vzCut, vzCut );
+
 	report->cd( 2, 1 );
 	gPad->SetLogy(1);
 	book->style( iStr+"avg" )
@@ -1843,6 +1853,16 @@ void calib::stepReport() {
 		->set( "draw", "" )
 		->set( "domain", -vzCut, vzCut)
 		->draw();
+
+	TH1 * hAvg = book->get( iStr+"avg");
+	hAvg->Fit( gaus, "R" );	
+	double fitTOff = gaus->GetParameter( 1 ); // Mean
+	double toff = hAvg -> GetMean();
+
+
+
+
+
 
 	report->cd( 1, 2 );
 	book->style( iStr+"zTPCzVPD" )
@@ -1862,6 +1882,7 @@ void calib::stepReport() {
 	
 	report->newPage(1, 2);
 
+	gStyle->SetOptStat( 0 );
 	gPad->SetLogy(1);
 	book->style( iStr+"nAcceptedWest" )->draw( "draw", "")
 		->draw()->set( "legend", "West" )
@@ -1870,25 +1891,21 @@ void calib::stepReport() {
 	book->style( iStr+"nAcceptedEast" )
 		->set( "lineColor", kRed )->set( "draw", "same" )->draw()->set( "legend", "East");
 
+	gStyle->SetOptStat( 0111 );
 	report->next();
 	gPad->SetLogy(1);
 	book->style( iStr+"nValidPairs" )->set( "dynamicDomain", 0.0f, 1, -1 )->draw();
 
 	report->savePage();
 
-	
-	//book->style( iStr+"avg" )
-		//->set( "domain", -100, 100);
 	/** Determine the Offset and contrain it for the outlier rejection*/
-	double toff = book->get( iStr+"avg") -> GetMean();
-	cout << " VPD - TPC = " << toff << endl;
+	cout << " VPD - TPC = mean (fit) = " << toff << " ( " << fitTOff << " ) "<< endl;
 	double ovc = 1.0 / constants::c;
 	double nOff = ovc * toff * 2;
-	cout << "Channel [ west ] += " <<nOff << endl;
+	cout << "Channel [ west ] += " << nOff << endl;
 	for ( int i = constants::startWest; i < constants::endWest; i++ ){
 		this->initialOffsets[ i ] += nOff;
 	}
-
 
 
 }
