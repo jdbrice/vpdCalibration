@@ -107,6 +107,7 @@ private:
 	int triggerToTofMap[ constants::nChannels ];
 	int tofToTriggerMap[ constants::nChannels ];
 	bool mapTriggerToTof;
+	bool convertTacToNS;
 	
 
 public:
@@ -159,6 +160,11 @@ public:
 	double getX( int channel );	// default is TOT
 	double getY( int channel );	// default is TDC
 
+	bool doingTrigger() {
+		if ( "bbq-tdc" == yVariable || "mxq-tdc" == yVariable )
+			return true;
+		return false;
+	}
 	
 
 protected:

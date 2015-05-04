@@ -143,7 +143,7 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
     }
 
     mapTriggerToTof = config.getAsBool( "mapTriggerToTof", false );
-
+    convertTacToNS = config.getAsBool( "convertTacToNS", false );
 }
 
 /**
@@ -210,12 +210,16 @@ double calib::getY( int channel ){
 		}
 	}
 
+	double tacToNS = 1.0;
+	if ( convertTacToNS )
+		tacToNS = constants::tacToNS;
+
 	if ( (string)"tof-le" == yVariable )
 		return pico->channelTDC( channel );
 	else if ( (string)"bbq-tdc" == yVariable ){
-		return ( (double)pico->bbqTDC( channel ) * constants::tacToNS );
+		return ( (double)pico->bbqTDC( channel ) * tacToNS );
 	} else if ( (string)"mxq-tdc" == yVariable ){
-		return ( (double)pico->mxqTDC( channel ) * constants::tacToNS );
+		return ( (double)pico->mxqTDC( channel ) * tacToNS );
 	}
 
 	// the x varaibles in case you want to do non-standard comparisons
@@ -277,6 +281,7 @@ void calib::offsets() {
 
 		// channel 1 on the west side is the reference channel
     	double reference = getY( 0 );
+    	if ( doingTrigger() && reference == 0 ) continue;
     	
 
 		for( int j = constants::startWest; j < constants::endEast; j++) {
@@ -295,6 +300,7 @@ void calib::offsets() {
 
 	    	book->fill( "tdcRaw", j, tdc );
 
+	    	if ( doingTrigger() && 0 == tdc  ) continue;
 	    	if(tot <= minTOT || tot >= maxTOT) continue;	    
 
 
@@ -995,6 +1001,7 @@ void calib::step( ) {
   			tAll[ j ] -= corr[ j ];
     	}
     	reference = getY( 0 ) - getCorrection( 0, tot[ 0 ] );
+    	if ( doingTrigger() && getY( 0 ) == 0 ) continue;
 
 		// loop over every channel on the west and then on the east side
 		for( int j = constants::startWest; j < constants::endEast; j++) {
