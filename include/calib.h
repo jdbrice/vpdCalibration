@@ -32,6 +32,8 @@ private:
 	// the current iteration in the calibration loop
 	uint currentIteration;
 
+	// the channel used as the reference for calculating offsets
+	uint refChannel;
 	// Dont use bad detectors
 	// defaults to false, set to true if dead channel is found
 	bool deadDetector[ constants::nChannels ];

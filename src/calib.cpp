@@ -144,6 +144,8 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 
     mapTriggerToTof = config.getAsBool( "mapTriggerToTof", false );
     convertTacToNS = config.getAsBool( "convertTacToNS", false );
+
+    refChannel = config.getAsInt( "referenceChannel", 0 );
 }
 
 /**
@@ -280,7 +282,7 @@ void calib::offsets() {
 
 
 		// channel 1 on the west side is the reference channel
-    	double reference = getY( 0 );
+    	double reference = getY( refChannel );
     	if ( doingTrigger() && reference == 0 ) continue;
     	
 
@@ -319,7 +321,7 @@ void calib::offsets() {
 		double rms = 1.2*tmp->GetRMS();
 		tmp->GetXaxis()->SetRangeUser( max - rms, max + rms  );
 
-		if ( i == constants::startWest )
+		if ( i == refChannel || doingTrigger())
 			this->initialOffsets[ i ] = 0;
 		else
 			this->initialOffsets[ i ] = tmp->GetMean();
@@ -349,7 +351,7 @@ void calib::offsets() {
 
 
 		// channel 1 on the west side is the reference channel
-    	double reference = getY( 0 );
+    	double reference = getY( refChannel );
     	
 
 		for( int j = constants::startWest; j < constants::endEast; j++) {
@@ -426,14 +428,24 @@ void calib::offsets() {
 	//book->style( "westOffset"+ts(currentIteration) )->set( "legend", "berberjh" );
 	//book->clearLegend();
 
-	book->style( "westOffset" )->set( "lineColor", kRed)
-		->set( "title", "West (Channels 1-19) vs. East (Channels 20-38)" )->draw()->set( "legend", "West");
+	string dFirst = "westOffset";
+	string dSecond = "eastOffset";
 
-	book->style( "eastOffset" )->set( "lineColor", kBlue)
+	if ( book->get( dFirst )->GetMaximum() < book->get( dSecond )->GetMaximum() ){
+		dFirst = "eastOffset";
+		dSecond = "westOffset";
+	}
+
+	book->style( dFirst )->set( "lineColor", kRed)
+		->set( "title", "West (Channels 1-19) vs. East (Channels 20-38)" )->draw()->set( "legend", dFirst);
+
+	book->style( dSecond )->set( "lineColor", kBlue)
 		->set( "title", "West (Channels 1-19) vs. East (Channels 20-38)" )
 		->set( "draw", "same")
 		->draw( )
-		->set( "legend", "East")->set( "legend", legendAlignment::right, legendAlignment::top);
+		->set( "legend", dSecond)->set( "legend", legendAlignment::right, legendAlignment::top);
+
+	gPad->SetLogy(1);
 	
 	report->savePage();
 
@@ -612,7 +624,7 @@ void calib::binTOT( bool variableBinning ) {
     	Int_t size = tots[i].size();
       	cout << "[calib.binTOT] Channel[ " << i << " ] : " << size << " hits" << endl;
       	
-      	if( size < threshold ) { // check for dead channels
+      	if( size < 1000 ) { // check for dead channels
         	
         	Double_t step = ( maxTOT - minTOT ) / numTOTBins;
 
@@ -773,7 +785,7 @@ void calib::outlierRejection( bool reject ) {
 
 	    tdcWest -= (this->initialOffsets[ j ] + this->outlierOffsets[ j ]);
 
-	  
+	  	if ( doingTrigger() && 0 == tdcWest ) continue;
 	    if( totWest <= minTOT || totWest > maxTOT) continue;
 	    
 	    double corWest = getCorrection( j, totWest );
@@ -791,6 +803,7 @@ void calib::outlierRejection( bool reject ) {
 
 	    	tdcEast -= (this->initialOffsets[ k ] + this->outlierOffsets[ k ]);
 
+	    	if ( doingTrigger() && 0 == tdcEast ) continue;
 	    	if( totEast <= minTOT || totEast > maxTOT) continue;
 	    	
 	    	double corEast = getCorrection( k, totEast );
@@ -803,7 +816,7 @@ void calib::outlierRejection( bool reject ) {
 
 	    	// calculate the VPD z Vertex
 	    	double vpdZ = constants::c * ( tdcEast - tdcWest) / 2.0;
-	    	if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable )
+	    	if ( doingTrigger() )
 	    		vpdZ = constants::c * ( tdcWest - tdcEast) / 2.0;
 
 	    	book->get( iStr+"All" )->Fill( tpcZ - vpdZ );
@@ -827,7 +840,7 @@ void calib::outlierRejection( bool reject ) {
 	if ( countEast >= 1 && countWest >= 1){
 
 		double vpdZ = constants::c * ( (sumEast/countEast) - (sumWest/countWest)) / 2.0;	
-		if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable )
+		if ( doingTrigger() )
 			vpdZ = constants::c * ( (sumWest/countWest) - (sumEast/countEast)) / 2.0;	
 		book->fill( iStr+"zTPCzVPDAvg", tpcZ, vpdZ );
 		book->fill( iStr+"avg", ( tpcZ-vpdZ ));
@@ -873,7 +886,8 @@ void calib::prepareStepHistograms() {
 		string title2D = step + sCh + " " + yVariable + " vs " + xVariable + ";" + xLabel + ";" + yLabel ;
 		string title1D = step + sCh + " " + yVariable + ";" + yLabel + "; [ # ] "  ;
 
-		book->make2D( 	iStr + "tdctot", 	title2D, numTOTBins , totBins[ ch ], 1000, -40, 40 );
+		int tdcTot_y = 400;
+		book->make2D( 	iStr + "tdctot", 	title2D, numTOTBins , totBins[ ch ], 1000, -tdcTot_y, tdcTot_y );
 		book->make2D( 	iStr + "tdccor", 	title2D, numTOTBins , totBins[ ch ], 1000, -20, 20 );
 		book->make1D( 	iStr + "tdc", 		title1D, 500, -10, 10 );
 		book->make2D( 	iStr + "avgN", 		step + sCh + " : 1 - <N>;# of Detectors;" + yLabel, 
@@ -1000,8 +1014,8 @@ void calib::step( ) {
   			corr[ j ] = getCorrection( j, tot[ j ] );
   			tAll[ j ] -= corr[ j ];
     	}
-    	reference = getY( 0 ) - getCorrection( 0, tot[ 0 ] );
-    	if ( doingTrigger() && getY( 0 ) == 0 ) continue;
+    	reference = getY( refChannel ) - getCorrection( refChannel, tot[ refChannel ] );
+    	if ( doingTrigger() && getY( refChannel ) == 0 ) continue;
 
 		// loop over every channel on the west and then on the east side
 		for( int j = constants::startWest; j < constants::endEast; j++) {
@@ -1009,7 +1023,9 @@ void calib::step( ) {
 			// skip dead detectors
 			if ( deadDetector[ j ] ) continue;
 			if ( !useDetector[ j ] ) continue;
-			// require the tot is within range
+
+			// require the tot is within range and the tdc is not zero
+			if ( doingTrigger() && 0 == tdc[ j ] ) continue;
 	    	if(tot[ j ] <= minTOT || tot[ j ] > maxTOT) continue;
 
 
@@ -1024,6 +1040,7 @@ void calib::step( ) {
 				if ( deadDetector[ k ] ) continue;
 				if ( !useDetector[ k ] ) continue;
 	    		
+	    		if ( doingTrigger() && 0 == tdc[ k ] ) continue;
 	    		if(tot[ k ] <= minTOT || tot[ k ] > maxTOT) continue;
 	    		if ( j == k ) continue;
 	    		
@@ -1210,7 +1227,7 @@ void calib::checkStep( ) {
 
 		    	// calculate the VPD z Vertex
 		    	double vpdZ = constants::c * ( tdcEast - tdcWest) / 2.0;
-		    	if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable )
+		    	if ( doingTrigger() )
 		    		vpdZ = constants::c * ( tdcWest - tdcEast) / 2.0;
 
 		    	book->get( iStr+"all" )->Fill( tpcZ - vpdZ );
@@ -1226,8 +1243,9 @@ void calib::checkStep( ) {
 			//cout << "" << (ovc * -1.29 * 2 * countWest) << endl;
 			//sumWest = sumWest + (ovc * 3.35 * 2 * countWest);
 			double vpdZ = constants::c * ( (sumEast/countEast) - (sumWest/countWest)) / 2.0;	
-			//if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable )
-			//	vpdZ = constants::c * ( (sumWest/countWest) - (sumEast/countEast)) / 2.0;	
+			if ( doingTrigger() )
+				vpdZ = constants::c * ( (sumWest/countWest) - (sumEast/countEast)) / 2.0;	
+			
 			book->fill( iStr+"zTPCzVPDAvg", tpcZ, vpdZ );
 			book->fill( iStr+"avg", ( tpcZ-vpdZ ));
 
@@ -1447,7 +1465,7 @@ void calib::makeCorrections( ){
 
 		TF1* g = new TF1( "g", "gaus", -5, 5 );
 		if ( !removeOffset )
-			g->SetRange( -100, 100 );
+			g->SetRange( -10, 10 );
 
 		if ( currentIteration <= 1 || currentIteration == maxIterations - 1){
 			if ( deadDetector[ k ] ){
@@ -1476,6 +1494,8 @@ void calib::makeCorrections( ){
 		// do the fit
 	    pre->FitSlicesY( g );
 
+
+
 	    TH1D* preMean = (TH1D*) gDirectory->FindObject( 
 	    					(iStr + "tdctot_1").c_str() );
 
@@ -1488,7 +1508,8 @@ void calib::makeCorrections( ){
 
 	    book->cd( "channel" + ts( k ) );
 
-	    TH1D* cor = (TH1D*) preMean->Clone( (iStr + "totcor").c_str() );
+	    //TH1D* cor = (TH1D*) preMean->Clone( (iStr + "totcor").c_str() );
+	    TH1D* cor = (TH1D*) pre->ProfileX( (iStr + "totcor").c_str() );
 	    book->add( (iStr + "totcor").c_str(), cor  );
 
 	    TH1D* dif = (TH1D*) postMean->Clone( (iStr + "difcor").c_str() );
@@ -1498,7 +1519,7 @@ void calib::makeCorrections( ){
 	    
 	    for ( int ib = 1; ib <= numTOTBins ; ib ++ ){
 
-	    	if ( removeOffset ){
+	    	/*if ( removeOffset ){
 				// reject low statistics bins and instead interpolate between good bins
 		    	if ( ib > 1){
 			    	if ( preMean->GetBinError( ib ) < maxError && preMean->GetBinError( ib ) != 0 )
@@ -1512,7 +1533,7 @@ void calib::makeCorrections( ){
 
 	    	if ( currentIteration >= 1 && TMath::Abs( dif->GetBinContent( ib ) ) > 1 ){
 	    		dif->SetBinContent( ib, 0 );
-	    	}
+	    	}*/
 
 	    	correction[ k ][ ib  ] = cor->GetBinContent( ib );
 	    	
@@ -1533,8 +1554,10 @@ void calib::makeCorrections( ){
 		    
 		    if ( removeOffset )
 		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "range", -5.0, 5.0);
-		    else
-		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "dynamicdomain", 1, -1, -1, 2 );
+		    else{
+		    	//book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "dynamicdomain", 1, -1, -1, 2 );
+		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "range", -15.0, 15.0);
+		    }
 		    	
 		    if ( xVariable.find( "adc" ) != string::npos )
 		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "numberOfTicks", 5, 5);
@@ -1917,12 +1940,8 @@ void calib::stepReport() {
 		->draw();
 	fill->Draw("same" );
 
-
-	/**
-	 * Fit to a gauss
-	 */
-	TF1* gaus = new TF1( "g", "gaus" );
-	gaus->SetRange( -vzCut, vzCut );
+	
+	
 
 	report->cd( 2, 1 );
 	gPad->SetLogy(1);
@@ -1932,10 +1951,16 @@ void calib::stepReport() {
 		->set( "domain", -vzCut, vzCut)
 		->draw();
 
+	/**
+	 * Fit to a gauss
+	 */
+	TF1* gaus = new TF1( "g", "gaus" );
+	gaus->SetRange( -vzCut, vzCut );
+
 	TH1 * hAvg = book->get( iStr+"avg");
 	hAvg->Fit( gaus, "R" );	
 	double fitTOff = gaus->GetParameter( 1 ); // Mean
-	double toff = hAvg -> GetMean();
+	double toff = hAvg -> GetMean();	
 
 
 
@@ -1980,9 +2005,11 @@ void calib::stepReport() {
 	cout << " VPD - TPC = mean (fit) = " << toff << " ( " << fitTOff << " ) "<< endl;
 	double ovc = 1.0 / constants::c;
 	double nOff = ovc * toff * 2;
+	if ( doingTrigger() )
+		nOff *= -1;
 	cout << "Channel [ west ] += " << nOff << endl;
 	for ( int i = constants::startWest; i < constants::endWest; i++ ){
-		this->initialOffsets[ i ] += nOff;
+			this->initialOffsets[ i ] += nOff;
 	}
 
 
@@ -2010,7 +2037,7 @@ void calib::averageN() {
 	// correction based on channel and tot value
 	double corr[ constants::nChannels ];	
 	// reference tdc time => the 1st channel on the west side
-	double reference;
+	//double reference;
 	stringstream sstr;
 
 	// Alias the values for this event for ease
@@ -2030,7 +2057,7 @@ void calib::averageN() {
 			tAll[ j ] -= corr[ j ];
 	}
 
-	reference = pico->vpdLeWest[0];
+	//reference = pico->vpdLeWest[0];
 	int start = constants::startWest;
 	int end = constants::endWest;
 
