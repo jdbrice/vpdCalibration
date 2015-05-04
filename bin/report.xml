@@ -14,13 +14,17 @@
 	<!--<paramsInput>params.dat</paramsInput>-->
 	
 	<paramsInput>
-		<v>params.dat</v>
+		<v>daniel.dat</v>
 		<v>bill.dat</v>
 	</paramsInput>
 	<paramsLegend>
 		<v></v>
 		<v></v>
 	</paramsLegend>
+	<paramsOffset>
+		<v>-7.9</v>
+		<v></v>
+	</paramsOffset>
 
 	<!-- Data input -->
 	<!--
@@ -41,9 +45,9 @@
 			akima:	for akima spline interpolation 
 			anything else for bin based corrections -->
 	<splineType>akima</splineType>
-	<numTOTBins>127</numTOTBins>
-	<minTOT>10</minTOT>
-	<maxTOT>40</maxTOT>
+	<numTOTBins>128</numTOTBins>
+	<minTOT>0</minTOT>
+	<maxTOT>63.5</maxTOT>
 
 
 </config>

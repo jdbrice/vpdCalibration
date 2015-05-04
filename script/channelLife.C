@@ -49,11 +49,14 @@ void channelLife( string filename = "cLife.xml" ){
 	/*
 	 * Setup the chain
 	 */
-	TChain * chain = new TChain( cfg->getString( "input.dst:treeName" ).c_str() );
-	ChainLoader::load( chain, cfg->getString( "input.dst:url" ), cfg->getInt( "input.dst:maxFiles", -1 ) );
-	TreeMap tm( chain );
+	//TChain * chain = new TChain( cfg->getString( "input.dst:treeName" ).c_str() );
+	//ChainLoader::load( chain, cfg->getString( "input.dst:url" ), cfg->getInt( "input.dst:maxFiles", -1 ) );
+	//TreeMap ds( chain );
+	DataSource ds( cfg, "DataSource" );
 
-	int nEvents = tm.getEntries();
+	int nEvents = ds.getEntries();
+
+	return;
 
 	logger.info() << "nEvents = " << nEvents << endl;
 	TaskTimer tt;
@@ -66,8 +69,8 @@ void channelLife( string filename = "cLife.xml" ){
 	vector<int> sortedRunNumbers;
 	for ( int i = 0; i < nEvents; i++ ){
 
-		tm.getEntry( i );
-		int run = tm[ "run" ];
+		ds.getEntry( i );
+		int run = ds.get( "run" );
 		if ( 16009013 == run ) // this run was marked as junk but i accidentally included it
 			continue;
 		
@@ -116,27 +119,27 @@ void channelLife( string filename = "cLife.xml" ){
 	
 	for ( int i = 0; i < nEvents; i++ ){
 
-		tm.getEntry( i );
-		int run = tm[ "run" ];
+		ds.getEntry( i );
+		int run = ds.get( "run" );
 		string rn = "_"+ts(run);
 
 		for ( int j= 0; j < 19; j ++ ){
 
 			if ( j < 16 ){
-				book.fill( "bbqAdc", j, tm.get( "vpdBbqAdc"+det, j ) );
-				book.fill( "bbqTdc", j, tm.get( "vpdBbqTdc"+det, j ) );
+				book.fill( "bbqAdc", j, ds.get( "vpdBbqAdc"+det, j ) );
+				book.fill( "bbqTdc", j, ds.get( "vpdBbqTdc"+det, j ) );
 			}
 
-			book.fill( "le", j, tm.get( "vpdLe"+det, j ) );
-			book.fill( "tot", j, tm.get( "vpdTot"+det, j ) );
+			book.fill( "le", j, ds.get( "vpdLe"+det, j ) );
+			book.fill( "tot", j, ds.get( "vpdTot"+det, j ) );
 
 			if ( j < 16 ){
-				book.fill( "bbqAdc"+rn, j, tm.get( "vpdBbqAdc"+det, j ) );
-				book.fill( "bbqTdc"+rn, j, tm.get( "vpdBbqTdc"+det, j ) );
+				book.fill( "bbqAdc"+rn, j, ds.get( "vpdBbqAdc"+det, j ) );
+				book.fill( "bbqTdc"+rn, j, ds.get( "vpdBbqTdc"+det, j ) );
 			}
 
-			book.fill( "le"+rn, j, tm.get( "vpdLe"+det, j ) );
-			book.fill( "tot"+rn, j, tm.get( "vpdTot"+det, j ) );
+			book.fill( "le"+rn, j, ds.get( "vpdLe"+det, j ) );
+			book.fill( "tot"+rn, j, ds.get( "vpdTot"+det, j ) );
 
 
 		}

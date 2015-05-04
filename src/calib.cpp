@@ -1588,9 +1588,9 @@ void calib::writeParameters(  ){
 		book->make1D( "slewingNoOffset" +ts(j), title, numTOTBins, totBins[ j ] );
 
 		f << (j + 1) << endl;
-		f << (numTOTBins + 1) << endl;
+		f << (numTOTBins) << endl;
 
-		for ( int i = 0; i < numTOTBins; i++ ){
+		for ( int i = 0; i <= numTOTBins; i++ ){
 			f << totBins[ j ][ i ] << " ";
 		}
 		f << endl;
@@ -1691,9 +1691,17 @@ void calib::readParameters(  ){
 		bool good = true;
 		std::vector<string> files = config.getAsStringVector( "paramsInput" );
 		std::vector<string> lNames = config.getAsStringVector( "paramsInput" );
+		std::vector<double> fOffsets;
 		if ( config.isVector( "paramsLegend" ) ){
 			lNames = config.getAsStringVector( "paramsLegend" );
 		}
+		if ( config.isVector( "paramsOffset" ) ){
+			fOffsets = config.getAsDoubleVector( "paramsOffset" );
+		} else {
+			for ( int i = 0; i < files.size();i++)
+				fOffsets.push_back( 0 );
+		}
+
 
 		for ( uint fi = 0; fi < files.size(); fi ++ ){
 			string inName =  files[ fi ];
@@ -1723,19 +1731,21 @@ void calib::readParameters(  ){
 						string title = "Channel "+ts(channel)+" Slewing Corrections; " + xLabel + ";" + yLabel ;
 						// create a hist
 						book->cd( "params" );
-						book->make1D( "file"+ts(fi)+"channel"+ts(channel-1), title, tBins, totBins[ channel-1] );
+						book->make1D( "file"+ts(fi)+"channel"+ts(channel-1), title, tBins-1, totBins[ channel-1] );
 
-
+						double bZero = 0;
 						for ( int j=0; j < tBins; j++ ){
 							infile >> tmp;
 							correction[ channel - 1 ][ j ] = tmp;
+							if ( 0 == j )
+								bZero = tmp;
 							//cout << "Cor[ " << channel - 1 << " ][ " << j << " ] = " << tmp << endl;
-							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, tmp );
+							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, tmp - bZero );
 						}
 						// TODO : tmp workaround for variable binning bug
 						//correction[ channel - 1 ][ 0 ] = correction[ channel - 1 ][ 1 ];
 						for ( int j=0; j < tBins; j++ ){ 
-							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, correction[ channel - 1 ][ j ] /*- correction[ channel - 1 ][ 5 ]*/ );
+							book->get( "file"+ts(fi)+"channel"+ts(channel-1) )->SetBinContent( j+1, correction[ channel - 1 ][ j ] - fOffsets[ fi ]  );
 						}
 
 						
@@ -1758,7 +1768,7 @@ void calib::readParameters(  ){
 		if ( good ){
 			cout << "[calib." << __FUNCTION__ <<  "] " << " Read parameters for all channels " << endl;
 
-		    report->newPage( 2, 3);
+		    //report->newPage( 2, 3);
 			for ( int k = 0; k < constants::nChannels; k++ ){
 
 				for ( uint fi = 0; fi < files.size(); fi ++ ){
@@ -1768,41 +1778,102 @@ void calib::readParameters(  ){
 					}
 					
 					
-				    book->style( "file"+ts(fi)+"channel"+ts(k) )
-				    	->set( "lineColor", 1+fi );
-				    if ( 0 == fi ){
-				    	book->clearLegend();
-					    book->style( "file"+ts(fi)+"channel"+ts(k) )
-					    	->set( "domain", minTOT, maxTOT )
-							->draw()
-							->set( "legend", lNames[ fi ] )->set( "legend", legendAlignment::right, legendAlignment::top, .4);
-					} else {
-						book->style( "file"+ts(fi)+"channel"+ts(k) )
-							->set( "draw", "same" )
-							->draw()
-							->set( "legend", lNames[ fi ]);
-					}
+				    
 
 				}
 
-				report->next();
+				//report->next();
 
-			    if ( k == constants::nChannels-1)
-			    	report->savePage();
+			    //if ( k == constants::nChannels-1)
+			    //	report->savePage();
 			}
 			currentIteration = 0;
 		}
+
+
+		report->newPage( 2, 3);
+
+		int samples = 60;
+		// now make a percent error plot for the first 2 param files
+		if ( files.size() >= 2 ){
+			for ( int k = 0; k < constants::nChannels; k++ ){
+
+				for ( uint fi = 0; fi < files.size(); fi ++ ){
+					book->style( "file"+ts(fi)+"channel"+ts(k) )
+					    	->set( "lineColor", 1+fi );
+				    if ( 0 == fi ){
+				    	book->clearLegend();
+				    	
+					    book->style( "file"+ts(fi)+"channel"+ts(k) )
+							->draw()->set("domain", 10, 40)
+							->set( "legend", lNames[ fi ] )->set( "legend", legendAlignment::right, legendAlignment::top, .4);
+
+					} else {
+
+						book->style( "file"+ts(fi)+"channel"+ts(k) )
+							->set( "draw", "same" )
+							->draw()->set("domain", 10, 40)
+							->set( "legend", lNames[ fi ]);
+
+					}
+				}
+				report->next();
+				
+
+
+				TH1D * f0Params = (TH1D*)(book->get( "file"+ts(0)+"channel"+ts(k) )->Clone( "f0Params" ));
+				TH1D * f1Params = (TH1D*)(book->get( "file"+ts(1)+"channel"+ts(k) )->Clone( "f1Params" ));
+
+
+				//f0Params->GetXaxis()->SetRangeUser( 10, 40 );
+				//f1Params->GetXaxis()->SetRangeUser( 10, 40 );
+				//f0Params->Draw();
+				//f1Params->Draw( "same" );
+
+
+				book->make1D( "diff"+ts(k), "Channel " + ts(k)+ " Difference in params", samples, minTOT, maxTOT );
+				book->make1D( "pDiff"+ts(k), "Channel " + ts(k)+ " Percent difference in params", samples, minTOT, maxTOT );
+
+				double step = (maxTOT - minTOT) / (double)samples;
+				int iBin = 1;
+				for ( double x = minTOT; x <= maxTOT; x+=step){
+
+					int f0Bin = f0Params->GetXaxis()->FindBin( x );
+					int f1Bin = f1Params->GetXaxis()->FindBin( x );
+
+					double f0Val = f0Params->GetBinContent( f0Bin );
+					double f1Val = f1Params->GetBinContent( f1Bin );
+
+					cout << "f0 - f1 = " << f0Val << " - " << f1Val << endl; 
+
+					book->get( "diff"+ts(k) )->SetBinContent( iBin, (f0Val - f1Val) );
+					if ( 0 != f1Val ) 
+						book->get( "pDiff"+ts(k) )->SetBinContent( iBin, (f1Val - f0Val) / (f1Val) );
+					iBin++;
+				}
+
+				book->style( "diff"+ts(k) )->set( "range", -1, 1 )->set( "domain", 10, 40)
+				->set( "title", "Channel " +ts(k) + ": (percent) difference in params (red) blue")
+				->draw()->set( "y", "[ns]" );
+				book->style( "pDiff"+ts(k) )->set( "range", -1, 1 )
+				->set( "domain", 10, 40)->set("draw", "same")
+				->set( "lineColor", kRed )
+				->draw();
+				report->next();
+
+			}
+		}
+
+
 	}
+
+
+
+
+
 
 	cout << "[calib." << __FUNCTION__ <<  "] " << " completed in " << elapsed() << " seconds " << endl;
 
-
-	cout << " min, max, nBins : " << minTOT << ",  " << maxTOT << ", " << numTOTBins << endl;
-	for ( int i = 0; i < 30; i ++ ){
-		double totStep = (( maxTOT - minTOT ) / (double)(numTOTBins));
-		double tot = minTOT + totStep * (double)(i);
-		cout << getCorrection( 0, tot );
-	}
 }
 
 
