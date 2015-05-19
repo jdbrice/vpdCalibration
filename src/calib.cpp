@@ -8,6 +8,7 @@
 // provides my own string shortcuts etc.
 using namespace jdbUtils;
 
+int minTriggerTDC = 2;
 
 /**
  * Constructor - Initializes all of the calibration parameters from the configuration file
@@ -144,6 +145,9 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
 
     mapTriggerToTof = config.getAsBool( "mapTriggerToTof", false );
     convertTacToNS = config.getAsBool( "convertTacToNS", false );
+    TACToNS = config.getAsDouble( "TACToNS", constants::tacToNS );
+
+    cout << "TAC to NS = " << TACToNS << endl;
 
     refChannel = config.getAsInt( "referenceChannel", 0 );
 }
@@ -214,7 +218,7 @@ double calib::getY( int channel ){
 
 	double tacToNS = 1.0;
 	if ( convertTacToNS )
-		tacToNS = constants::tacToNS;
+		tacToNS = TACToNS;
 
 	if ( (string)"tof-le" == yVariable )
 		return pico->channelTDC( channel );
@@ -254,7 +258,7 @@ void calib::offsets() {
 	
 	// make all the histos the first round
 	if ( ! book->get( "tdc" ) ){
-		book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
+		book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 200000, -200, 550 );
 		book->make1D( "tdcMean", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5 );
 		book->make2D( "correctedOffsets", "Corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
 		book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels, 0, constants::nChannels, 1000, 0, 51200 );	
@@ -283,7 +287,8 @@ void calib::offsets() {
 
 		// channel 1 on the west side is the reference channel
     	double reference = getY( refChannel );
-    	if ( doingTrigger() && reference == 0 ) continue;
+    	if ( doingTrigger() ) 
+    		reference = 0;
     	
 
 		for( int j = constants::startWest; j < constants::endEast; j++) {
@@ -302,7 +307,7 @@ void calib::offsets() {
 
 	    	book->fill( "tdcRaw", j, tdc );
 
-	    	if ( doingTrigger() && 0 == tdc  ) continue;
+	    	if ( doingTrigger() && minTriggerTDC > tdc  ) continue;
 	    	if(tot <= minTOT || tot >= maxTOT) continue;	    
 
 
@@ -321,7 +326,7 @@ void calib::offsets() {
 		double rms = 1.2*tmp->GetRMS();
 		tmp->GetXaxis()->SetRangeUser( max - rms, max + rms  );
 
-		if ( i == refChannel || doingTrigger())
+		if ( i == refChannel || doingTrigger() )
 			this->initialOffsets[ i ] = 0;
 		else
 			this->initialOffsets[ i ] = tmp->GetMean();
@@ -417,7 +422,7 @@ void calib::offsets() {
 
 
 	book->style( "tdc" )
-		->set( "range", -35.0, 35.0 )->draw();
+		->set( "range", -450.0, 600.0 )->set( "draw", "colz" )->draw();
 	book->style( "tdcMean" )
 		->set( "markerStyle", 20)->set( "markerColor", 2 )
 		->set( "linecolor", 2)->set( "draw", "same ple" )
@@ -660,10 +665,17 @@ void calib::binTOT( bool variableBinning ) {
         	}	// end variable binning 
         	else { // fixed binning
 
-				for ( int s = 0; s <= numTOTBins; s++ ){
-					double edge = ((maxTOT - minTOT) / (double) numTOTBins) * s;
-					edge += minTOT;
-					totBins[ i ][ s ] = edge;
+        		if ( !doingTrigger() || numTOTBins != 8){
+					for ( int s = 0; s <= numTOTBins; s++ ){
+						double edge = ((maxTOT - minTOT) / (double) numTOTBins) * s;
+						edge += minTOT;
+						totBins[ i ][ s ] = edge;
+					}
+				} else {
+					int testBins[] = { 0, 30, 60, 95, 135, 200, 300, 600, 4095 };
+					for ( int s = 0; s <= numTOTBins; s++ ){
+						totBins[ i ][ s ] = testBins[ s ];
+					}
 				}
 			
         	}
@@ -687,6 +699,12 @@ void calib::binTOT( bool variableBinning ) {
  */
 double calib::getCorrection( int vpdChannel, double tot ){
 	
+	int totBin = binForTOT( vpdChannel, tot );
+
+	// bypass spline on last bin
+	if ( numTOTBins == totBin ){
+		return correction[ vpdChannel ][ totBin ];
+	}
 
 	// use splines to get the correction value if set to
 	if ( useSpline && spline[ vpdChannel ] && spline[ vpdChannel ]->getSpline() ){
@@ -695,7 +713,7 @@ double calib::getCorrection( int vpdChannel, double tot ){
 	}
 	
 	// if not fall back to doing bin based corrections
-	int totBin = binForTOT( vpdChannel, tot ); 
+	 
 	return correction[ vpdChannel ][ totBin ];
 
 }
@@ -785,7 +803,7 @@ void calib::outlierRejection( bool reject ) {
 
 	    tdcWest -= (this->initialOffsets[ j ] + this->outlierOffsets[ j ]);
 
-	  	if ( doingTrigger() && 0 == tdcWest ) continue;
+	  	if ( doingTrigger() && minTriggerTDC > tdcWest ) continue;
 	    if( totWest <= minTOT || totWest > maxTOT) continue;
 	    
 	    double corWest = getCorrection( j, totWest );
@@ -803,7 +821,7 @@ void calib::outlierRejection( bool reject ) {
 
 	    	tdcEast -= (this->initialOffsets[ k ] + this->outlierOffsets[ k ]);
 
-	    	if ( doingTrigger() && 0 == tdcEast ) continue;
+	    	if ( doingTrigger() && minTriggerTDC > tdcEast ) continue;
 	    	if( totEast <= minTOT || totEast > maxTOT) continue;
 	    	
 	    	double corEast = getCorrection( k, totEast );
@@ -886,7 +904,7 @@ void calib::prepareStepHistograms() {
 		string title2D = step + sCh + " " + yVariable + " vs " + xVariable + ";" + xLabel + ";" + yLabel ;
 		string title1D = step + sCh + " " + yVariable + ";" + yLabel + "; [ # ] "  ;
 
-		int tdcTot_y = 400;
+		int tdcTot_y = 40;
 		book->make2D( 	iStr + "tdctot", 	title2D, numTOTBins , totBins[ ch ], 1000, -tdcTot_y, tdcTot_y );
 		book->make2D( 	iStr + "tdccor", 	title2D, numTOTBins , totBins[ ch ], 1000, -20, 20 );
 		book->make1D( 	iStr + "tdc", 		title1D, 500, -10, 10 );
@@ -902,7 +920,7 @@ void calib::prepareStepHistograms() {
 	gStyle->SetOptStat( 111 );
 	book->cd( "OutlierRejection" );
 
-	int zBins = 600, zRange = 200;
+	int zBins = 1200, zRange = 200;
 
 	book->make1D( 	iStr + "All", step + "Outlier Rejection; z_{TPC} - z_{VPD}; [#]", zBins, -zRange, zRange );
 	book->make1D( 	iStr + "avg", step + "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} - z_{VPD} [cm]; [#]", 	zBins, -zRange, zRange );
@@ -1015,7 +1033,8 @@ void calib::step( ) {
   			tAll[ j ] -= corr[ j ];
     	}
     	reference = getY( refChannel ) - getCorrection( refChannel, tot[ refChannel ] );
-    	if ( doingTrigger() && getY( refChannel ) == 0 ) continue;
+    	if ( doingTrigger() || true) 
+    		reference = 0;
 
 		// loop over every channel on the west and then on the east side
 		for( int j = constants::startWest; j < constants::endEast; j++) {
@@ -1025,7 +1044,7 @@ void calib::step( ) {
 			if ( !useDetector[ j ] ) continue;
 
 			// require the tot is within range and the tdc is not zero
-			if ( doingTrigger() && 0 == tdc[ j ] ) continue;
+			if ( doingTrigger() && minTriggerTDC > tdc[ j ] ) continue;
 	    	if(tot[ j ] <= minTOT || tot[ j ] > maxTOT) continue;
 
 
@@ -1040,7 +1059,7 @@ void calib::step( ) {
 				if ( deadDetector[ k ] ) continue;
 				if ( !useDetector[ k ] ) continue;
 	    		
-	    		if ( doingTrigger() && 0 == tdc[ k ] ) continue;
+	    		if ( doingTrigger() && minTriggerTDC > tdc[ k ] ) continue;
 	    		if(tot[ k ] <= minTOT || tot[ k ] > maxTOT) continue;
 	    		if ( j == k ) continue;
 	    		
@@ -1563,6 +1582,9 @@ void calib::makeCorrections( ){
 		    	book->style( ("it"+ts(currentIteration)+"tdccor") )->set( "numberOfTicks", 5, 5);
 
 		    post->Draw( "colz" );
+
+		    if ( doingTrigger() )
+			    gPad->SetLogx(1);
 		    
 		    if ( useSpline ){
 		    	TGraph* g = vSpline->graph( minTOT, maxTOT, (maxTOT - minTOT) / 50.0 );
@@ -1593,6 +1615,11 @@ void calib::makeCorrections( ){
  * so that the corrected time is true to the initial time.
  */
 void calib::writeParameters(  ){
+
+	if ( doingTrigger() ){
+		writeTriggerParameters();
+		return;
+	}
 
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Start " << endl;
 	cout << " min, max, nBins : " << minTOT << ",  " << maxTOT << ", " << numTOTBins << endl;
@@ -1948,18 +1975,18 @@ void calib::stepReport() {
 	book->style( iStr+"avg" )
 		->set( "numberOfTicks", 5, 5)
 		->set( "draw", "" )
-		->set( "domain", -vzCut, vzCut)
+		->set( "domain", -vzCut*3, vzCut*3)
 		->draw();
 
 	/**
 	 * Fit to a gauss
 	 */
 	TF1* gaus = new TF1( "g", "gaus" );
-	gaus->SetRange( -vzCut, vzCut );
+	gaus->SetRange( -vzCut*2, vzCut*2 );
 
 	TH1 * hAvg = book->get( iStr+"avg");
 	hAvg->Fit( gaus, "R" );	
-	double fitTOff = gaus->GetParameter( 1 ); // Mean
+	double ftoff = gaus->GetParameter( 1 ); // Mean
 	double toff = hAvg -> GetMean();	
 
 
@@ -2002,9 +2029,9 @@ void calib::stepReport() {
 	report->savePage();
 
 	/** Determine the Offset and contrain it for the outlier rejection*/
-	cout << " VPD - TPC = mean (fit) = " << toff << " ( " << fitTOff << " ) "<< endl;
+	cout << " VPD - TPC = mean (fit) = " << toff << " ( " << ftoff << " ) "<< endl;
 	double ovc = 1.0 / constants::c;
-	double nOff = ovc * toff * 2;
+	double nOff = ovc * ftoff * 2;
 	if ( doingTrigger() )
 		nOff *= -1;
 	cout << "Channel [ west ] += " << nOff << endl;
@@ -2248,5 +2275,100 @@ void calib::readTriggerToTofMap(){
 
 	cout << "[calib." << __FUNCTION__ << "] " << " completed in " << elapsed() << " seconds " << endl;
 
+
+}
+
+
+
+void calib::writeTriggerParameters(  ){
+
+	cout << "Writing out Trigger Parameters" << endl;
+
+	string outName = config.getAsString( "baseName" ) + config.getAsString( "paramsOutput", "params.dat" );
+
+	ofstream f;
+	f.open( outName.c_str() );
+
+	/**
+	 * Preamble
+	 */
+	string pa = 
+	"# Board	Channel	NumBins	BinOrOffset ADCBinLimit0 ADCBinLimit1 ... \n"
+	"# Board	Channel	NumBins	BinOrOffset TACOffsetBin0 TACOffsetBin1 ... \n"
+	"#   Board is 0xYY where YY is top two hex digits of board address \n"
+	"#   Channel is 0-31; only TAC channels are valid (4,5,6,7,12,13,14,15,20,21,22,23,28,29,30,31) \n"
+	"#   BinOrOffset = 0 for a Bin Limit row, 1 for an Offset row \n"
+	"#   NumBins must be exactly equal to the number of ADC Bins implemented in the QT VHDL \n"
+	"#     All ADC Bin Limits must be defined \n"
+	"#     Each ADC Bin Limit must be equal to or greater than the previous bin limit \n"
+	"#     An ADC value is in bin 'N' if BinLimit[N-1] < ADC <= BinLimit[N] \n"
+	"#     The first bin has an implied lower limit of '0' \n"
+	"#     An ADC value of '0' falls into the first bin \n"
+	"#     Unused ADC bins should have a limit of 4095 and be the highest ADC bins \n"
+	"#     At least one bin limit should be 4095 (full range covered) \n"
+	"# Slew Corrections come after the QT LUT (ie after TAC Offset/ADC Pedestal Subtraction) \n"
+	"# Slew Corrections come before QT Channel Masks";
+
+	f << pa << endl;
+	f << "\n" << "#VP001 East" << endl;
+
+	book->cd( "correctionParameters" );
+
+	int qtChannels[] = { 4,5,6,7,12,13,14,15,20,21,22,23,28,29,30,31 };
+	int iQT = 0;
+
+	// Write out the East VPD
+	for ( int j = constants::startEast; j < constants::endEast; j++ ){
+		if ( deadDetector[ j ] ) continue;
+
+		int channel = 16;
+
+		int board = qtChannels[ iQT ];
+
+		f << "0x" << channel << "\t" << board << setw( 7 ) << numTOTBins << " 0"; // zero for bin edges
+
+		for ( int i = 1; i <= numTOTBins; i++ ){
+			f << setw(7) << totBins[ j ][ i ] << " ";
+		}
+		f << endl;
+
+		f << "0x" << channel << "\t" << board << setw( 7 ) << numTOTBins << " 1"; // 1 for bin corrections
+		for ( int i = 1; i <= numTOTBins; i++ ){
+			f << setw(7) << TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ j ] ) / constants::tacToNS) << " ";
+		}
+		f << endl;
+
+		iQT++;
+	}
+
+
+	f << "\n" << "#VP002 West" << endl;
+
+	iQT = 0;
+	// Write out the East VPD
+	for ( int j = constants::startWest; j < constants::endWest; j++ ){
+		if ( deadDetector[ j ] ) continue;
+
+		int channel = 18;
+
+		int board = qtChannels[ iQT ];
+
+		f << "0x" << channel << "\t" << board << setw( 7 ) << numTOTBins << " 0"; // zero for bin edges
+
+		for ( int i = 1; i <= numTOTBins; i++ ){
+			f << setw(7) << totBins[ j ][ i ] << " ";
+		}
+		f << endl;
+
+		f << "0x" << channel << "\t" << board << setw( 7 ) << numTOTBins << " 1"; // 1 for bin corrections
+		for ( int i = 1; i <= numTOTBins; i++ ){
+			f << setw(7) << (TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ j ] ) / constants::tacToNS) /*+ 6 WHY*/) << " ";
+		}
+		f << endl;
+
+		iQT++;
+	}
+
+	f.close();
 
 }

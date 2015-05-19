@@ -110,6 +110,7 @@ private:
 	int tofToTriggerMap[ constants::nChannels ];
 	bool mapTriggerToTof;
 	bool convertTacToNS;
+	double TACToNS;
 	
 
 public:
@@ -151,6 +152,7 @@ public:
 	int binForTOT( int vpdChannel, double tot );
 
 	void writeParameters(  );
+	void writeTriggerParameters( );
 	void readParameters( );
 	
 	// reports

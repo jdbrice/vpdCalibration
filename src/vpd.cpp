@@ -105,7 +105,7 @@ int main( int argc, char* argv[] ) {
         //vpdCalib.checkStep();
 
         // write out the parameters file
-        //vpdCalib.writeParameters(  );
+        vpdCalib.writeParameters();
         
     }
 
