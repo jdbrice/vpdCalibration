@@ -111,6 +111,9 @@ private:
 	bool mapTriggerToTof;
 	bool convertTacToNS;
 	double TACToNS;
+
+
+	int firstRun, lastRun;
 	
 
 public:
@@ -128,6 +131,7 @@ public:
 
 	// calculates the inital offsets of each channel
 	void offsets( );
+	void updateOffsets();
 	void finalOffsets( );
 
 	void getInitialOffsets();
@@ -172,6 +176,15 @@ public:
 	
 
 protected:
+
+	bool runInRange( int run ){
+		if ( 0 >= firstRun || 0 >= lastRun )
+			return true;
+		
+		if ( run < firstRun || run > lastRun )
+			return false;
+		return true;
+	}
 
 	void makeCorrections();
 

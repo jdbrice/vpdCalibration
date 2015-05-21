@@ -98,6 +98,7 @@ int main( int argc, char* argv[] ) {
         
         // get the inital offsets
         vpdCalib.offsets();
+
         
         // run the main calibration loop
         vpdCalib.loop();

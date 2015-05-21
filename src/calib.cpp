@@ -150,6 +150,11 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
     cout << "TAC to NS = " << TACToNS << endl;
 
     refChannel = config.getAsInt( "referenceChannel", 0 );
+
+    firstRun = config.getAsInt( "firstRun", -1 );
+    lastRun = config.getAsInt( "lastRun", -1 );
+
+
 }
 
 /**
@@ -251,6 +256,17 @@ void calib::offsets() {
 	}
 
 
+	/*for( int j = constants::startWest; j < constants::endEast; j++) {
+		deadDetector[ j ] = true;
+	}
+
+	for ( int i = 0; i < 5; i++ )
+		deadDetector[ i ] = false;
+	for ( int i = constants::startEast; i < constants::startEast+10; i++ )
+		deadDetector[ i ] = false;*/
+	
+
+
 	Int_t nevents = (Int_t)_chain->GetEntries();
 	cout << "[calib." << __FUNCTION__ << "] Loaded: " << nevents << " events " << endl;
 
@@ -258,7 +274,7 @@ void calib::offsets() {
 	
 	// make all the histos the first round
 	if ( ! book->get( "tdc" ) ){
-		book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 200000, -200, 550 );
+		book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 200000, -550, 550 );
 		book->make1D( "tdcMean", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5 );
 		book->make2D( "correctedOffsets", "Corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
 		book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels, 0, constants::nChannels, 1000, 0, 51200 );	
@@ -272,8 +288,11 @@ void calib::offsets() {
 	// loop over all events
 	for(Int_t i=0; i<nevents; i++) {
     	_chain->GetEntry(i);
+
+    	progressBar( i, nevents, 75 );
+    	if ( !runInRange( pico->run ) ) continue;
 		
-		progressBar( i, nevents, 75 );
+		
 
 		// perform the cuts used in calibration step to ensure the distributions match
 		double tpcZ = pico->vertexZ;
@@ -342,8 +361,9 @@ void calib::offsets() {
 	// loop over all events to draw them with offsets removed
 	for(Int_t i=0; i<nevents; i++) {
     	_chain->GetEntry(i);
-		
-		progressBar( i, nevents, 75 );
+
+    	progressBar( i, nevents, 75 );
+    	if ( !runInRange( pico->run ) ) continue;
 
 		// perform the cuts used in calibration step to ensure the distributions match
 		double tpcZ = pico->vertexZ;
@@ -456,6 +476,97 @@ void calib::offsets() {
 
 	cout << "[calib." << __FUNCTION__ << "] completed in " << elapsed() << " seconds " << endl;
 }
+
+void calib::updateOffsets() {
+
+	startTimer();
+
+	if ( !_chain ){
+		cout << "[calib." << __FUNCTION__ << "] ERROR: Invalid chain " << endl;
+		return;
+	}
+
+	Int_t nevents = (Int_t)_chain->GetEntries();
+	cout << "[calib." << __FUNCTION__ << "] Loaded: " << nevents << " events " << endl;
+
+	book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 200000, -500, 550 );
+
+
+	vector<double> totalTime( constants::nChannels, 0 );
+	vector<int> totalHits( constants::nChannels, 0 );
+	int tEvt = 0;
+
+
+	// loop over all events
+	for(Int_t i=0; i<1000; i++) {
+    	_chain->GetEntry(i);
+
+    	if ( !runInRange( pico->run ) ) continue;
+		
+		progressBar( i, nevents, 75 );
+
+		// perform the cuts used in calibration step to ensure the distributions match
+		double tpcZ = pico->vertexZ;
+		float vx = pico->vertexX;
+    	float vy = pico->vertexY;
+    	float vxy = TMath::Sqrt( vx*vx + vy*vy );
+    	if ( vxy > 1 ) continue;
+    	if ( pico->nTofHits <= 1 ) continue;
+    	if ( TMath::Abs( tpcZ ) > 100 ) continue;
+
+
+		// channel 1 on the west side is the reference channel
+    	double reference = getY( refChannel );
+    	if ( doingTrigger() ) 
+    		reference = 0;
+    	
+    	tEvt ++;
+		for( int j = constants::startWest; j < constants::endEast; j++) {
+
+			
+			// skip dead detectors
+			if ( deadDetector[ j ] ) continue;
+
+			int nHits = pico->numHits( j );
+			
+			if ( nHits < constants::minHits ) 
+				continue;
+
+			double tdc = getY( j );
+	    	double tot = getX( j );
+
+	    	if ( doingTrigger() && minTriggerTDC > tdc  ) continue;
+	    	if(tot <= minTOT || tot >= maxTOT) continue;	    
+
+	    	if ( tdc > 0 && reference > 0 && tdc < 10000 && reference < 10000){
+		    	totalTime[ j ] += (tdc - reference - this->initialOffsets[ j ]);
+		    	totalHits[ j ] ++;
+		    	//if ( 25 == j )
+				//cout << "[ " << j << " ] = " << (tdc - reference) << endl;		
+
+				book->fill( "tdc", j, tdc - reference );
+			}
+
+		}	
+	} // end loop on events
+
+
+	for( int j = constants::startWest; j < constants::endEast; j++) {
+
+		cout << "Channel[ " << j << "]" << endl;
+		cout << "\tTotalHits : " << totalHits[ j ] << endl;
+		cout << "\ttotalTime : " << totalTime[ j ] << endl;
+		cout << "\tAverage Offset : " << (totalTime[ j ] / (double) totalHits[ j ]) << endl;
+		this->initialOffsets[ j ] += (totalTime[ j ] / (double) totalHits[ j ]);
+	}
+
+
+
+	cout << "[calib." << __FUNCTION__ << "] completed in " << elapsed() << " seconds " << endl;
+}
+
+
+
 
 void calib::finalOffsets() {
 
@@ -586,7 +697,10 @@ void calib::binTOT( bool variableBinning ) {
 	for(Int_t i=0; i<nevents; i++) {
     	_chain->GetEntry(i);
 
-		progressBar( i, nevents, 75 );
+    	progressBar( i, nevents, 75 );
+    	if ( !runInRange( pico->run ) ) continue;
+
+		
     	Int_t numEast = pico->numberOfVpdEast;
       	Int_t numWest = pico->numberOfVpdWest;
      
@@ -757,15 +871,7 @@ void calib::outlierRejection( bool reject ) {
 	// must be called from inside event loop in the calib step
 	string iStr = "it"+ts(currentIteration);
 
-	if ( reject == false ){
-		// reset the state
-		for ( int j = constants::startWest; j < constants::endEast; j++ ){
-			useDetector[ j ] = true;
-		}
-		westIsGood = true;
-		eastIsGood = true;
-		return;
-	}
+	
 
 	// get the TPC z vertex
 	double tpcZ = pico->vertexZ;
@@ -883,6 +989,17 @@ void calib::outlierRejection( bool reject ) {
 
 	book->fill( iStr+"nAcceptedEast", nAccepted );
 
+	if ( reject == false ){
+		// reset the state
+		for ( int j = constants::startWest; j < constants::endEast; j++ ){
+			useDetector[ j ] = true;
+		}
+		westIsGood = true;
+		eastIsGood = true;
+		return;
+	}
+
+
 }
 
 /**
@@ -957,6 +1074,8 @@ void calib::prepareStepHistograms() {
  */
 void calib::step( ) {
 
+	//updateOffsets();
+
 	cout << "[calib." << __FUNCTION__ << "[" << currentIteration << "]] " << " Start " << endl;
 	
 	startTimer();
@@ -994,7 +1113,8 @@ void calib::step( ) {
 	for(Int_t i = 0; i < nevents; i++) {
     	_chain->GetEntry(i);
 
-		progressBar( i, nevents, 75 );
+    	progressBar( i, nevents, 75 );
+    	if ( !runInRange( pico->run ) ) continue;
 
     
     	float vx = pico->vertexX;
@@ -1942,8 +2062,7 @@ void calib::stepReport() {
 	gStyle->SetOptStat( 1111 );
 	string iStr = "it"+ts(currentIteration);
 
-	if ( config.getAsBool( "outlierRejection" ) == false )
-		return;
+	bool outliers = config.getAsBool( "outlierRejection" );
 
 	double vzCut = 40;
 	if ( currentIteration < vzOutlierCut.size() )
@@ -1965,7 +2084,9 @@ void calib::stepReport() {
 	book->style( iStr+"All" )
 		->set( "numberOfTicks", 5, 5)
 		->draw();
-	fill->Draw("same" );
+	
+	if ( outliers )	// only draw the cut area if we are doing outlier rejection
+		fill->Draw("same" );
 
 	
 	
@@ -1991,9 +2112,6 @@ void calib::stepReport() {
 
 
 
-
-
-
 	report->cd( 1, 2 );
 	book->style( iStr+"zTPCzVPD" )
 		->set( "numberOfTicks", 5, 5)
@@ -2010,23 +2128,27 @@ void calib::stepReport() {
 	
 	book->clearLegend();
 	
-	report->newPage(1, 2);
+	if ( outliers ){
+		report->newPage(1, 2);
 
-	gStyle->SetOptStat( 0 );
-	gPad->SetLogy(1);
-	book->style( iStr+"nAcceptedWest" )->draw( "draw", "")
-		->draw()->set( "legend", "West" )
-		->set("legend", legendAlignment::right, legendAlignment::top);
+		gStyle->SetOptStat( 0 );
+		gPad->SetLogy(1);
+		book->style( iStr+"nAcceptedWest" )->draw( "draw", "")
+			->draw()->set( "legend", "West" )
+			->set("legend", legendAlignment::center, legendAlignment::top);
+		
+		book->style( iStr+"nAcceptedEast" )
+			->set( "lineColor", kRed )->set( "draw", "same" )->draw()->set( "legend", "East");
+
+		gStyle->SetOptStat( 0111 );
+		report->next();
+		gPad->SetLogy(1);
+		book->style( iStr+"nValidPairs" )->set( "dynamicDomain", 0.0f, 1, -1 )->draw();
+
+		report->savePage();
+	}
+
 	
-	book->style( iStr+"nAcceptedEast" )
-		->set( "lineColor", kRed )->set( "draw", "same" )->draw()->set( "legend", "East");
-
-	gStyle->SetOptStat( 0111 );
-	report->next();
-	gPad->SetLogy(1);
-	book->style( iStr+"nValidPairs" )->set( "dynamicDomain", 0.0f, 1, -1 )->draw();
-
-	report->savePage();
 
 	/** Determine the Offset and contrain it for the outlier rejection*/
 	cout << " VPD - TPC = mean (fit) = " << toff << " ( " << ftoff << " ) "<< endl;
