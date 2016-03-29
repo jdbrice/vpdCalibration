@@ -8,6 +8,7 @@
 #include "TOFrPicoDst.h"
 #include "splineMaker.h"
 #include <vector>
+#include <map>
 
 // clock_t, clock, CLOCKS_PER_SEC 
 #include <time.h>       
@@ -39,6 +40,7 @@ private:
 	bool deadDetector[ constants::nChannels ];
 
 	// the initial offsets for each channel relative to the 1st channel on the west side
+	double tacOffsets[ constants::nChannels ];
 	double initialOffsets[ constants::nChannels ];
 	double outlierOffsets[ constants::nChannels ];
 	// the west - east offset only needed for the case of not removing initial offsets
@@ -112,7 +114,8 @@ private:
 	bool convertTacToNS;
 	double TACToNS;
 
-
+	vector<int> maskedChannels;
+	map<int, bool> channelMask;
 	int firstRun, lastRun;
 	
 
@@ -135,6 +138,8 @@ public:
 	void finalOffsets( );
 
 	void getInitialOffsets();
+
+	void hardCodeTACOffsets();
 
 	// determines the binning in tot space for each channel
 	void binTOT( bool variableBinning = true );

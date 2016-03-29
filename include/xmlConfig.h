@@ -34,6 +34,7 @@ public:
 	void display( char* nName );
 	vector<string> getAsStringVector( char* nName );
 	vector<double> getAsDoubleVector( char* nName );
+	vector<int> getAsIntVector( char* nName );
 
 	bool nodeExists( char* nName );
 	bool isVector( char* nName );

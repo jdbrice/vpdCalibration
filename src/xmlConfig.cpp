@@ -143,6 +143,7 @@ vector<string> xmlConfig::getAsStringVector( char* nName ) {
 		{
 		    sstr.str("");
 		    sstr << child->value();
+		    // cout << "[" << sstr.str() << "]" << endl;
 		    res.push_back( sstr.str() );
 		}
 		
@@ -162,6 +163,16 @@ std::vector<double> xmlConfig::getAsDoubleVector( char* nName ){
 	}
 	return res;
 
+}
+
+std::vector<int> xmlConfig::getAsIntVector( char* nName ){
+
+	vector<string> str = getAsStringVector( nName );
+	vector<int> res;
+	for ( uint i = 0; i < str.size(); i++ ){
+		res.push_back( atoi( str[ i ].c_str() ) );
+	}
+	return res;
 }
 
 double xmlConfig::getAsDouble( char* nName, double def ) {

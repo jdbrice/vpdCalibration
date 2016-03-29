@@ -8,7 +8,7 @@
 // provides my own string shortcuts etc.
 using namespace jdbUtils;
 
-int minTriggerTDC = 2;
+int minTriggerTDC = 180;
 
 /**
  * Constructor - Initializes all of the calibration parameters from the configuration file
@@ -155,6 +155,16 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
     lastRun = config.getAsInt( "lastRun", -1 );
 
 
+
+    maskedChannels = config.getAsIntVector( "MaskChannels" );
+    for ( int i = 0; i < constants::endEast; i++ ){
+    	channelMask[ i ] = false;
+    	if ( config.nodeExists( "MaskChannels" ) && maskedChannels.end() != find( maskedChannels.begin(), maskedChannels.end(), i ) ){
+    		cout << "Masking Channel " << i << endl;
+    		channelMask[ i ] = true;
+    	}
+    }
+
 }
 
 /**
@@ -175,6 +185,45 @@ calib::~calib() {
 	cout << "[calib.~calib] " << endl;
 }
 
+
+void calib::hardCodeTACOffsets(){
+
+	// east
+	tacOffsets[19] =  0;
+	tacOffsets[20] =  371;
+	tacOffsets[21] =  368;
+	tacOffsets[22] =  484;
+	tacOffsets[23] =  0;
+	tacOffsets[24] =  623;
+	tacOffsets[25] =  562;
+	tacOffsets[26] =  685;
+	tacOffsets[27] =  0;
+	tacOffsets[28] =  35;
+	tacOffsets[29] =  1159;
+	tacOffsets[30] =  642;
+	tacOffsets[31] =  0;
+	tacOffsets[32] =  290;
+	tacOffsets[33] =  322;
+	tacOffsets[34] =  419;
+
+	tacOffsets[0] = 0;
+	tacOffsets[1] = 0;
+	tacOffsets[2] = 591;
+	tacOffsets[3] = 639;
+	tacOffsets[4] = 0;
+	tacOffsets[5] = 636;
+	tacOffsets[6] = 548;
+	tacOffsets[7] = 620;
+	tacOffsets[8] = 0;
+	tacOffsets[9] = 1;
+	tacOffsets[10] = 563;
+	tacOffsets[11] = 529;
+	tacOffsets[12] = 0;
+	tacOffsets[13] = 522;
+	tacOffsets[14] = 413;
+	tacOffsets[15] = 639;
+}
+
 /**
  * Generalizes the calibration method to allow any combination of the trigger
  * or time-of-flight electronic's descriminators to be used.
@@ -183,6 +232,9 @@ calib::~calib() {
  */
 double calib::getX( int channel ) {
 	
+	if ( channelMask[ channel ] )
+		return 0.0;
+
 	if ( mapTriggerToTof ){
 		if ( (string)"bbq-adc" == xVariable || (string)"mxq-adc" == xVariable ){
 			channel = tofToTriggerMap[ channel ];
@@ -214,6 +266,8 @@ double calib::getX( int channel ) {
  * @return         returns the channel's timing value
  */
 double calib::getY( int channel ){
+	if ( channelMask[ channel ] )
+		return 0.0;
 
 	if ( mapTriggerToTof ){
 		if ( (string)"bbq-tdc" == yVariable || (string)"mxq-tdc" == yVariable ){
@@ -222,13 +276,14 @@ double calib::getY( int channel ){
 	}
 
 	double tacToNS = 1.0;
+	int TAC_OFF = tacOffsets[ channel ];;
 	if ( convertTacToNS )
 		tacToNS = TACToNS;
 
 	if ( (string)"tof-le" == yVariable )
 		return pico->channelTDC( channel );
 	else if ( (string)"bbq-tdc" == yVariable ){
-		return ( (double)pico->bbqTDC( channel ) * tacToNS );
+		return (( (double)pico->bbqTDC( channel ) - TAC_OFF ) * tacToNS  );
 	} else if ( (string)"mxq-tdc" == yVariable ){
 		return ( (double)pico->mxqTDC( channel ) * tacToNS );
 	}
@@ -250,22 +305,18 @@ void calib::offsets() {
 
 	startTimer();
 
+	gStyle->SetOptFit( 111 );
+
+	if ( doingTrigger() )
+		hardCodeTACOffsets();
+
 	if ( !_chain ){
 		cout << "[calib." << __FUNCTION__ << "] ERROR: Invalid chain " << endl;
 		return;
 	}
 
-
-	/*for( int j = constants::startWest; j < constants::endEast; j++) {
-		deadDetector[ j ] = true;
-	}
-
-	for ( int i = 0; i < 5; i++ )
-		deadDetector[ i ] = false;
-	for ( int i = constants::startEast; i < constants::startEast+10; i++ )
-		deadDetector[ i ] = false;*/
-	
-
+	// sanity check
+	_chain->Draw( "(vpdBbqTdcEast - vpdBbqTdcEast[0]) * 0.018 >> hVpdBbqTdcEast", "vpdBbqTdcEast > 0" );
 
 	Int_t nevents = (Int_t)_chain->GetEntries();
 	cout << "[calib." << __FUNCTION__ << "] Loaded: " << nevents << " events " << endl;
@@ -274,7 +325,11 @@ void calib::offsets() {
 	
 	// make all the histos the first round
 	if ( ! book->get( "tdc" ) ){
-		book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 200000, -550, 550 );
+		if ( convertTacToNS )
+			book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -550, 550 );
+		else {
+			book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 1000, 0, 4096 );
+		}
 		book->make1D( "tdcMean", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5 );
 		book->make2D( "correctedOffsets", "Corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
 		book->make2D( "tdcRaw", "All tdc Values ", constants::nChannels, 0, constants::nChannels, 1000, 0, 51200 );	
@@ -306,6 +361,7 @@ void calib::offsets() {
 
 		// channel 1 on the west side is the reference channel
     	double reference = getY( refChannel );
+    	
     	if ( doingTrigger() ) 
     		reference = 0;
     	
@@ -324,10 +380,11 @@ void calib::offsets() {
 			double tdc = getY( j );
 	    	double tot = getX( j );
 
+
 	    	book->fill( "tdcRaw", j, tdc );
 
 	    	if ( doingTrigger() && minTriggerTDC > tdc  ) continue;
-	    	if(tot <= minTOT || tot >= maxTOT) continue;	    
+	    	if( !doingTrigger() && (tot <= minTOT || tot >= maxTOT || 0 == reference) ) continue;	    
 
 
 		    book->fill( "tdc", j, tdc - reference );
@@ -357,6 +414,8 @@ void calib::offsets() {
 
 		delete tmp;
 	}
+
+	
 
 	// loop over all events to draw them with offsets removed
 	for(Int_t i=0; i<nevents; i++) {
@@ -442,7 +501,8 @@ void calib::offsets() {
 
 
 	book->style( "tdc" )
-		->set( "range", -450.0, 600.0 )->set( "draw", "colz" )->draw();
+		//->set( "range", 0.0, 5000.0 )
+		->set( "draw", "colz" )->draw();
 	book->style( "tdcMean" )
 		->set( "markerStyle", 20)->set( "markerColor", 2 )
 		->set( "linecolor", 2)->set( "draw", "same ple" )
@@ -535,8 +595,8 @@ void calib::updateOffsets() {
 			double tdc = getY( j );
 	    	double tot = getX( j );
 
-	    	if ( doingTrigger() && minTriggerTDC > tdc  ) continue;
-	    	if(tot <= minTOT || tot >= maxTOT) continue;	    
+	    	if( doingTrigger() && minTriggerTDC > tdc  ) continue;
+	    	if(  !doingTrigger() && (tot <= minTOT || tot >= maxTOT) ) continue;	    
 
 	    	if ( tdc > 0 && reference > 0 && tdc < 10000 && reference < 10000){
 		    	totalTime[ j ] += (tdc - reference - this->initialOffsets[ j ]);
@@ -900,6 +960,8 @@ void calib::outlierRejection( bool reject ) {
 	double countWest = 0;
 	stringstream sstr;
 
+	bool summedEast = false;
+	
 	for ( int j = constants::startWest; j < constants::endWest; j++ ){
 
 		if ( deadDetector[ j ] ) continue;
@@ -910,13 +972,15 @@ void calib::outlierRejection( bool reject ) {
 	    tdcWest -= (this->initialOffsets[ j ] + this->outlierOffsets[ j ]);
 
 	  	if ( doingTrigger() && minTriggerTDC > tdcWest ) continue;
-	    if( totWest <= minTOT || totWest > maxTOT) continue;
+	    if( !doingTrigger() && (totWest <= minTOT || totWest > maxTOT) ) continue;
 	    
 	    double corWest = getCorrection( j, totWest );
 	    tdcWest -= corWest;
 
 	    sumWest += tdcWest;
 	    countWest++;
+
+	    
 
 		for ( int k = constants::startEast; k < constants::endEast; k++ ){
 			
@@ -928,12 +992,12 @@ void calib::outlierRejection( bool reject ) {
 	    	tdcEast -= (this->initialOffsets[ k ] + this->outlierOffsets[ k ]);
 
 	    	if ( doingTrigger() && minTriggerTDC > tdcEast ) continue;
-	    	if( totEast <= minTOT || totEast > maxTOT) continue;
+	    	if( !doingTrigger() && (totEast <= minTOT || totEast > maxTOT)) continue;
 	    	
 	    	double corEast = getCorrection( k, totEast );
 	    	tdcEast -= corEast;
 
-	    	if ( j == constants::startWest ){
+	    	if ( summedEast == false ){
 	    		sumEast += tdcEast;
 	    		countEast++;
 	    	}
@@ -959,8 +1023,10 @@ void calib::outlierRejection( bool reject ) {
 	    	} 
 		    	  			
 		} // loop channel k
+		summedEast = true;
 	} // loop channel j
 
+	// cout << "CountEast = " << countEast << ", countWest = " << countWest << endl;
 	if ( countEast >= 1 && countWest >= 1){
 
 		double vpdZ = constants::c * ( (sumEast/countEast) - (sumWest/countWest)) / 2.0;	
@@ -1048,9 +1114,9 @@ void calib::prepareStepHistograms() {
 	gStyle->SetOptStat( 0 );
 	book->make1D( 	iStr + "nValidPairs", step + "# of Valid Pairs; # of Pairs; [#]", 500, 0, 500 );
 	book->make1D( 	iStr + "nAcceptedWest", step + "# of Accepted Detectors; # of Detectors; [#] ",
-							19, -0.5, 18.5 );
+							20, -0.5, 19.5 );
 	book->make1D( 	iStr + "nAcceptedEast", step + "# of Accepted Detectors; # of Detectors; [#] ",
-							19, -0.5, 18.5 );
+							20, -0.5, 19.5 );
 	/*
 	* outlier rejection histos
 	*/
@@ -1153,7 +1219,7 @@ void calib::step( ) {
   			tAll[ j ] -= corr[ j ];
     	}
     	reference = getY( refChannel ) - getCorrection( refChannel, tot[ refChannel ] );
-    	if ( doingTrigger() || true) 
+    	if ( doingTrigger() ) 
     		reference = 0;
 
 		// loop over every channel on the west and then on the east side
@@ -1165,7 +1231,7 @@ void calib::step( ) {
 
 			// require the tot is within range and the tdc is not zero
 			if ( doingTrigger() && minTriggerTDC > tdc[ j ] ) continue;
-	    	if(tot[ j ] <= minTOT || tot[ j ] > maxTOT) continue;
+	    	if( !doingTrigger() && (tot[ j ] <= minTOT || tot[ j ] > maxTOT)) continue;
 
 
 	    	double tdcSumWest = 0;
@@ -1180,7 +1246,7 @@ void calib::step( ) {
 				if ( !useDetector[ k ] ) continue;
 	    		
 	    		if ( doingTrigger() && minTriggerTDC > tdc[ k ] ) continue;
-	    		if(tot[ k ] <= minTOT || tot[ k ] > maxTOT) continue;
+	    		if( !doingTrigger() && (tot[ k ] <= minTOT || tot[ k ] > maxTOT)) continue;
 	    		if ( j == k ) continue;
 	    		
 	    		if ( k >= constants::startWest && k < constants::endWest ){
@@ -1508,6 +1574,9 @@ void calib::finish( ){
 		book->add( iCh + "sigmaMean", mean );
 
 		TF1 * fr = new TF1( "fr", calib::detectorResolution, 0, 19, 1);
+		//fr->SetParameter( 1, 0.05 )
+		//fr->SetParLimits( 1, 0.000001, 10 );
+
 
 		sigFit->Fit( "fr", "QR" );
 
@@ -2133,12 +2202,12 @@ void calib::stepReport() {
 
 		gStyle->SetOptStat( 0 );
 		gPad->SetLogy(1);
-		book->style( iStr+"nAcceptedWest" )->draw( "draw", "")
-			->draw()->set( "legend", "West" )
+		book->style( iStr+"nAcceptedEast" )->draw( "draw", "")
+			->draw()->set( "legend", "East" )
 			->set("legend", legendAlignment::center, legendAlignment::top);
 		
-		book->style( iStr+"nAcceptedEast" )
-			->set( "lineColor", kRed )->set( "draw", "same" )->draw()->set( "legend", "East");
+		book->style( iStr+"nAcceptedWest" )
+			->set( "lineColor", kRed )->set( "draw", "same" )->draw()->set( "legend", "West");
 
 		gStyle->SetOptStat( 0111 );
 		report->next();
@@ -2154,8 +2223,9 @@ void calib::stepReport() {
 	cout << " VPD - TPC = mean (fit) = " << toff << " ( " << ftoff << " ) "<< endl;
 	double ovc = 1.0 / constants::c;
 	double nOff = ovc * ftoff * 2;
-	if ( doingTrigger() )
+	if ( doingTrigger() ){
 		nOff *= -1;
+	}
 	cout << "Channel [ west ] += " << nOff << endl;
 	for ( int i = constants::startWest; i < constants::endWest; i++ ){
 			this->initialOffsets[ i ] += nOff;
@@ -2290,8 +2360,9 @@ void calib::averageN() {
  */
 Double_t calib::detectorResolution(Double_t *x, Double_t *par){
 	Double_t resval = 0.0;
+	double x0 = x[0] ;//* par[ 1 ];
 	if (x[0]>0){
-		resval	= TMath::Sqrt( x[0] / ( 1.0 + x[0] ) );
+		resval	= TMath::Sqrt( x0 / ( 1.0 + x0 ) );
 		return ( par[0] / resval );
 	} else {
 		return 0.0;
@@ -2440,8 +2511,8 @@ void calib::writeTriggerParameters(  ){
 	int iQT = 0;
 
 	// Write out the East VPD
-	for ( int j = constants::startEast; j < constants::endEast; j++ ){
-		if ( deadDetector[ j ] ) continue;
+	for ( int j = constants::startEast; j < constants::trgEndEast; j++ ){
+		// if ( deadDetector[ j ] ) continue;
 
 		int channel = 16;
 
@@ -2456,7 +2527,9 @@ void calib::writeTriggerParameters(  ){
 
 		f << "0x" << channel << "\t" << board << setw( 7 ) << numTOTBins << " 1"; // 1 for bin corrections
 		for ( int i = 1; i <= numTOTBins; i++ ){
-			f << setw(7) << TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ j ] ) / constants::tacToNS) << " ";
+			int full_cor = TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ j ] ) / constants::tacToNS);
+		
+			f << setw(7) << full_cor << " ";
 		}
 		f << endl;
 
@@ -2468,8 +2541,8 @@ void calib::writeTriggerParameters(  ){
 
 	iQT = 0;
 	// Write out the East VPD
-	for ( int j = constants::startWest; j < constants::endWest; j++ ){
-		if ( deadDetector[ j ] ) continue;
+	for ( int j = constants::startWest; j < constants::trgEndWest; j++ ){
+		// if ( deadDetector[ j ] ) continue;
 
 		int channel = 18;
 
@@ -2484,7 +2557,9 @@ void calib::writeTriggerParameters(  ){
 
 		f << "0x" << channel << "\t" << board << setw( 7 ) << numTOTBins << " 1"; // 1 for bin corrections
 		for ( int i = 1; i <= numTOTBins; i++ ){
-			f << setw(7) << (TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ j ] ) / constants::tacToNS) /*+ 6 WHY*/) << " ";
+			int full_cor = TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ j ] ) / constants::tacToNS);
+		
+			f << setw(7) << full_cor << " ";
 		}
 		f << endl;
 

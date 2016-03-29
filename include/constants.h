@@ -18,9 +18,11 @@ public:
 
 	static const Int_t startWest = 0;
 	static const Int_t endWest = 19;
+	static const Int_t trgEndWest = 16;
 
 	static const Int_t startEast = 19;
 	static const Int_t endEast = 38;
+	static const Int_t trgEndEast = 35;
 
 	// minimum number of hits 
 	static const Int_t minHits = 3;
