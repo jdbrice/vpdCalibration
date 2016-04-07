@@ -8,7 +8,8 @@
 // provides my own string shortcuts etc.
 using namespace jdbUtils;
 
-int minTriggerTDC = 180;
+int minTriggerTDC = 2;
+int minTriggerADC = 10;
 
 /**
  * Constructor - Initializes all of the calibration parameters from the configuration file
@@ -147,6 +148,9 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
     convertTacToNS = config.getAsBool( "convertTacToNS", false );
     TACToNS = config.getAsDouble( "TACToNS", constants::tacToNS );
 
+    // if ( convertTacToNS )
+    // 	minTriggerTDC = minTriggerTDC * TACToNS;
+
     cout << "TAC to NS = " << TACToNS << endl;
 
     refChannel = config.getAsInt( "referenceChannel", 0 );
@@ -190,38 +194,40 @@ void calib::hardCodeTACOffsets(){
 
 	// east
 	tacOffsets[19] =  0;
-	tacOffsets[20] =  371;
-	tacOffsets[21] =  368;
-	tacOffsets[22] =  484;
+	tacOffsets[20] =  373;
+	tacOffsets[21] =  407;
+	tacOffsets[22] =  469;
 	tacOffsets[23] =  0;
-	tacOffsets[24] =  623;
-	tacOffsets[25] =  562;
-	tacOffsets[26] =  685;
+	tacOffsets[24] =  660;
+	tacOffsets[25] =  596;
+	tacOffsets[26] =  722;
 	tacOffsets[27] =  0;
-	tacOffsets[28] =  35;
-	tacOffsets[29] =  1159;
-	tacOffsets[30] =  642;
+	tacOffsets[28] =  54;
+	tacOffsets[29] =  1173;
+	tacOffsets[30] =  658;
 	tacOffsets[31] =  0;
-	tacOffsets[32] =  290;
-	tacOffsets[33] =  322;
-	tacOffsets[34] =  419;
+	tacOffsets[32] =  320;
+	tacOffsets[33] =  352;
+	tacOffsets[34] =  448;
 
+
+	// west
 	tacOffsets[0] = 0;
 	tacOffsets[1] = 0;
-	tacOffsets[2] = 591;
-	tacOffsets[3] = 639;
+	tacOffsets[2] = 592;
+	tacOffsets[3] = 620;
 	tacOffsets[4] = 0;
-	tacOffsets[5] = 636;
-	tacOffsets[6] = 548;
-	tacOffsets[7] = 620;
+	tacOffsets[5] = 618;
+	tacOffsets[6] = 536;
+	tacOffsets[7] = 602;
 	tacOffsets[8] = 0;
 	tacOffsets[9] = 1;
-	tacOffsets[10] = 563;
-	tacOffsets[11] = 529;
+	tacOffsets[10] = 559;
+	tacOffsets[11] = 525;
 	tacOffsets[12] = 0;
-	tacOffsets[13] = 522;
-	tacOffsets[14] = 413;
-	tacOffsets[15] = 639;
+	tacOffsets[13] = 530;
+	tacOffsets[14] = 409;
+	tacOffsets[15] = 637;
 }
 
 /**
@@ -316,7 +322,7 @@ void calib::offsets() {
 	}
 
 	// sanity check
-	_chain->Draw( "(vpdBbqTdcEast - vpdBbqTdcEast[0]) * 0.018 >> hVpdBbqTdcEast", "vpdBbqTdcEast > 0" );
+	//_chain->Draw( "(vpdBbqTdcEast - vpdBbqTdcEast[0]) * 0.018 >> hVpdBbqTdcEast", "vpdBbqTdcEast > 0" );
 
 	Int_t nevents = (Int_t)_chain->GetEntries();
 	cout << "[calib." << __FUNCTION__ << "] Loaded: " << nevents << " events " << endl;
@@ -325,7 +331,7 @@ void calib::offsets() {
 	
 	// make all the histos the first round
 	if ( ! book->get( "tdc" ) ){
-		if ( convertTacToNS )
+		if ( convertTacToNS || !doingTrigger() )
 			book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -550, 550 );
 		else {
 			book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 1000, 0, 4096 );
@@ -362,8 +368,8 @@ void calib::offsets() {
 		// channel 1 on the west side is the reference channel
     	double reference = getY( refChannel );
     	
-    	if ( doingTrigger() ) 
-    		reference = 0;
+    	// if ( doingTrigger() ) 
+    	// 	reference = 0;
     	
 
 		for( int j = constants::startWest; j < constants::endEast; j++) {
@@ -384,7 +390,9 @@ void calib::offsets() {
 	    	book->fill( "tdcRaw", j, tdc );
 
 	    	if ( doingTrigger() && minTriggerTDC > tdc  ) continue;
-	    	if( !doingTrigger() && (tot <= minTOT || tot >= maxTOT || 0 == reference) ) continue;	    
+	    	// cout << "tot " << tot << endl;
+	    	// cout << "minTOT " << minTOT << endl;
+	    	if( !doingTrigger() && (tot <= minTOT || tot >= maxTOT || reference == 0) ) continue;	    
 
 
 		    book->fill( "tdc", j, tdc - reference );
@@ -404,7 +412,7 @@ void calib::offsets() {
 
 		if ( i == refChannel || doingTrigger() )
 			this->initialOffsets[ i ] = 0;
-		else
+		else 
 			this->initialOffsets[ i ] = tmp->GetMean();
 
 		cout << "Channel [ " << i+1 << " ] Offset = " << this->initialOffsets[ i ] << " ns " << endl;
@@ -452,7 +460,7 @@ void calib::offsets() {
 			double tdc = getY( j );
 	    	double tot = getX( j );
 
-	    	if(tot <= minTOT || tot >= maxTOT) continue;	    
+	    	if ( tot <= minTOT || tot >= maxTOT ) continue;	    
 
 		    book->fill( "tdcOffsetRemoved", j, tdc - reference - initialOffsets[ j ] );
 
@@ -596,7 +604,7 @@ void calib::updateOffsets() {
 	    	double tot = getX( j );
 
 	    	if( doingTrigger() && minTriggerTDC > tdc  ) continue;
-	    	if(  !doingTrigger() && (tot <= minTOT || tot >= maxTOT) ) continue;	    
+	    	if(  (tot <= minTOT || tot >= maxTOT) ) continue;	    
 
 	    	if ( tdc > 0 && reference > 0 && tdc < 10000 && reference < 10000){
 		    	totalTime[ j ] += (tdc - reference - this->initialOffsets[ j ]);
@@ -972,7 +980,7 @@ void calib::outlierRejection( bool reject ) {
 	    tdcWest -= (this->initialOffsets[ j ] + this->outlierOffsets[ j ]);
 
 	  	if ( doingTrigger() && minTriggerTDC > tdcWest ) continue;
-	    if( !doingTrigger() && (totWest <= minTOT || totWest > maxTOT) ) continue;
+	    if(  (totWest <= minTOT || totWest > maxTOT) ) continue;
 	    
 	    double corWest = getCorrection( j, totWest );
 	    tdcWest -= corWest;
@@ -992,7 +1000,7 @@ void calib::outlierRejection( bool reject ) {
 	    	tdcEast -= (this->initialOffsets[ k ] + this->outlierOffsets[ k ]);
 
 	    	if ( doingTrigger() && minTriggerTDC > tdcEast ) continue;
-	    	if( !doingTrigger() && (totEast <= minTOT || totEast > maxTOT)) continue;
+	    	if( (totEast <= minTOT || totEast > maxTOT)) continue;
 	    	
 	    	double corEast = getCorrection( k, totEast );
 	    	tdcEast -= corEast;
@@ -1231,7 +1239,7 @@ void calib::step( ) {
 
 			// require the tot is within range and the tdc is not zero
 			if ( doingTrigger() && minTriggerTDC > tdc[ j ] ) continue;
-	    	if( !doingTrigger() && (tot[ j ] <= minTOT || tot[ j ] > maxTOT)) continue;
+	    	if(  (tot[ j ] <= minTOT || tot[ j ] > maxTOT)) continue;
 
 
 	    	double tdcSumWest = 0;
@@ -1246,7 +1254,7 @@ void calib::step( ) {
 				if ( !useDetector[ k ] ) continue;
 	    		
 	    		if ( doingTrigger() && minTriggerTDC > tdc[ k ] ) continue;
-	    		if( !doingTrigger() && (tot[ k ] <= minTOT || tot[ k ] > maxTOT)) continue;
+	    		if( (tot[ k ] <= minTOT || tot[ k ] > maxTOT)) continue;
 	    		if ( j == k ) continue;
 	    		
 	    		if ( k >= constants::startWest && k < constants::endWest ){
