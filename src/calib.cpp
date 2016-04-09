@@ -8,7 +8,7 @@
 // provides my own string shortcuts etc.
 using namespace jdbUtils;
 
-int minTriggerTDC = 2;
+int minTriggerTDC = 180;
 int minTriggerADC = 10;
 
 /**
@@ -148,8 +148,8 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
     convertTacToNS = config.getAsBool( "convertTacToNS", false );
     TACToNS = config.getAsDouble( "TACToNS", constants::tacToNS );
 
-    // if ( convertTacToNS )
-    // 	minTriggerTDC = minTriggerTDC * TACToNS;
+    if ( convertTacToNS )
+    	minTriggerTDC = minTriggerTDC * TACToNS;
 
     cout << "TAC to NS = " << TACToNS << endl;
 
@@ -331,10 +331,15 @@ void calib::offsets() {
 	
 	// make all the histos the first round
 	if ( ! book->get( "tdc" ) ){
-		if ( convertTacToNS || !doingTrigger() )
-			book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -550, 550 );
-		else {
+		
+		if ( doingTrigger() && convertTacToNS ){
+			book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 200, 0, 45 );
+		}
+		else if ( doingTrigger() && !convertTacToNS )
 			book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 1000, 0, 4096 );
+		else { // not doing trigger
+			book->make2D( "tdc", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -550, 550 );
+			
 		}
 		book->make1D( "tdcMean", yVariable + " relative to West Channel 1; Detector ; " + yLabel, constants::nChannels, -0.5, constants::nChannels-0.5 );
 		book->make2D( "correctedOffsets", "Corrected Initial Offsets", constants::nChannels, -0.5, constants::nChannels-0.5, 2000, -100, 100 );
@@ -460,7 +465,7 @@ void calib::offsets() {
 			double tdc = getY( j );
 	    	double tot = getX( j );
 
-	    	if ( tot <= minTOT || tot >= maxTOT ) continue;	    
+	    	if( !doingTrigger() && (tot <= minTOT || tot >= maxTOT || reference == 0) ) continue;	    
 
 		    book->fill( "tdcOffsetRemoved", j, tdc - reference - initialOffsets[ j ] );
 
@@ -604,7 +609,7 @@ void calib::updateOffsets() {
 	    	double tot = getX( j );
 
 	    	if( doingTrigger() && minTriggerTDC > tdc  ) continue;
-	    	if(  (tot <= minTOT || tot >= maxTOT) ) continue;	    
+	    	if( !doingTrigger() && (tot <= minTOT || tot >= maxTOT || reference == 0) ) continue;
 
 	    	if ( tdc > 0 && reference > 0 && tdc < 10000 && reference < 10000){
 		    	totalTime[ j ] += (tdc - reference - this->initialOffsets[ j ]);
@@ -823,6 +828,10 @@ void calib::binTOT( bool variableBinning ) {
         	
         	// set this detector to dead
         	deadDetector[ i ] = true;
+        	int testBins[] = { 4095, 4095, 4095, 4095, 4095, 4095, 4095, 4095, 4095 };
+			for ( int s = 0; s <= numTOTBins; s++ ){
+				totBins[ i ][ s ] = testBins[ s ];
+			}
 
       	} else { // channel not dead
 
@@ -980,7 +989,7 @@ void calib::outlierRejection( bool reject ) {
 	    tdcWest -= (this->initialOffsets[ j ] + this->outlierOffsets[ j ]);
 
 	  	if ( doingTrigger() && minTriggerTDC > tdcWest ) continue;
-	    if(  (totWest <= minTOT || totWest > maxTOT) ) continue;
+	    if( !doingTrigger() && (totWest <= minTOT || totWest >= maxTOT ) ) continue;
 	    
 	    double corWest = getCorrection( j, totWest );
 	    tdcWest -= corWest;
@@ -1000,7 +1009,7 @@ void calib::outlierRejection( bool reject ) {
 	    	tdcEast -= (this->initialOffsets[ k ] + this->outlierOffsets[ k ]);
 
 	    	if ( doingTrigger() && minTriggerTDC > tdcEast ) continue;
-	    	if( (totEast <= minTOT || totEast > maxTOT)) continue;
+	    	if( !doingTrigger() && (totEast <= minTOT || totEast >= maxTOT ) ) continue;
 	    	
 	    	double corEast = getCorrection( k, totEast );
 	    	tdcEast -= corEast;
@@ -1111,7 +1120,7 @@ void calib::prepareStepHistograms() {
 	gStyle->SetOptStat( 111 );
 	book->cd( "OutlierRejection" );
 
-	int zBins = 1200, zRange = 200;
+	int zBins = 100, zRange = 200;
 
 	book->make1D( 	iStr + "All", step + "Outlier Rejection; z_{TPC} - z_{VPD}; [#]", zBins, -zRange, zRange );
 	book->make1D( 	iStr + "avg", step + "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} - z_{VPD} [cm]; [#]", 	zBins, -zRange, zRange );
@@ -1221,7 +1230,7 @@ void calib::step( ) {
    	 			off[ j ] = 0;
    			tAll[ j ] = tdc[ j ] - off[ j ];
 
-    		if(tot[ j ] <= minTOT || tot[ j ] >= maxTOT) continue;
+    		if( !doingTrigger() && (tot[ j ] <= minTOT || tot[ j ] >= maxTOT) ) continue;
   			
   			corr[ j ] = getCorrection( j, tot[ j ] );
   			tAll[ j ] -= corr[ j ];
@@ -1254,7 +1263,7 @@ void calib::step( ) {
 				if ( !useDetector[ k ] ) continue;
 	    		
 	    		if ( doingTrigger() && minTriggerTDC > tdc[ k ] ) continue;
-	    		if( (tot[ k ] <= minTOT || tot[ k ] > maxTOT)) continue;
+	    		if( !doingTrigger() && (tot[ k ] <= minTOT || tot[ k ] > maxTOT)) continue;
 	    		if ( j == k ) continue;
 	    		
 	    		if ( k >= constants::startWest && k < constants::endWest ){
@@ -1677,7 +1686,7 @@ void calib::makeCorrections( ){
 
 	// get the corrections for the next iteration 
 	for( int k = constants::startWest; k < constants::endEast; k++) {
-
+		if ( deadDetector[ k ] ) continue;
 
 		TF1* g = new TF1( "g", "gaus", -5, 5 );
 		if ( !removeOffset )
@@ -2520,6 +2529,7 @@ void calib::writeTriggerParameters(  ){
 
 	// Write out the East VPD
 	for ( int j = constants::startEast; j < constants::trgEndEast; j++ ){
+		cout << "Channel [ " << j+1 << " ] Offset = " << this->initialOffsets[ j ] << " ns " << endl;
 		// if ( deadDetector[ j ] ) continue;
 
 		int channel = 16;
@@ -2535,7 +2545,7 @@ void calib::writeTriggerParameters(  ){
 
 		f << "0x" << channel << "\t" << board << setw( 7 ) << numTOTBins << " 1"; // 1 for bin corrections
 		for ( int i = 1; i <= numTOTBins; i++ ){
-			int full_cor = TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ j ] ) / constants::tacToNS);
+			int full_cor = TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ 35 ] ) / constants::tacToNS);
 		
 			f << setw(7) << full_cor << " ";
 		}
@@ -2551,6 +2561,7 @@ void calib::writeTriggerParameters(  ){
 	// Write out the East VPD
 	for ( int j = constants::startWest; j < constants::trgEndWest; j++ ){
 		// if ( deadDetector[ j ] ) continue;
+		cout << "Channel [ " << j+1 << " ] Offset = " << this->initialOffsets[ j ] << " ns " << endl;
 
 		int channel = 18;
 
@@ -2565,7 +2576,7 @@ void calib::writeTriggerParameters(  ){
 
 		f << "0x" << channel << "\t" << board << setw( 7 ) << numTOTBins << " 1"; // 1 for bin corrections
 		for ( int i = 1; i <= numTOTBins; i++ ){
-			int full_cor = TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ j ] ) / constants::tacToNS);
+			int full_cor = TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ 35 ] ) / constants::tacToNS);
 		
 			f << setw(7) << full_cor << " ";
 		}
