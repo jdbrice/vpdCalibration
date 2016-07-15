@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
 
-	<SlewingIn url="/Users/danielbrandenburg/bnl/local/work/vpdCalibration/bin/run16/trigger/bbq_params.dat"/>
-	<SlewingOut url="bbq_params.dat"/>
+	<SlewingIn url="/Users/danielbrandenburg/bnl/local/work/vpdCalibration/bin/run16/run17099043_shifted_to_center/shifted_bbq_params.dat"/>
+	<SlewingOut url="shifted_bbq_params_by_west_n16_june_auau200.dat"/>
 
-	<Shift east="-22" west="0" />
+	<Shift east="0" west="-16" />
 
 </config>

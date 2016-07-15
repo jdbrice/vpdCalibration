@@ -25,7 +25,7 @@ public:
 	static const Int_t trgEndEast = 35;
 
 	// minimum number of hits 
-	static const Int_t minHits = 3;
+	static const Int_t minHits = 1;
 
 	static constexpr Double_t c = 29.9792458;	// 29.979 * 10^7 m/s
 

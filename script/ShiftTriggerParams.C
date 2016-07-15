@@ -1,5 +1,5 @@
 
-
+using namespace jdb;
 XmlConfig config;
 
 int eBinEdges[19][10];
@@ -22,6 +22,7 @@ void readParams();
 
 void ShiftTriggerParams( ){
 
+
 	Logger::setGlobalLogLevel( "all" );
 	config.loadFile( "ShiftTriggerParams.xml" );
 
@@ -36,8 +37,12 @@ void ShiftTriggerParams( ){
 
 	for ( int j = 0; j < 16; j++){
 		for ( int i = 0; i < numBins; i++ ){
-			eCorrs[j][i] = eCorrs[j][i] + shiftEast;
-			wCorrs[j][i] = wCorrs[j][i] + shiftWest;
+			if ( eBinEdges[j][0] != 4095 )	// dont shift zeroed out channel
+				eCorrs[j][i] = eCorrs[j][i] + shiftEast;
+
+			if ( wBinEdges[j][0] != 4095 )	// dont shift zeroed out channel
+				wCorrs[j][i] = wCorrs[j][i] + shiftWest;
+
 		}	
 	}
 	
@@ -126,9 +131,11 @@ void readParams(){
 
 void writeTriggerParameters(){
 
-	cout << "Writing out Trigger Parameters" << endl;
+	
 
-	string outName = config.getString( "baseName", "" ) + config.getString( "paramsOutput", "params.dat" );
+	string outName = config.getString( "SlewingOut:url", "shifted_trigger_params.dat" );
+
+	cout << "Writing out Trigger Parameters to \"" << outName << "\"" << endl;
 
 	ofstream f;
 	f.open( outName.c_str() );

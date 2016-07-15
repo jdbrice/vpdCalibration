@@ -169,6 +169,9 @@ calib::calib( TChain* chain, uint nIterations, xmlConfig con )  {
     	}
     }
 
+
+    minNTofHits = -1;
+
 }
 
 /**
@@ -192,42 +195,76 @@ calib::~calib() {
 
 void calib::hardCodeTACOffsets(){
 
+	cout << "HARD CODE TAC OFFSETS" << endl;
+
 	// east
-	tacOffsets[19] =  0;
-	tacOffsets[20] =  373;
-	tacOffsets[21] =  407;
-	tacOffsets[22] =  469;
-	tacOffsets[23] =  0;
-	tacOffsets[24] =  660;
-	tacOffsets[25] =  596;
-	tacOffsets[26] =  722;
-	tacOffsets[27] =  0;
-	tacOffsets[28] =  54;
-	tacOffsets[29] =  1173;
-	tacOffsets[30] =  658;
-	tacOffsets[31] =  0;
-	tacOffsets[32] =  320;
-	tacOffsets[33] =  352;
-	tacOffsets[34] =  448;
+	// tacOffsets[19] =  	150;
+	// tacOffsets[20] =  	137;
+	// tacOffsets[21] = 	125;
+	// tacOffsets[22] =  	131;
+	// tacOffsets[23] =  	0;
+	// tacOffsets[24] = 	110;
+	// tacOffsets[25] =  	52;
+	// tacOffsets[26] =  	120;
+	// tacOffsets[27] = 	-30;
+	// tacOffsets[28] =  	-510;
+	// tacOffsets[29] = 	510;
+	// tacOffsets[30] =  	65;
+	// tacOffsets[31] = 	0;
+	// tacOffsets[32] =  	157;
+	// tacOffsets[33] = 	39;
+	// tacOffsets[34] =  	0;
+	tacOffsets[19] =  	0;
+	tacOffsets[20] =  	147;
+	tacOffsets[21] = 	141;
+	tacOffsets[22] =  	148;
+	tacOffsets[23] =  	0;
+	tacOffsets[24] = 	95;
+	tacOffsets[25] =  	77;
+	tacOffsets[26] =  	176;
+	tacOffsets[27] = 	0;
+	tacOffsets[28] =  	-500;
+	tacOffsets[29] = 	622;
+	tacOffsets[30] =  	80;
+	tacOffsets[31] = 	0;
+	tacOffsets[32] =  	65;
+	tacOffsets[33] = 	57;
+	tacOffsets[34] =  	13;
 
 
 	// west
-	tacOffsets[0] = 0;
-	tacOffsets[1] = 0;
-	tacOffsets[2] = 592;
-	tacOffsets[3] = 620;
-	tacOffsets[4] = 0;
-	tacOffsets[5] = 618;
-	tacOffsets[6] = 536;
-	tacOffsets[7] = 602;
-	tacOffsets[8] = 0;
-	tacOffsets[9] = 1;
-	tacOffsets[10] = 559;
-	tacOffsets[11] = 525;
-	tacOffsets[12] = 0;
-	tacOffsets[13] = 530;
-	tacOffsets[14] = 409;
-	tacOffsets[15] = 637;
+	// tacOffsets[0] =		0;
+	// tacOffsets[1] =		0;
+	// tacOffsets[2] =		93;
+	// tacOffsets[3] = 	54;
+	// tacOffsets[4] = 	0;
+	// tacOffsets[5] =		155;
+	// tacOffsets[6] = 	38;
+	// tacOffsets[7] = 	49;
+	// tacOffsets[8] =		418;
+	// tacOffsets[9] = 	-207;
+	// tacOffsets[10] =	131;
+	// tacOffsets[11] = 	69;
+	// tacOffsets[12] =	548;
+	// tacOffsets[13] = 	94;
+	// tacOffsets[14] =	128;
+	// tacOffsets[15] = 	49;
+	tacOffsets[0] =		0;
+	tacOffsets[1] =		0;
+	tacOffsets[2] =		103;
+	tacOffsets[3] = 	64;
+	tacOffsets[4] = 	0;
+	tacOffsets[5] =		159;
+	tacOffsets[6] = 	37;
+	tacOffsets[7] = 	48;
+	tacOffsets[8] =		0;
+	tacOffsets[9] = 	-205;
+	tacOffsets[10] =	142;
+	tacOffsets[11] = 	76;
+	tacOffsets[12] =	0;
+	tacOffsets[13] = 	101;
+	tacOffsets[14] =	136;
+	tacOffsets[15] = 	55;
 }
 
 /**
@@ -291,7 +328,7 @@ double calib::getY( int channel ){
 	else if ( (string)"bbq-tdc" == yVariable ){
 		return (( (double)pico->bbqTDC( channel ) - TAC_OFF ) * tacToNS  );
 	} else if ( (string)"mxq-tdc" == yVariable ){
-		return ( (double)pico->mxqTDC( channel ) * tacToNS );
+		return ( ((double)pico->mxqTDC( channel ) - TAC_OFF) * tacToNS );
 	}
 
 	// the x varaibles in case you want to do non-standard comparisons
@@ -365,10 +402,12 @@ void calib::offsets() {
 		float vx = pico->vertexX;
     	float vy = pico->vertexY;
     	float vxy = TMath::Sqrt( vx*vx + vy*vy );
-    	if ( vxy > 1 ) continue;
-    	if ( pico->nTofHits <= 1 ) continue;
-    	if ( TMath::Abs( tpcZ ) > 100 ) continue;
+    	// cout << "vxy = " << vxy << endl;
 
+    	if ( vxy > 1 ) continue;
+    	if ( pico->nTofHits <= minNTofHits ) continue;
+    	if ( TMath::Abs( tpcZ ) > 100 ) continue;
+    	
 
 		// channel 1 on the west side is the reference channel
     	double reference = getY( refChannel );
@@ -443,7 +482,7 @@ void calib::offsets() {
     	float vy = pico->vertexY;
     	float vxy = TMath::Sqrt( vx*vx + vy*vy );
     	if ( vxy > 1 ) continue;
-    	if ( pico->nTofHits <= 1 ) continue;
+    	if ( pico->nTofHits <= minNTofHits ) continue;
     	if ( TMath::Abs( tpcZ ) > 100 ) continue;
 
 
@@ -541,7 +580,7 @@ void calib::offsets() {
 		->set( "title", "West (Channels 1-19) vs. East (Channels 20-38)" )
 		->set( "draw", "same")
 		->draw( )
-		->set( "legend", dSecond)->set( "legend", legendAlignment::right, legendAlignment::top);
+		->set( "legend", dSecond)->set( "legend", legendAlignment::left, legendAlignment::top);
 
 	gPad->SetLogy(1);
 	
@@ -584,7 +623,7 @@ void calib::updateOffsets() {
     	float vy = pico->vertexY;
     	float vxy = TMath::Sqrt( vx*vx + vy*vy );
     	if ( vxy > 1 ) continue;
-    	if ( pico->nTofHits <= 1 ) continue;
+    	if ( pico->nTofHits <= minNTofHits ) continue;
     	if ( TMath::Abs( tpcZ ) > 100 ) continue;
 
 
@@ -681,7 +720,7 @@ void calib::finalOffsets() {
     	float vy = pico->vertexY;
     	float vxy = TMath::Sqrt( vx*vx + vy*vy );
     	if ( vxy > 1 ) continue;
-    	if ( pico->nTofHits <= 1 ) continue;
+    	if ( pico->nTofHits <= minNTofHits ) continue;
     	if ( TMath::Abs( tpcZ ) > 100 ) continue;
 
 
@@ -776,6 +815,9 @@ void calib::binTOT( bool variableBinning ) {
 		
     	Int_t numEast = pico->numberOfVpdEast;
       	Int_t numWest = pico->numberOfVpdWest;
+
+      	// cout << "nEast = " << numEast << endl;
+      	// cout << "nWest = " << numWest << endl;
      
 	    if( numWest > constants::minHits){
 	        
@@ -816,7 +858,7 @@ void calib::binTOT( bool variableBinning ) {
     	Int_t size = tots[i].size();
       	cout << "[calib.binTOT] Channel[ " << i << " ] : " << size << " hits" << endl;
       	
-      	if( size < 1000 ) { // check for dead channels
+      	if( size < 100 ) { // check for dead channels
         	
         	Double_t step = ( maxTOT - minTOT ) / numTOTBins;
 
@@ -864,6 +906,7 @@ void calib::binTOT( bool variableBinning ) {
 					}
 				} else {
 					int testBins[] = { 0, 30, 60, 95, 135, 200, 300, 600, 4095 };
+					// int testBins[] = { 0, 30, 400, 600, 800, 1000, 1200, 1500, 4095 };
 					for ( int s = 0; s <= numTOTBins; s++ ){
 						totBins[ i ][ s ] = testBins[ s ];
 					}
@@ -1206,7 +1249,7 @@ void calib::step( ) {
     	if ( vxy > 1 ) continue;
 
     	double tpcZ = pico->vertexZ;
-    	if ( pico->nTofHits <= 1 ) continue;
+    	if ( pico->nTofHits <= minNTofHits ) continue;
     	if ( TMath::Abs( tpcZ ) > 100 ) continue;
 
     	// perform outlier rejection for this event
@@ -1410,7 +1453,7 @@ void calib::checkStep( ) {
     	if ( vxy > 1 ) continue;
 
     	double tpcZ = pico->vertexZ;
-    	if ( pico->nTofHits <= 1 ) continue;
+    	if ( pico->nTofHits <= minNTofHits ) continue;
     	if ( TMath::Abs( tpcZ ) > 100 ) continue;
 
     	double sumEast = 0;
@@ -2576,11 +2619,13 @@ void calib::writeTriggerParameters(  ){
 
 		f << "0x" << channel << "\t" << board << setw( 7 ) << numTOTBins << " 1"; // 1 for bin corrections
 		for ( int i = 1; i <= numTOTBins; i++ ){
-			int full_cor = TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ 35 ] ) / constants::tacToNS);
+			int full_cor = TMath::Nint( -1 * (correction[ j ][ i ] + this->initialOffsets[ j ] ) / constants::tacToNS);
 		
 			f << setw(7) << full_cor << " ";
 		}
 		f << endl;
+
+		cout << "Offset[j] = " << this->initialOffsets[ j ] << endl;
 
 		iQT++;
 	}

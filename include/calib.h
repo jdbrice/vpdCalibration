@@ -117,6 +117,8 @@ private:
 	vector<int> maskedChannels;
 	map<int, bool> channelMask;
 	int firstRun, lastRun;
+
+	int minNTofHits;
 	
 
 public:
