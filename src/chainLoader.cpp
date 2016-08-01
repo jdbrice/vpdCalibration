@@ -43,3 +43,35 @@ void chainLoader::load(
 	}
 
 }
+
+
+void chainLoader::loadList(  TChain * _chain, string _listFile, int _maxFiles ){
+	
+	string classname = "ChainLoader";
+	cout << "( chain, listFile=" << _listFile << ", maxFiles=" << _maxFiles << " )" << endl;
+
+	int nFiles = 0;
+
+	string line;
+	ifstream fListFile( _listFile.c_str());
+	if ( fListFile.is_open() ){
+
+		while ( getline( fListFile, line ) ){
+			_chain->Add( line.c_str() );
+			cout << "Adding File : " << line << endl;
+			nFiles++;
+
+			if ( _maxFiles >= 1 && nFiles >= _maxFiles ){
+				break;
+			}
+
+		}
+		fListFile.close();
+			
+
+	} else {
+		cout << "Could not open " << _listFile  << endl;
+	}
+
+	cout << nFiles << " files loaded into chain" << endl;
+} // loadList

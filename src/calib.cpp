@@ -870,10 +870,18 @@ void calib::binTOT( bool variableBinning ) {
         	
         	// set this detector to dead
         	deadDetector[ i ] = true;
-        	int testBins[] = { 4095, 4095, 4095, 4095, 4095, 4095, 4095, 4095, 4095 };
-			for ( int s = 0; s <= numTOTBins; s++ ){
-				totBins[ i ][ s ] = testBins[ s ];
-			}
+        	
+        	if ( doingTrigger() ){
+        		int testBins[] = { 4095, 4095, 4095, 4095, 4095, 4095, 4095, 4095, 4095 };
+        		for ( int s = 0; s <= numTOTBins; s++ ){
+					totBins[ i ][ s ] = testBins[ s ];
+				}
+        	} else {
+        		for ( int s = 0; s <= numTOTBins; s++ ){
+					totBins[ i ][ s ] = 40;
+				}
+        	}
+			
 
       	} else { // channel not dead
 
@@ -1165,8 +1173,8 @@ void calib::prepareStepHistograms() {
 
 	int zBins = 100, zRange = 200;
 
-	book->make1D( 	iStr + "All", step + "Outlier Rejection; z_{TPC} - z_{VPD}; [#]", zBins, -zRange, zRange );
-	book->make1D( 	iStr + "avg", step + "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} - z_{VPD} [cm]; [#]", 	zBins, -zRange, zRange );
+	book->make1D( 	iStr + "All", step + "Outlier Rejection; z_{TPC} - z_{VPD}; [#]", zBins*8, -zRange, zRange );
+	book->make1D( 	iStr + "avg", step + "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} - z_{VPD} [cm]; [#]", 	zBins*20, -zRange/2, zRange/2 );
 	
 	book->make2D( 	iStr + "zTPCzVPD", step + "TPC vs. VPD z Vertex; z_{TPC};z_{VPD}", zBins/2, -zRange/2, zRange/2, zBins/2, -zRange/2, zRange/2 );
 	book->make2D( 	iStr + "zTPCzVPDAvg", step + "TPC vs. VPD z Vertex using <East> & <West>; z_{TPC} [cm];z_{VPD} [cm]", zBins/2, -zRange/2, zRange/2, zBins/2, -zRange/2, zRange/2 );

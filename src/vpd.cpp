@@ -67,7 +67,10 @@ int main( int argc, char* argv[] ) {
     // Load the files into the chain 
     TChain * chain = new TChain( "tof" );
    
-    chainLoader::load( chain, (char*)config.getAsString( "dataDir" ).c_str(), config.getAsInt( "maxFiles", 10000 ) );
+    if ( config.getAsString( "dataDir" ).find( ".lis" ) != std::string::npos ){
+        chainLoader::loadList( chain, (char*)config.getAsString( "dataDir" ).c_str(), config.getAsInt( "maxFiles", 10000 ) );
+    } else 
+        chainLoader::load( chain, (char*)config.getAsString( "dataDir" ).c_str(), config.getAsInt( "maxFiles", 10000 ) );
     
     // get the num of iterations
     int numIterations = config.getAsInt( "numIterations", 5 );

@@ -2,15 +2,15 @@
 #include <fstream>
 
 
-void adjustStartTime( double currentMeanOfFinalTOFDist, string vpdParams  ){
+void adjustVpdZ( double currentVpdVzMean, string vpdParams  ){
 
-	double dt = -currentMeanOfFinalTOFDist;
+	double dt = currentVpdVzMean / ( 29.9 ) * 2;
 
 	ifstream infile;
 	infile.open( vpdParams.c_str() );
 
 	ofstream outfile;
-	outfile.open( "vpd_4DB.t0_Off.dat" );
+	outfile.open( "vpd_4DB.vz_Off.dat" );
 
 	cout << "Adjust Time by " << dt << " [ns]" << endl;
 	/**
@@ -31,10 +31,6 @@ void adjustStartTime( double currentMeanOfFinalTOFDist, string vpdParams  ){
 
 			double bv = -1;
 			infile >> bv;
-			if ( bv > 40 ) {
-				cout << "Warning : Found bin edge > 40 ns, setting to 40 " << endl;
-				bv = 40;
-			}
 			outfile << bv << " ";
 		}
 		outfile << endl;
@@ -45,11 +41,10 @@ void adjustStartTime( double currentMeanOfFinalTOFDist, string vpdParams  ){
 			double bv = -1;
 			double tdt = dt;
 			infile >> bv;
-			if ( 0.0 == bv ){
+			if ( 0.0 == bv || i <= 19 ){ // ONLY add to WEST corrections
 				tdt = 0.0;
 			}
 			outfile << (bv + tdt) << " ";
-			
 		}
 		outfile << endl;
 
